@@ -41,4 +41,11 @@ fi
 
 echo "Building ${PRESET_NAME}"
 
-cmake --preset "${PRESET_NAME}"&&cmake --build --preset "${PRESET_NAME}" -j
+# Detect if CC and CXX are set in the environment
+CMAKE_COMPILER_ARGS=""
+if [[ -n "$CC" && -n "$CXX" ]]; then
+  echo "Using custom compiler: CC=$CC, CXX=$CXX"
+  CMAKE_COMPILER_ARGS="-DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX"
+fi
+
+cmake --preset "${PRESET_NAME}" ${CMAKE_COMPILER_ARGS} && cmake --build --preset "${PRESET_NAME}" -j

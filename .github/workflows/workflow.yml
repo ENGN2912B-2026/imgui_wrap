@@ -15,6 +15,12 @@ jobs:
   build-ubuntu:
     name: Ubuntu-Build (GLFW_GL3)
     runs-on: ubuntu-24.04
+    env:
+      # ubuntu-24-04 default GCC is version 13 which does not support C++23 very well
+      # we override the compiler for Cmake to GCC 14 for now
+      CC: gcc-14
+      CXX: g++-14
+
     steps:
 
     - name: Checkout source code
