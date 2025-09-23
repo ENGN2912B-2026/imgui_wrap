@@ -39,7 +39,9 @@ jobs:
 
     env:
       PRESET_NAME: gcc-linux-release
-      CMAKE_CONFIG_OPTIONS: -DUSE_GLFW_GL3=0 -DUSE_GUI_TEST_ENGINE=1
+      # ubuntu-24-04 default GCC is version 13 which does not support C++23 very well
+      # we override the compiler for Cmake to GCC 14 for now
+      CMAKE_CONFIG_OPTIONS: -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14 -DUSE_GLFW_GL3=0 -DUSE_GUI_TEST_ENGINE=1
 
     steps:
 
