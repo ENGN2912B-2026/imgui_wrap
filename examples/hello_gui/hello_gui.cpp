@@ -5,7 +5,12 @@
 #include <gui/Frame.hpp>
 #include <imgui.h>
 
-#include <print> // Check if C++23 is working
+#if __cpp_lib_print >= 202207L
+# include <print> // Use C++23 std::println
+# define HAS_PRINT
+#else
+# include <iostream>
+#endif
 
 class MainWindow : public gui::Frame
 {
@@ -28,7 +33,11 @@ int main(int argc, char** argv)
   app.run();
 
   // Success
+#ifdef HAS_PRINT
   std::println("Finished successfully!\n");
+#else
+  std::cout << "Finished successfully!\n";
+#endif
 
   return 0;
 }
