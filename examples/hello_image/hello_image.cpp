@@ -9,10 +9,6 @@
 #include <gl/gl.h>
 #include <gl/FrameBuffer.hpp>
 #include <gui/gui.hpp>
-#include <timer/Timer.hpp>
-
-#include <cassert>
-#include <cmath>
 
 namespace
 {
@@ -106,8 +102,25 @@ public:
       texture_ = LoadTexture(image_);
     }
 
-    auto size = math::make<gui::Vec2i>(ImGui::GetContentRegionAvail());
-    ImGui::Image((ImTextureID)(intptr_t)texture_, size.to<float>());
+    // Respect the image aspect ratio
+    auto contentRegion = ImGui::GetContentRegionAvail();
+    auto displaySize = contentRegion;
+    float aspectRatio = static_cast<float>(image_.getWidth()) / image_.getHeight();
+    if (displaySize.x / displaySize.y > aspectRatio)
+    {
+      displaySize.x = displaySize.y * aspectRatio;
+    }
+    else
+    {
+      displaySize.y = displaySize.x / aspectRatio;
+    }
+
+    // Center the image
+    ImGui::SetCursorPosX((contentRegion.x - displaySize.x) * 0.5f + ImGui::GetCursorPosX());
+    ImGui::SetCursorPosY((contentRegion.y - displaySize.y) * 0.5f + ImGui::GetCursorPosY());
+
+    // Display the image
+    ImGui::Image((ImTextureID)(intptr_t)texture_, displaySize);
   }
 };
 
