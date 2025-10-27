@@ -25,6 +25,22 @@
 #include <filesystem>
 #include <sstream>
 
+#ifndef _WIN32
+#include <cstring>
+char* strcpy_s(char *dest, size_t dest_size, const char *src) {
+	std::strncpy(dest, src, dest_size);
+	dest[dest_size - 1] = '\0';
+	return dest;
+}
+template <size_t size>
+char* strcpy_s(char (&dest)[size], const char *src) {
+  std::strncpy(dest, src, size);
+  dest[size - 1] = '\0';
+  return dest;
+}
+#endif
+
+
 using namespace std::chrono_literals;
 
 namespace FileDialog {
@@ -231,7 +247,11 @@ namespace FileDialog {
 				std::time_t tt = std::chrono::system_clock::to_time_t(st);
 
 				std::tm mt;
+#ifdef _WIN32
 				localtime_s(&mt, &tt);
+#else
+				localtime_r(&tt, &mt);
+#endif
 				std::stringstream ss;
 				ss << std::put_time(&mt, "%F %R");
 
@@ -285,11 +305,11 @@ namespace FileDialog {
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel##1")) {
-					strcpy_s(new_folder_name, "");
-					strcpy_s(new_folder_error, "");
+					new_folder_name[0] = '\0';
+					new_folder_error[0] = '\0';
 					ImGui::CloseCurrentPopup();
 				}
-				ImGui::TextColored(ImColor(1.0f, 0.0f, 0.2f, 1.0f), new_folder_error);
+				ImGui::TextColored(ImColor(1.0f, 0.0f, 0.2f, 1.0f), "%s", new_folder_error);
 				ImGui::EndPopup();
 			}
 
@@ -316,7 +336,7 @@ namespace FileDialog {
 				file_dialog_file_select_index = 0;
 				file_dialog_folder_select_index = 0;
 				file_dialog_current_file = "";
-				strcpy_s(file_dialog_error, "");
+				file_dialog_error[0] = '\0';
 				initial_path_set = false;
 				file_dialog_open = false;
 			};
@@ -333,7 +353,7 @@ namespace FileDialog {
 					else {
 						auto path = file_dialog_current_path + (file_dialog_current_path.back() == '\\' ? "" : "\\") + file_dialog_current_file;
 						strcpy_s(buffer, path.length() + 1, path.c_str());
-						strcpy_s(file_dialog_error, "");
+						file_dialog_error[0] = '\0';
 						reset_everything();
 					}
 				}
@@ -344,14 +364,14 @@ namespace FileDialog {
 					else {
 						auto path = file_dialog_current_path + (file_dialog_current_path.back() == '\\' ? "" : "\\") + file_dialog_current_file;
 						strcpy_s(buffer, path.length() + 1, path.c_str());
-						strcpy_s(file_dialog_error, "");
+						file_dialog_error[0] = '\0';
 						reset_everything();
 					}
 				}
 			}
 
 			if (strlen(file_dialog_error) > 0) {
-				ImGui::TextColored(ImColor(1.0f, 0.0f, 0.2f, 1.0f), file_dialog_error);
+				ImGui::TextColored(ImColor(1.0f, 0.0f, 0.2f, 1.0f), "%s", file_dialog_error);
 			}
 
 			ImGui::End();

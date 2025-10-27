@@ -71,7 +71,7 @@ public:
     fileDialog_{}
   {
     fileDialog_.SetTitle("Select a File");
-    fileDialog_.SetTypeFilters({ ".h", ".cpp" });
+    fileDialog_.SetTypeFilters({ ".h", ".c", ".hpp", ".cpp" });
   }
 
   void render() override
