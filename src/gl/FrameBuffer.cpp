@@ -1,4 +1,4 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2025 Daniel Moreno. All rights reserved.
 //
 
 #include <gl/gl.h>
@@ -8,7 +8,9 @@
 
 namespace gl
 {
-  FrameBuffer::FrameBuffer(const Vec2i& size) : size_{ size }
+  FrameBuffer::FrameBuffer(const Vec2i& size, GLint inperpolationMode)
+    : size_{ size }
+    , inperpolationMode_{ inperpolationMode }
   {
     // Create a frame buffer object (fbo)
     glGenFramebuffers(1, &fbo_);
@@ -41,6 +43,22 @@ namespace gl
     }
   }
 
+  void FrameBuffer::setInterpolationMode(GLint mode)
+  {
+    if (inperpolationMode_ != mode)
+    {
+      inperpolationMode_ = mode;
+
+      if (texture_ > 0)
+      { // Update the texture parameters
+        glBindTexture(GL_TEXTURE_2D, texture_);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mode);
+        glBindTexture(GL_TEXTURE_2D, 0);
+      }
+    }
+  }
+
   void FrameBuffer::bind() const
   {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
@@ -59,8 +77,8 @@ namespace gl
     // Create a color attachment texture
     glBindTexture(GL_TEXTURE_2D, texture_);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size_.x, size_.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, inperpolationMode_);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, inperpolationMode_);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_, 0);
 
     // Create a render buffer object for depth and stencil attachment (we won't be sampling these)

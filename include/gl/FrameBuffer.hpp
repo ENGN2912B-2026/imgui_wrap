@@ -1,8 +1,9 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2025 Daniel Moreno. All rights reserved.
 //
 
 #pragma once
 
+#include <gl/gl.h>
 #include <math/Vec2.hpp>
 
 namespace gl
@@ -12,16 +13,24 @@ namespace gl
   class FrameBuffer
   {
     Vec2i size_;
-    unsigned fbo_;
-    unsigned texture_;
-    unsigned rbo_;
+    GLuint fbo_;
+    GLuint texture_;
+    GLuint rbo_;
+    GLint inperpolationMode_;
   public:
-    FrameBuffer(const Vec2i& size = {0, 0});
+    FrameBuffer(
+      const Vec2i& size = {0, 0},
+      GLint inperpolationMode = GL_LINEAR);
 
     ~FrameBuffer();
 
+    // Set or get the frame buffer size
     void setSize(const Vec2i& size);
     const Vec2i& getSize() const { return size_; }
+
+    // Set or get the texture interpolation mode
+    void setInterpolationMode(GLint mode);
+    const GLint getInterpolationMode() const { return inperpolationMode_; }
 
     void bind() const;
     void unbind() const;
