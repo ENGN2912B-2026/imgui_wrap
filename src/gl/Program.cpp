@@ -1,4 +1,4 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2025 Daniel Moreno. All rights reserved.
 //
 
 #include <gl/gl.h>
@@ -19,7 +19,10 @@ namespace gl
     glDeleteProgram(program_);
   }
 
-  Program::Program(const std::string& vertexShader, const std::string& fragmentShader)
+  Program::Program(
+    const std::string& vertexShader,
+    const std::string& fragmentShader,
+    const std::vector<std::pair<unsigned, std::string>>& attributes)
   {
     program_ = glCreateProgram();
     attachShader(Shader(GL_VERTEX_SHADER));
@@ -28,6 +31,7 @@ namespace gl
     attachShader(Shader(GL_FRAGMENT_SHADER));
     shaders_.back().source(fragmentShader.c_str());
     shaders_.back().compile();
+    bindAttributeLocations(attributes);
     link();
   }
 
@@ -62,6 +66,15 @@ namespace gl
   void Program::unuse() const
   {
     glUseProgram(0);
+  }
+
+  void Program::bindAttributeLocations(
+    const std::vector<std::pair<unsigned, std::string>>& attributes)
+  {
+    for (const auto& [index, name] : attributes)
+    {
+      glBindAttribLocation(program_, index, name.c_str());
+    }
   }
 
   void Program::setUniform1f(const char* name, float value) const
