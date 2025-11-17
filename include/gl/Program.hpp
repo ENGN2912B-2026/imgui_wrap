@@ -53,6 +53,11 @@ namespace gl
       const std::vector<std::pair<unsigned, std::string>>& attributes);
 
     // Set uniform variables
+    void setUniform1i(const char* name, int32_t value) const;
+    void setUniform2i(const char* name, const std::array<int32_t,2>& value) const;
+    void setUniform3i(const char* name, const std::array<int32_t,3>& value) const;
+    void setUniform4i(const char* name, const std::array<int32_t,4>& value) const;
+
     void setUniform1f(const char* name, float value) const;
     void setUniform2f(const char* name, const std::array<float,2>& value) const;
     void setUniform3f(const char* name, const std::array<float,3>& value) const;
