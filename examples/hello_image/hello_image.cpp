@@ -7,7 +7,6 @@
 //
 
 #include <gl/gl.h>
-#include <gl/FrameBuffer.hpp>
 #include <gui/gui.hpp>
 
 namespace
