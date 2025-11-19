@@ -1,5 +1,5 @@
 
 target_sources(imgui_wrap
-  PUBLIC
+  PRIVATE
     Timer.cpp
 )

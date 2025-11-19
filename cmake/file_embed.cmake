@@ -53,7 +53,7 @@ function(FileEmbedAdd file)
             MAIN_DEPENDENCY ${file}
     )
 
-    target_sources(${FILE_EMBED_LIB_} PUBLIC ${generated_cpp})
+    target_sources(${FILE_EMBED_LIB_} PRIVATE ${generated_cpp})
 
 endfunction()
 

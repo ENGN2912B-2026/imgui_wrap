@@ -1,6 +1,6 @@
 
 target_sources(imgui_wrap
-  PUBLIC
+  PRIVATE
     FrameBuffer.cpp
     Program.cpp
     Shader.cpp

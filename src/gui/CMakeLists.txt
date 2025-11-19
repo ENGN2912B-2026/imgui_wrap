@@ -1,7 +1,7 @@
 
 target_sources(imgui_wrap
-  PUBLIC
-    # public files
+  PRIVATE
+    # public api
     Widget.cpp
     Application.cpp
     Window.cpp
@@ -13,8 +13,8 @@ target_sources(imgui_wrap
     HorizontalSizer.cpp
     Image.cpp
     imgui_stdlib.cpp
-  PRIVATE
-    # private files
+
+    # implementation
     impl/Backend.cpp
     impl/Backend_Null.cpp
     impl/util.cpp
