@@ -16,7 +16,7 @@ namespace gui
     using Vec2i = math::Vec2i;
 
     Image();
-    ~Image();
+    virtual ~Image();
 
     void render() override;
 

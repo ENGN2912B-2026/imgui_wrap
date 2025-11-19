@@ -138,8 +138,7 @@ namespace gui
       }
     }
     else
-    {
-      // make mouse position invalid if the image is not hovered
+    { // make mouse position invalid if the image is not hovered
       mousePosition_.x = std::numeric_limits<float>::quiet_NaN();
       mousePosition_.y = std::numeric_limits<float>::quiet_NaN();
     }
@@ -149,6 +148,7 @@ namespace gui
   {
     scale_ = 1.0f;
     translation_ = { 0.0f, 0.0f };
-    mousePosition_ = { 0.0f, 0.0f };
+    mousePosition_.x = std::numeric_limits<float>::quiet_NaN();
+    mousePosition_.y = std::numeric_limits<float>::quiet_NaN();
   }
 }
