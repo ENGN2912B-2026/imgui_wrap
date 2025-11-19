@@ -7,7 +7,6 @@ target_sources(imgui_wrap
     Shape.cpp
     Circle.cpp
     Sphere.cpp
-    WidgetGL.cpp
 )
 
 if (USE_GLAD)

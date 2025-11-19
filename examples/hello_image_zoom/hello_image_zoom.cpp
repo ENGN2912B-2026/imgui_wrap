@@ -6,15 +6,15 @@
 //
 
 #include <gl/gl.h>
-#include <gl/WidgetGL.hpp>
 #include <gui/gui.hpp>
+#include <gui/Image.hpp>
 
 #include <cmath>
 #include <stdexcept>
 #include <vector>
 #include <cstdint>
 
-class TopFrame : public gl::WidgetGL
+class TopFrame : public gui::Image
 {
   GLuint textureId_;
 public:
@@ -30,9 +30,25 @@ public:
   }
 
 protected:
-  GLuint textureId() const override
+  ImTextureID textureId() const override
   {
-    return textureId_;
+    return static_cast<ImTextureID>(textureId_);
+  }
+
+  Vec2i textureSize(ImTextureID textureId) const override
+  {
+    Vec2i size{ 0, 0 };
+    if (textureId > 0U)
+    {
+      GLint width, height;
+      glBindTexture(GL_TEXTURE_2D, textureId);
+      glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+      glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+      glBindTexture(GL_TEXTURE_2D, 0);
+      size.x = static_cast<int>(width);
+      size.y = static_cast<int>(height);
+    }
+    return size;
   }
 
   void updateTexture() override

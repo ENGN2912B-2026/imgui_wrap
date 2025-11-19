@@ -1,27 +1,27 @@
 //  Copyright (c) 2025 Daniel Moreno. All rights reserved.
 //
 
-#include <gl/WidgetGL.hpp>
+#include <gui/Image.hpp>
 
 #include <stdexcept>
 #include <limits>
 
-namespace gl
+namespace gui
 {
-  WidgetGL::WidgetGL() : gui::ChildFrame{}
+  Image::Image() : gui::ChildFrame{}
   {
     resetView();
   }
 
-  WidgetGL::~WidgetGL()
+  Image::~Image()
   {
 
   }
 
-  void WidgetGL::render()
+  void Image::render()
   {
     updateTexture();
-    const GLuint textureId{ this->textureId() };
+    const ImTextureID textureId{ this->textureId() };
     if (!textureId)
     { // No image has been set
       return;
@@ -66,7 +66,7 @@ namespace gl
     const ImVec2 uv1{ (t1 + Vec2f{ 1.0f, 1.0f } * s1).to<float>() };
 
     // Display the texture
-    ImGui::Image((ImTextureID)(intptr_t)textureId, displaySize, uv0, uv1);
+    ImGui::Image(textureId, displaySize, uv0, uv1);
 
     // Handle mouse events
     if(ImGui::IsItemHovered())
@@ -145,26 +145,10 @@ namespace gl
     }
   }
 
-  void WidgetGL::resetView()
+  void Image::resetView()
   {
     scale_ = 1.0f;
     translation_ = { 0.0f, 0.0f };
     mousePosition_ = { 0.0f, 0.0f };
-  }
-
-  math::Vec2i WidgetGL::textureSize(GLuint textureId)
-  {
-    Vec2i size{ 0, 0 };
-    if (textureId > 0U)
-    {
-      GLint width, height;
-      glBindTexture(GL_TEXTURE_2D, textureId);
-      glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-      glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
-      glBindTexture(GL_TEXTURE_2D, 0);
-      size.x = static_cast<int>(width);
-      size.y = static_cast<int>(height);
-    }
-    return size;
   }
 }

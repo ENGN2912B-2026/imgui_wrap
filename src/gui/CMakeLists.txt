@@ -11,6 +11,7 @@ target_sources(imgui_wrap
     StackingSizer.cpp
     VerticalSizer.cpp
     HorizontalSizer.cpp
+    Image.cpp
     imgui_stdlib.cpp
   PRIVATE
     # private files

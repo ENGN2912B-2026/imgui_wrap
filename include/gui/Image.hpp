@@ -6,16 +6,17 @@
 #include <gl/gl.h>
 #include <gui/gui.hpp>
 
-namespace gl
+namespace gui
 {
-  class WidgetGL : public gui::ChildFrame
+  // GUI Image class for displaying an image with zoom and pan capabilities
+  class Image : public gui::ChildFrame
   {
   public:
     using Vec2f = math::Vec2f;
     using Vec2i = math::Vec2i;
 
-    WidgetGL();
-    ~WidgetGL();
+    Image();
+    ~Image();
 
     void render() override;
 
@@ -32,11 +33,9 @@ namespace gl
     Vec2f mousePosition() const { return mousePosition_; }
 
   protected:
-    virtual GLuint textureId() const { return 0U; };
-
+    virtual ImTextureID textureId() const { return 0U; };
+    virtual Vec2i textureSize(ImTextureID textureId) const { return {0, 0}; };
     virtual void updateTexture() {}
-
-    static Vec2i textureSize(GLuint textureId);
 
   private:
     // private data members
