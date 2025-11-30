@@ -15,7 +15,7 @@ namespace gui
     using Vec2f = math::Vec2f;
     using Vec2i = math::Vec2i;
 
-    Image();
+    Image(bool enablePanZoom = false);
     virtual ~Image();
 
     void render() override;
@@ -32,6 +32,10 @@ namespace gui
 
     Vec2f mousePosition() const { return mousePosition_; }
 
+    bool isPanZoomEnabled() const { return enablePanZoom_; }
+
+    void setPanZoomEnabled(bool enabled) { enablePanZoom_ = enabled; }
+
   protected:
     virtual ImTextureID textureId() const { return 0U; };
     virtual Vec2i textureSize(ImTextureID textureId) const { return {0, 0}; };
@@ -42,5 +46,6 @@ namespace gui
     float scale_;
     Vec2f translation_;
     Vec2f mousePosition_;
+    bool enablePanZoom_;
   };
 }

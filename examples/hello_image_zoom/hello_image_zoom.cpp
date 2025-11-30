@@ -18,7 +18,7 @@ class TopFrame : public gui::Image
 {
   GLuint textureId_;
 public:
-  TopFrame() : textureId_{ 0U }
+  TopFrame() : gui::Image{ true /* enablePanZoom */}, textureId_{ 0U }
   {
   }
 

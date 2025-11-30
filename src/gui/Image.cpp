@@ -8,7 +8,9 @@
 
 namespace gui
 {
-  Image::Image() : gui::ChildFrame{}
+  Image::Image(bool enablePanZoom)
+  : gui::ChildFrame{}
+  , enablePanZoom_{ enablePanZoom }
   {
     resetView();
   }
@@ -82,60 +84,63 @@ namespace gui
       mousePosition_.x = imagePoint.x * width;
       mousePosition_.y = imagePoint.y * height;
 
-      // update image zoom when mouse wheel is scrolled
-      if(io.MouseWheel != 0.0f)
-      {
-        // compute the new scale
-        constexpr float maxScale{ 1.0f };
-        const float minScale{ 1.0f / std::max(width, height) };
-        const float scaleFactor{ io.MouseWheel < 0 ? 1.1f : 0.9f };
-        const float s2{ std::min(maxScale, std::max(minScale, scaleFactor * s1)) };
+      if (enablePanZoom_)
+      { // handle pan and zoom only if enabled
+        if(io.MouseWheel != 0.0f)
+        { // update image zoom when mouse wheel is scrolled
 
-        // make the image position below the mouse to stay at a fixed point
-        // before and after zooming, compute the new translation to keep the
-        // fixed point where it was:
-        //
-        //    screenPoint <-> imagePoint
-        //    imagePoint.x = uv0'.x + screenPoint.x * (uv1'.x - uv0'.x)
-        //    imagePoint.y = uv0'.y + screenPoint.y * (uv1'.y - uv0'.y)
-        //    uv0' = (0,0)*s2 + t2 = t2
-        //    uv1' = (1,1)*s2 + t2
-        //    uv1'- uv0' = (1,1)*s2 + t2 -t2 = (s2,s2)
-        //    -> imagePoint = t2 + screenPoint * s2
-        //    -> t2 = imagePoint - screenPoint * s2
-        //
-        Vec2f t2{ imagePoint - screenPoint * s2 };
-        if (t2.x < 0.0f) { t2.x = 0.0f; }
-        if (t2.y < 0.0f) { t2.y = 0.0f; }
-        if (t2.x > 1.0f - s2) { t2.x = 1.0f - s2; }
-        if (t2.y > 1.0f - s2) { t2.y = 1.0f - s2; }
+          // compute the new scale
+          constexpr float maxScale{ 1.0f };
+          const float minScale{ 1.0f / std::max(width, height) };
+          const float scaleFactor{ io.MouseWheel < 0 ? 1.1f : 0.9f };
+          const float s2{ std::min(maxScale, std::max(minScale, scaleFactor * s1)) };
 
-        // update scale and translation
-        scale_ = s2;
-        translation_ = t2;
-      }
-      else if (io.MouseDoubleClicked[0])
-      { // reset view on double click
-        resetView();
-      }
-      else if(io.MouseDown[0])
-      { // pan the image if mouse is moved while pressing the left button
+          // make the image position below the mouse to stay at a fixed point
+          // before and after zooming, compute the new translation to keep the
+          // fixed point where it was:
+          //
+          //    screenPoint <-> imagePoint
+          //    imagePoint.x = uv0'.x + screenPoint.x * (uv1'.x - uv0'.x)
+          //    imagePoint.y = uv0'.y + screenPoint.y * (uv1'.y - uv0'.y)
+          //    uv0' = (0,0)*s2 + t2 = t2
+          //    uv1' = (1,1)*s2 + t2
+          //    uv1'- uv0' = (1,1)*s2 + t2 -t2 = (s2,s2)
+          //    -> imagePoint = t2 + screenPoint * s2
+          //    -> t2 = imagePoint - screenPoint * s2
+          //
+          Vec2f t2{ imagePoint - screenPoint * s2 };
+          if (t2.x < 0.0f) { t2.x = 0.0f; }
+          if (t2.y < 0.0f) { t2.y = 0.0f; }
+          if (t2.x > 1.0f - s2) { t2.x = 1.0f - s2; }
+          if (t2.y > 1.0f - s2) { t2.y = 1.0f - s2; }
 
-        const Vec2f screenDelta{
-          io.MouseDelta.x / displaySize.x,
-          io.MouseDelta.y / displaySize.y,
-        };
-        const Vec2f imageDelta{ screenDelta * s1 };
+          // update scale and translation
+          scale_ = s2;
+          translation_ = t2;
+        }
+        else if (io.MouseDoubleClicked[0])
+        { // reset view on double click
+          resetView();
+        }
+        else if(io.MouseDown[0])
+        { // pan the image if mouse is moved while pressing the left button
 
-        Vec2f t2{ t1 - imageDelta };
-        if (t2.x < 0.0f) { t2.x = 0.0f; }
-        if (t2.y < 0.0f) { t2.y = 0.0f; }
-        if (t2.x > 1.0f - s1) { t2.x = 1.0f - s1; }
-        if (t2.y > 1.0f - s1) { t2.y = 1.0f - s1; }
+          const Vec2f screenDelta{
+            io.MouseDelta.x / displaySize.x,
+            io.MouseDelta.y / displaySize.y,
+          };
+          const Vec2f imageDelta{ screenDelta * s1 };
 
-        // update translation
-        translation_ = t2;
-      }
+          Vec2f t2{ t1 - imageDelta };
+          if (t2.x < 0.0f) { t2.x = 0.0f; }
+          if (t2.y < 0.0f) { t2.y = 0.0f; }
+          if (t2.x > 1.0f - s1) { t2.x = 1.0f - s1; }
+          if (t2.y > 1.0f - s1) { t2.y = 1.0f - s1; }
+
+          // update translation
+          translation_ = t2;
+        }
+      } // if (enablePanZoom_)
     }
     else
     { // make mouse position invalid if the image is not hovered
