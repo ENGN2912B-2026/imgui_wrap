@@ -16,10 +16,11 @@ namespace timer
   class Timer::Impl
   {
     std::atomic<bool> running_;
+    size_t milliseconds_;
     std::thread thread_;
   public:
     // Default constructor
-    Impl() : running_{false}, thread_{}
+    Impl() : running_{false}, milliseconds_{0U}, thread_{}
     {
     }
 
@@ -27,6 +28,18 @@ namespace timer
     ~Impl()
     {
       stop();
+    }
+
+    // Set the timer period
+    void setPeriod(size_t milliseconds)
+    {
+      milliseconds_ = milliseconds;
+    }
+
+    // Get the timer period
+    size_t period() const
+    {
+      return milliseconds_;
     }
 
     // Start the timer
@@ -49,18 +62,19 @@ namespace timer
 
       // Start a new timer
       running_ = true;
+      milliseconds_ = milliseconds;
       thread_ = std::thread(
-        [this, milliseconds, callback = std::move(callback)]()
+        [this, callback = std::move(callback)]()
         {
           // Calculate the time taken by the callback function last time
           std::chrono::milliseconds callbackTime{ 0 };
           while (running_)
           {
             // Sleep until the next callback event
-            if (callbackTime < std::chrono::milliseconds(milliseconds))
+            if (callbackTime < std::chrono::milliseconds(milliseconds_))
             {
               std::this_thread::sleep_for(
-                std::chrono::milliseconds(milliseconds) - callbackTime);
+                std::chrono::milliseconds(milliseconds_) - callbackTime);
             }
 
             // Record the start time
@@ -88,6 +102,7 @@ namespace timer
         thread_.join();
         thread_ = std::thread{};
       }
+      milliseconds_ = 0U;
     }
 
     // Check if the timer is running

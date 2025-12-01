@@ -1,4 +1,4 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2025 Daniel Moreno. All rights reserved.
 //
 
 #pragma once
@@ -27,6 +27,12 @@ namespace timer
 
     // Stop the timer
     void stop();
+
+    // Set the timer period
+    void setPeriod(size_t milliseconds);
+
+    // Get the timer period
+    size_t period() const;
 
     // Check if the timer is running
     bool isRunning() const;

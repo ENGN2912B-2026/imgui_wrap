@@ -1,4 +1,4 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2025 Daniel Moreno. All rights reserved.
 //
 
 #include <timer/Timer.hpp>
@@ -23,6 +23,16 @@ namespace timer
   void Timer::stop()
   {
     impl_->stop();
+  }
+
+  void Timer::setPeriod(size_t milliseconds)
+  {
+    impl_->setPeriod(milliseconds);
+  }
+
+  size_t Timer::period() const
+  {
+    return impl_->period();
   }
 
   bool Timer::isRunning() const
