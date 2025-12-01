@@ -1,4 +1,4 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2025 Daniel Moreno. All rights reserved.
 //
 
 #include <gl/Sphere.hpp>
@@ -10,16 +10,17 @@ constexpr static double PI{ 3.14159265358979323846 };
 
 namespace gl
 {
-  Sphere::Sphere(size_t latitudes, size_t longitudes) :
-    program_{ nullptr },
-    VBO{ 0 },
-    VAO{ 0 },
-    initialized_{ false },
-    latitudes_{ latitudes },
-    longitudes_{ longitudes },
-    color_{ 1.0f, 0.0f, 0.0f, 1.0f },
-    center_{ 0.0f, 0.0f, 0.0f },
-    radius_{ 1.0f }
+  Sphere::Sphere(size_t latitudes, size_t longitudes)
+    : program_{ nullptr }
+    , VBO{ 0 }
+    , VAO{ 0 }
+    , initialized_{ false }
+    , latitudes_{ latitudes }
+    , longitudes_{ longitudes }
+    , color_{ 1.0f, 0.0f, 0.0f, 1.0f }
+    , center_{ 0.0f, 0.0f, 0.0f }
+    , radius_{ 1.0f }
+    , lightPosition_{ -1.0f, 1.0f, -1.0f }
   {
 
   }
@@ -220,11 +221,10 @@ namespace gl
     const std::array<float, 4> light0_ambientColor{ 0.2f, 0.2f, 0.2f, 1.0f };
     const std::array<float, 4> light0_diffuseColor{ 0.6f, 0.6f, 0.6f, 1.0f };
     const std::array<float, 4> light0_specularColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-    const std::array<float, 3> light0_position{ -1.0f, 1.0f, -1.0f };
     program_->setUniform4f("uLight0.ambientColor", light0_ambientColor);
     program_->setUniform4f("uLight0.diffuseColor", light0_diffuseColor);
     program_->setUniform4f("uLight0.specularColor", light0_specularColor);
-    program_->setUniform3f("uLight0.position", light0_position);
+    program_->setUniform3f("uLight0.position", lightPosition_);
 
     // Draw the vertices
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 3 * latitudes_ * longitudes_);
@@ -257,6 +257,13 @@ namespace gl
     center_[0] = x;
     center_[1] = y;
     center_[2] = z;
+  }
+
+  void Sphere::setLightPosition(float x, float y, float z)
+  {
+    lightPosition_[0] = x;
+    lightPosition_[1] = y;
+    lightPosition_[2] = z;
   }
 
   std::vector<float> Sphere::generateVertices_() const

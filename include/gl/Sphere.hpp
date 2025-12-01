@@ -1,4 +1,4 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2025 Daniel Moreno. All rights reserved.
 //
 
 #pragma once
@@ -22,6 +22,7 @@ namespace gl
     std::array<float, 4> color_;
     std::array<float, 3> center_;
     float radius_;
+    std::array<float, 3> lightPosition_;
   public:
     Sphere(size_t latitudes = 60, size_t longitudes = 60);
 
@@ -38,6 +39,8 @@ namespace gl
     void setCenter(float x, float y, float z = 0.0f);
 
     void setRadius(float radius);
+
+    void setLightPosition(float x, float y, float z);
 
   private:
     std::vector<float> generateVertices_() const;
