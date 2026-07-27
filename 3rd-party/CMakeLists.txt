@@ -31,7 +31,6 @@ if (USE_GLFW_GL3)
   target_compile_definitions(imgui
     PUBLIC
       -DUSE_GLFW_GL3
-      -DGLFW_HAS_PER_MONITOR_DPI=1
   )
 
   target_link_libraries(imgui PUBLIC glfw)

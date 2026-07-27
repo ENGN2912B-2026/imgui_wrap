@@ -1,4 +1,4 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 #include "Backend_Null.hpp"
 
@@ -12,6 +12,20 @@ namespace
     chrono::microseconds ms = chrono::duration_cast<chrono::microseconds>(
       chrono::high_resolution_clock::now().time_since_epoch());
     return static_cast<uint64_t>(ms.count());
+  }
+
+  void ImGui_ImplNullRender_UpdateTexture(ImTextureData* tex)
+  {
+    if (tex->Status == ImTextureStatus_WantCreate
+      || tex->Status == ImTextureStatus_WantDestroy)
+    {
+      tex->SetStatus(ImTextureStatus_OK);
+    }
+    if (tex->Status == ImTextureStatus_WantDestroy)
+    {
+      tex->SetTexID(ImTextureID_Invalid);
+      tex->SetStatus(ImTextureStatus_Destroyed);
+    }
   }
 }
 
@@ -28,7 +42,6 @@ namespace gui
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = window_size;
     io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset | ImGuiBackendFlags_HasMouseCursors;
-    io.Fonts->Build();
 #if IMGUI_VERSION_NUM < 18603
     for (int n = 0; n < ImGuiKey_COUNT; n++)
         io.KeyMap[n] = n;
@@ -87,17 +100,31 @@ namespace gui
   {
     ImDrawData* draw_data = ImGui::GetDrawData();
 
-    // RenderDrawData
-    for (int n = 0; n < draw_data->CmdListsCount; n++)
+    // Update textures
+    if (draw_data->Textures != nullptr)
     {
-      const ImDrawList* cmd_list = draw_data->CmdLists[n];
-      for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
+      for (ImTextureData* tex : *draw_data->Textures)
       {
-        const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
-        if (pcmd->UserCallback != NULL)
+        if (tex->Status != ImTextureStatus_OK)
         {
-          if (pcmd->UserCallback != ImDrawCallback_ResetRenderState)
-              pcmd->UserCallback(cmd_list, pcmd);
+          ImGui_ImplNullRender_UpdateTexture(tex);
+        }
+      }
+    }
+
+    // Render command lists
+    for (const ImDrawList* draw_list : draw_data->CmdLists)
+    {
+      for (int cmd_i = 0; cmd_i < draw_list->CmdBuffer.Size; cmd_i++)
+      {
+        const ImDrawCmd* pcmd = &draw_list->CmdBuffer[cmd_i];
+        if (pcmd->UserCallback != nullptr)
+        { // User callback, registered via ImDrawList::AddCallback()
+          pcmd->UserCallback(draw_list, pcmd);
+        }
+        else
+        { // Render triangles
+          // (In this backend, we don't actually render anything)
         }
       }
     }

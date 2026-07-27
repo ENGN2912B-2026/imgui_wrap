@@ -1,4 +1,4 @@
-//  Copyright (c) 2024-2025 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 #include "Backend_GLFW_GL3.hpp"
 
@@ -26,14 +26,9 @@ namespace
 {
   float GetDPI_(GLFWmonitor* monitor)
   {
-#if GLFW_HAS_PER_MONITOR_DPI
     float x_scale, y_scale;
     glfwGetMonitorContentScale(monitor, &x_scale, &y_scale);
     return x_scale;
-#else
-    IM_UNUSED(monitor);
-    return 1.0f;
-#endif
   }
 
   float GetDPI_(GLFWwindow* window)
@@ -183,7 +178,6 @@ namespace gui
     io.Fonts->AddFontDefault(&font_config);
 #endif
 
-    io.Fonts->Build();
     ImGui::GetStyle().ScaleAllSizes(DpiScale);
 
     return true;
