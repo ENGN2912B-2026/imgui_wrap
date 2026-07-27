@@ -20,7 +20,7 @@ target_sources(imgui_wrap
     impl/util.cpp
 )
 
-target_link_libraries(imgui_wrap PUBLIC imgui)
+target_link_libraries(imgui_wrap PUBLIC imgui imgui_zoomable_image)
 
 if (USE_GLFW_GL3)
   target_sources(imgui_wrap PRIVATE impl/Backend_GLFW_GL3.cpp)

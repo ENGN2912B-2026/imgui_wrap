@@ -10,6 +10,9 @@ option(USE_ROBOTO_WEBFONT "Enable Roboto webfont" ON)
 set(IMGUI_DIR ${PROJECT_SOURCE_DIR}/3rd-party/imgui)
 checkout_submodules(${IMGUI_DIR})
 
+set(IMGUI_ZOOMABLE_IMAGE_DIR ${PROJECT_SOURCE_DIR}/3rd-party/imgui_zoomable_image)
+checkout_submodules(${IMGUI_ZOOMABLE_IMAGE_DIR})
+
 if(USE_GLFW_GL3)
   set(GLFW_DIR ${PROJECT_SOURCE_DIR}/3rd-party/glfw)
   checkout_submodules(${GLFW_DIR})

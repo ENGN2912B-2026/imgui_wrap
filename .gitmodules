@@ -10,3 +10,6 @@
 [submodule "3rd-party/implot"]
 	path = 3rd-party/implot
 	url = ../../epezent/implot.git
+[submodule "3rd-party/imgui_zoomable_image"]
+	path = 3rd-party/imgui_zoomable_image
+	url = ../../danielm5/imgui_zoomable_image.git

@@ -45,6 +45,10 @@ if (USE_GLFW_GL3)
 
 endif(USE_GLFW_GL3)
 
+# ImGui Zoomable Image########################################################
+add_library(imgui_zoomable_image INTERFACE)
+target_include_directories(imgui_zoomable_image INTERFACE imgui_zoomable_image)
+
 # ImPlot #####################################################################
 if (USE_IMPLOT)
   add_library(implot STATIC
