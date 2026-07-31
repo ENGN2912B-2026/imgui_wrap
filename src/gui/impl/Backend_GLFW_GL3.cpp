@@ -257,4 +257,14 @@ namespace gui
       viewport, x, y, w, h, pixels, user_data);
   }
 
+  void Backend_GLFW_GL3::SetWindowTitle(const char* title)
+  {
+    glfwSetWindowTitle(window, title);
+  }
+
+  void Backend_GLFW_GL3::SetWindowSize(const ImVec2& size)
+  {
+    glfwSetWindowSize(window, static_cast<int>(size.x), static_cast<int>(size.y));
+  }
+
 } // namespace gui

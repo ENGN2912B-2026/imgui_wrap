@@ -140,4 +140,15 @@ namespace gui
     // nothing to do
   }
 
+  void Backend_Null::SetWindowTitle(const char* title)
+  {
+    // nothing to do
+  }
+
+  void Backend_Null::SetWindowSize(const ImVec2& size)
+  {
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize = size;
+  }
+
 } // namespace gui
