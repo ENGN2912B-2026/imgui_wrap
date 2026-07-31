@@ -4,6 +4,7 @@
 #include <gui2/Runtime.hpp>
 
 #include "../gui/impl/Backend.hpp"
+#include <gui2/Panel.hpp>
 
 #include <imgui.h>
 
@@ -159,8 +160,13 @@ namespace gui2
     backend_->Render();
   }
 
-  void Runtime::display(const std::string& text)
+  void Runtime::display(const std::string& text) const
   {
     ImGui::Text("%s", text.c_str());
+  }
+
+  void Runtime::display(const Panel& panel) const
+  {
+    panel.displayContent(*this);
   }
 }

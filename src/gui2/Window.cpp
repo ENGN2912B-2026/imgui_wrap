@@ -5,10 +5,10 @@
 
 namespace gui2
 {
-  Window::Window(const std::string& title, const Vec2i& size) :
-    title_{title},
-    size_{size},
-    contentCallback_{nullptr}
+  Window::Window(const std::string& title, const Vec2i& size)
+    : title_{title}
+    , size_{size}
+    , widget_{}
   {
 
   }
@@ -39,11 +39,15 @@ namespace gui2
     size_ = size;
   }
 
-  void Window::displayContent(class Runtime& runtime)
+  void Window::displayContent(const Runtime& runtime) const
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (contentCallback_) {
-      contentCallback_(runtime);
-    }
+    widget_.display(runtime);
+  }
+
+  void Window::setContent(Widget widget)
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    widget_ = std::move(widget);
   }
 }

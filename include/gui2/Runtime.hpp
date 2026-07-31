@@ -19,6 +19,7 @@ namespace gui2
   // forward declaration
   //class Backend;
   using Backend = gui::Backend;
+  class Panel;
 
   class Runtime
   {
@@ -53,7 +54,8 @@ namespace gui2
     void frameEnd();
 
     // Display functions
-    void display(const std::string& text);
+    void display(const std::string& text) const;
+    void display(const Panel& panel) const;
   };
 
 } // namespace gui

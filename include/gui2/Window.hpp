@@ -1,10 +1,8 @@
 //  Copyright (c) 2026 Daniel Moreno. All rights reserved.
 //
-
 #pragma once
 
-#include <gui2/Types.hpp>
-#include <gui2/Runtime.hpp>
+#include <gui2/Widget.hpp>
 
 #include <string>
 #include <memory>
@@ -13,11 +11,12 @@
 
 namespace gui2
 {
+  // A desktop window.
   class Window
   {
     std::string title_;
     Vec2i size_;
-    std::function<void(class Runtime&)> contentCallback_;
+    Widget widget_;
     mutable std::mutex mutex_;
   public:
     Window(
@@ -31,14 +30,8 @@ namespace gui2
     const Vec2i& getSize() const;
     void setSize(const Vec2i& size);
 
-    template<typename T>
-    void setContent(T content) //TODO: Use concepts to constrain T to be primitive types that runtime can display
-    {
-      std::lock_guard<std::mutex> lock(mutex_);
-      contentCallback_ = [val = std::move(content)](Runtime& rt) { rt.display(val); };
-    }
-
-    void displayContent(Runtime& runtime);
+    void displayContent(const Runtime& runtime) const;
+    void setContent(Widget widget);
   };
 
 } // namespace gui
