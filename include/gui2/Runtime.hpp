@@ -7,6 +7,8 @@
 
 #include <string>
 #include <memory>
+#include <vector>
+#include <optional>
 
 namespace gui
 {
@@ -20,6 +22,11 @@ namespace gui2
   //class Backend;
   using Backend = gui::Backend;
   class Panel;
+  class VBox;
+  class HBox;
+  class Button;
+
+  using OptionalSize = std::optional<Vec2i>;
 
   class Runtime
   {
@@ -54,8 +61,16 @@ namespace gui2
     void frameEnd();
 
     // Display functions
-    void display(const std::string& text) const;
-    void display(const Panel& panel) const;
+    void display(const std::string& text,
+                 const OptionalSize& displaySize = {}) const;
+    void display(const Panel& panel,
+                 const OptionalSize& displaySize = {}) const;
+    void display(const VBox& vbox,
+                 const OptionalSize& displaySize = {}) const;
+    void display(const HBox& hbox,
+                 const OptionalSize& displaySize = {}) const;
+    void display(const Button& button,
+                 const OptionalSize& displaySize = {}) const;
   };
 
 } // namespace gui

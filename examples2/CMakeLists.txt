@@ -1,6 +1,6 @@
 
 add_subdirectory(hello_gui_v2)
-add_subdirectory(hello_sizer_v2)
+add_subdirectory(hello_layout_v2)
 
 # add_subdirectory(hello_file)
 # add_subdirectory(hello_file2)

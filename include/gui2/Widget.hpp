@@ -25,7 +25,7 @@ namespace gui2
     struct Value
     {
       virtual ~Value() = default;
-      virtual void display(const Runtime&) const = 0;
+      virtual void display(const Runtime&, const OptionalSize&) const = 0;
     };
 
     template<class T>
@@ -33,9 +33,9 @@ namespace gui2
     {
       T value;
       ValueInstance(T value) : value(std::move(value)) {}
-      void display(const Runtime& rt) const override
+      void display(const Runtime& rt, const OptionalSize& displaySize) const override
       {
-        rt.display(value);
+        rt.display(value, displaySize);
       }
     };
 
@@ -48,11 +48,11 @@ namespace gui2
     requires Primitive<T>
     Widget(T value) : value_{std::make_unique<ValueInstance<T>>(std::move(value))} {}
 
-    void display(const Runtime& runtime) const
+    void display(const Runtime& runtime, const OptionalSize& displaySize = {}) const
     {
       if (value_)
       {
-        value_->display(runtime);
+        value_->display(runtime, displaySize);
       }
     }
   };
