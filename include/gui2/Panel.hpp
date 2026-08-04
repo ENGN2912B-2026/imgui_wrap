@@ -3,35 +3,39 @@
 #pragma once
 
 #include <gui2/Widget.hpp>
+#include <gui2/Identifier.hpp>
 
 #include <string>
-#include <stdexcept>
 
 namespace gui2
 {
   class Panel
   {
+    std::string id_;
     std::string name_;
     Widget widget_;
   public:
-    Panel(std::string name = "panel", Widget widget = {})
+    template<Identifier T>
+    Panel(T&& id, Widget widget = {})
+      : widget_{std::move(widget)}
+      , id_{id.getValueStr()}
     {
-      setName(std::move(name));
-      setContent(std::move(widget));
-    }
-
-    const std::string& getName() const { return name_; }
-    void setName(std::string name)
-    {
-      if (name.empty())
+      if constexpr (IdentifierWithName<std::remove_cvref_t<T>>)
       {
-        throw std::invalid_argument{"Panel name cannot be empty"};
+        name_ = id.getName();
       }
-      name_ = std::move(name);
     }
 
-    const Widget& getContent() const { return widget_; }
-    void setContent(Widget widget) { widget_ = std::move(widget); }
+    Panel(Widget widget = {},
+          std::source_location location = std::source_location::current())
+      : widget_{std::move(widget)}
+    {
+      LocationId id{std::move(location)};
+      id_ = id.getValueStr();
+    }
+
+    const std::string& getId() const { return id_; }
+    const std::string& getName() const { return name_; }
 
     void displayContent(const Runtime& runtime) const { widget_.display(runtime); }
   };

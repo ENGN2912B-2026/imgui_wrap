@@ -22,9 +22,9 @@ int main(int argc, char** argv)
 
 #define USE_EXAMPLE_LAYOUT 3
 #if USE_EXAMPLE_LAYOUT == 1
-  gui2::Panel leftPanel{ "leftPanel", "Left Panel" };
-  gui2::Panel topPanel{ "topPanel", "Top Panel" };
-  gui2::Panel bottomPanel{ "bottomPanel", "Bottom Panel" };
+  gui2::Panel leftPanel{ "Left Panel" };
+  gui2::Panel topPanel{ "Top Panel" };
+  gui2::Panel bottomPanel{ "Bottom Panel" };
 
   gui2::HBox hbox{
     gui2::Fixed{200, std::move(leftPanel)},
@@ -40,10 +40,10 @@ int main(int argc, char** argv)
     using namespace gui2;
     window.setContent(
       HBox{
-        Fixed{200, Panel{ "leftPanel", "Left Panel" }},
+        Fixed{200, Panel{ "Left Panel" }},
         VBox{
-          Stretch{3, Panel{ "topPanel", "Top Panel" }},
-          Stretch{1, Panel{ "bottomPanel", "Bottom Panel" }},
+          Stretch{3, Panel{ "Top Panel" }},
+          Stretch{1, Panel{ "Bottom Panel" }},
         },
       }
     );
@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 #elif USE_EXAMPLE_LAYOUT == 3
   {
     using namespace gui2;
-    Panel mainPanel{ "mainPanel",
+    Panel mainPanel{
       VBox {
         "Main Panel",
         HBox{ "Second line left", "Second line right" },
@@ -61,10 +61,10 @@ int main(int argc, char** argv)
 
     window.setContent(
       HBox{
-        Fixed{200, Panel{ "leftPanel", "Left Panel" }},
+        Fixed{200, Panel{ "Left Panel" }},
         VBox{
           Stretch{3, std::move(mainPanel)},
-          Stretch{1, Panel{ "bottomPanel", "Bottom Panel" }},
+          Stretch{1, Panel{ "Bottom Panel" }},
         },
       }
     );

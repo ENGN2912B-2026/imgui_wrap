@@ -15,7 +15,7 @@ namespace gui2
   concept Primitive =
     requires(const Runtime& rt, T const& value)
     {
-        rt.display(value);
+      rt.display(value);
     };
 
   // Widget class
@@ -44,8 +44,7 @@ namespace gui2
   public:
     Widget() = default;
 
-    template<typename T>
-    requires Primitive<T>
+    template<Primitive T>
     Widget(T value) : value_{std::make_unique<ValueInstance<T>>(std::move(value))} {}
 
     void display(const Runtime& runtime, const OptionalSize& displaySize = {}) const

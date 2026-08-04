@@ -267,7 +267,7 @@ namespace gui2
     int flags = kDefaultImGuiChildWindowFlags;
     ImVec2 currentPosition{ ImGui::GetCursorScreenPos() };
     ImGui::SetNextWindowPos(currentPosition);
-    if (ImGui::BeginChild(panel.getName().c_str(), size, flags))
+    if (ImGui::BeginChild(panel.getId().c_str(), size, flags))
     {
       panel.displayContent(*this);
     }
