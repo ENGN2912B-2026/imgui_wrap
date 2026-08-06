@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     Panel mainPanel{
       VBox {
         "Main Panel",
-        HBox{ "Second line left", "Second line right" },
+        HBox{ "Second line left long text with something else", "Second line right long text also here for this test" },
         Button{ "Click Me", []() { std::println("Button clicked!"); } },
       }
     };

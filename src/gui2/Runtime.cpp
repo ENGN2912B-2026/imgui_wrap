@@ -254,7 +254,16 @@ namespace gui2
 
   void Runtime::display(const std::string& text, const OptionalSize& displaySize) const
   {
+    if (displaySize.has_value())
+    {
+      float localPosX = ImGui::GetCursorPosX();
+      ImGui::PushTextWrapPos(localPosX + displaySize.value().x);
+    }
     ImGui::Text("%s", text.c_str());
+    if (displaySize.has_value())
+    {
+      ImGui::PopTextWrapPos();
+    }
   }
 
   void Runtime::display(const Panel& panel, const OptionalSize& displaySize) const
