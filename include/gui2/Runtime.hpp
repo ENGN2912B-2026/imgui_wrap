@@ -25,6 +25,7 @@ namespace gui2
   class VBox;
   class HBox;
   class Button;
+  class CheckBox;
 
   using OptionalSize = std::optional<Vec2i>;
 
@@ -61,15 +62,28 @@ namespace gui2
     void frameEnd();
 
     // Display functions
+
+    // Primitive items which do not have state
     void display(const std::string& text,
                  const OptionalSize& displaySize = {}) const;
-    void display(const Panel& panel,
-                 const OptionalSize& displaySize = {}) const;
-    void display(const VBox& vbox,
-                 const OptionalSize& displaySize = {}) const;
-    void display(const HBox& hbox,
-                 const OptionalSize& displaySize = {}) const;
     void display(const Button& button,
+                 const OptionalSize& displaySize = {}) const;
+
+    // Primitive items which have state which might change during display
+    void display(CheckBox& checkBox,
+                 const OptionalSize& displaySize = {}) const;
+
+    // Container items, they maybe have children which could change during display
+    void display(Panel& panel,
+                 const OptionalSize& displaySize = {}) const;
+
+    // Layout containers, they do not really belong in the runtime renderer,
+    // their API doesn't include a "display" method. We keep them here for
+    // now to make everything functional, but we should consider moving them
+    // to a separate layout module.
+    void display(VBox& vbox,
+                 const OptionalSize& displaySize = {}) const;
+    void display(HBox& hbox,
                  const OptionalSize& displaySize = {}) const;
   };
 

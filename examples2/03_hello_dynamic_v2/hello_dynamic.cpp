@@ -6,6 +6,7 @@
 #include <gui2/VBox.hpp>
 #include <gui2/HBox.hpp>
 #include <gui2/Button.hpp>
+#include <gui2/CheckBox.hpp>
 
 #include <print>
 
@@ -24,11 +25,15 @@ int main(int argc, char** argv)
 #if USE_EXAMPLE == 1
   {
     using namespace gui2;
+
+    bool checkBox = false;
+
     Panel mainPanel{
       VBox {
         "Main Panel",
         HBox{ "Second line left long text with something else", "Second line right long text also here for this test" },
         Button{ "Click Me", []() { std::println("Button clicked!"); } },
+        CheckBox{ "Check me", &checkBox },
       }
     };
 

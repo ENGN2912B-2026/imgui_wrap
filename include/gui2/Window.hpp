@@ -30,7 +30,7 @@ namespace gui2
     const Vec2i& getSize() const;
     void setSize(const Vec2i& size);
 
-    void displayContent(const Runtime& runtime) const;
+    void displayContent(const Runtime& runtime);
     void setContent(Widget widget);
   };
 

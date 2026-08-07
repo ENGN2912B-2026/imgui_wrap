@@ -86,6 +86,7 @@ namespace gui2
     }
 
     const std::vector<BoxItem>& getItems() const { return items_; }
+    std::vector<BoxItem>& getItems() { return items_; }
 
   private:
     std::vector<BoxItem> items_;

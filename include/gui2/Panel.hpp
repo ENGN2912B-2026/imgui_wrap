@@ -37,7 +37,7 @@ namespace gui2
     const std::string& getId() const { return id_; }
     const std::string& getName() const { return name_; }
 
-    void displayContent(const Runtime& runtime) const { widget_.display(runtime); }
+    void displayContent(const Runtime& runtime) { widget_.display(runtime); }
   };
 
 } // namespace gui

@@ -8,6 +8,7 @@
 #include <gui2/VBox.hpp>
 #include <gui2/HBox.hpp>
 #include <gui2/Button.hpp>
+#include <gui2/CheckBox.hpp>
 
 #include <imgui.h>
 
@@ -266,7 +267,7 @@ namespace gui2
     }
   }
 
-  void Runtime::display(const Panel& panel, const OptionalSize& displaySize) const
+  void Runtime::display(Panel& panel, const OptionalSize& displaySize) const
   {
     ImVec2 size{0, 0};
     if (displaySize.has_value())
@@ -284,7 +285,7 @@ namespace gui2
                        // if `BeginChild()` returns false.
   }
 
-  void Runtime::display(const VBox& vbox, const OptionalSize& displaySize) const
+  void Runtime::display(VBox& vbox, const OptionalSize& displaySize) const
   {
     // Get the current cursor position and the available size
     ImVec2 currentPosition{ ImGui::GetCursorScreenPos() };
@@ -297,7 +298,7 @@ namespace gui2
     }
 
     // Compute the sizes and positions of the VBox items
-    const auto& items{ vbox.getItems() };
+    auto& items{ vbox.getItems() };
     std::vector<int> sizes, positions;
     computeItemLayouts_(
       items, currentPosition.y, availableSize.y, itemSpacing.y,
@@ -315,7 +316,7 @@ namespace gui2
     }
   }
 
-  void Runtime::display(const HBox& hbox, const OptionalSize& displaySize) const
+  void Runtime::display(HBox& hbox, const OptionalSize& displaySize) const
   {
     // Get the current cursor position and the available size
     ImVec2 currentPosition{ ImGui::GetCursorScreenPos() };
@@ -328,7 +329,7 @@ namespace gui2
     }
 
     // Compute the sizes and positions of the HBox items
-    const auto& items{ hbox.getItems() };
+    auto& items{ hbox.getItems() };
     std::vector<int> sizes, positions;
     computeItemLayouts_(
       items, currentPosition.x, availableSize.x, itemSpacing.x,
@@ -353,4 +354,14 @@ namespace gui2
       button.onClick();
     }
   }
-}
+
+  void Runtime::display(CheckBox& checkBox, const OptionalSize& displaySize) const
+  {
+    bool checked = checkBox.isChecked();
+    if (ImGui::Checkbox(checkBox.getLabel().c_str(), &checked))
+    {
+      checkBox.setChecked(checked);
+    }
+  }
+
+} // namespace gui
