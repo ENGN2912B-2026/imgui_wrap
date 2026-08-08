@@ -31,8 +31,8 @@ namespace gui2
     Vec2i lastSize = window_.getSize();
     while (running_ && rt.frameBegin())
     {
-      //TODO: I need to sync the window size with the runtime window size, in case the user resized the window
-      // in a thread-safe way.
+      //TODO: sync the window size with the runtime window size in a
+      // thread -safe, in case the user resized the window.
 
       // Synchronize the window size three-way between the application window,
       // the runtime window, and the backend window.

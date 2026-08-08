@@ -7,6 +7,8 @@
 #include <gui2/HBox.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
+#include <gui2/Dynamic.hpp>
+#include <gui2/Empty.hpp>
 
 #include <print>
 
@@ -31,7 +33,7 @@ int main(int argc, char** argv)
     Panel mainPanel{
       VBox {
         "Main Panel",
-        HBox{ "Second line left long text with something else", "Second line right long text also here for this test" },
+        Dynamic{[&]{ return "Checkbox state: " + std::string(checkBox ? "Checked" : "Unchecked"); }},
         Button{ "Click Me", []() { std::println("Button clicked!"); } },
         CheckBox{ "Check me", &checkBox },
       }

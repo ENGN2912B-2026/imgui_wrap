@@ -9,6 +9,8 @@
 #include <gui2/HBox.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
+#include <gui2/Empty.hpp>
+#include <gui2/Dynamic.hpp>
 
 #include <imgui.h>
 
@@ -267,6 +269,11 @@ namespace gui2
     }
   }
 
+  void Runtime::display(const Empty& empty, const OptionalSize& displaySize) const
+  {
+    // Do nothing, just reserve space for the empty item
+  }
+
   void Runtime::display(Panel& panel, const OptionalSize& displaySize) const
   {
     ImVec2 size{0, 0};
@@ -283,6 +290,11 @@ namespace gui2
     }
     ImGui::EndChild(); // For child windows `EndChild()` must be called even
                        // if `BeginChild()` returns false.
+  }
+
+  void Runtime::display(Dynamic& dynamic, const OptionalSize& displaySize) const
+  {
+    dynamic.display(*this, displaySize);
   }
 
   void Runtime::display(VBox& vbox, const OptionalSize& displaySize) const
