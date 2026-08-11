@@ -42,7 +42,8 @@ namespace gui2
   void Window::displayContent(const Runtime& runtime)
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    widget_.display(runtime);
+    Rect rect{ {0, 0}, size_ };
+    widget_.display(runtime, rect);
   }
 
   void Window::setContent(Widget widget)

@@ -65,20 +65,23 @@ namespace gui2
     // Display functions
 
     // Primitive items which do not have state
-    void display(const std::string& text, const OptionalSize& displaySize = {}) const;
-    void display(const Empty& empty, const OptionalSize& displaySize = {}) const;
-    void display(const Button& button, const OptionalSize& displaySize = {}) const;
+    void display(const Empty& empty, const Rect& rect) const;
+    void display(const std::string& text, const Rect& rect) const;
+    void display(const Button& button, const Rect& rect) const;
 
     // Primitive items which have state which might change during display
-    void display(CheckBox& checkBox, const OptionalSize& displaySize = {}) const;
+    void display(CheckBox& checkBox, const Rect& rect) const;
 
     // Container items, they maybe have children which could change during display
-    void display(Panel& panel, const OptionalSize& displaySize = {}) const;
+    void display(Panel& panel, const Rect& rect) const;
 
     // Layout containers, they do not really belong in the runtime renderer,
     // their API doesn't include a "display" method. We keep them here for
     // now to make everything functional, but we should consider moving them
     // to a separate layout module.
+    void display(VBox& vbox, const Rect& rect) const;
+    void display(HBox& hbox, const Rect& rect) const;
+
     void display(VBox& vbox, const OptionalSize& displaySize = {}) const;
     void display(HBox& hbox, const OptionalSize& displaySize = {}) const;
   };
@@ -87,18 +90,18 @@ namespace gui2
   // - Runtime has a display method for the type
   template<class T>
   concept Primitive =
-    requires(Runtime& rt, T& value)
+    requires(Runtime& rt, T& value, Rect& rect)
     {
-      rt.display(value);
+      rt.display(value, rect);
     };
 
   // Concept of displayable types:
   // - The type has a display method which takes a Runtime& as argument
   template<class T>
   concept Displayable =
-    requires(Runtime& rt, T& value)
+    requires(Runtime& rt, T& value, Rect& rect)
     {
-      value.display(rt);
+      value.display(rt, rect);
     };
 
   // Concept of content types:

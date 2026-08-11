@@ -254,41 +254,62 @@ namespace gui2
     backend_->Render();
   }
 
-  void Runtime::display(const std::string& text, const OptionalSize& displaySize) const
-  {
-    if (displaySize.has_value())
-    {
-      float localPosX = ImGui::GetCursorPosX();
-      ImGui::PushTextWrapPos(localPosX + displaySize.value().x);
-    }
-    ImGui::Text("%s", text.c_str());
-    if (displaySize.has_value())
-    {
-      ImGui::PopTextWrapPos();
-    }
-  }
-
-  void Runtime::display(const Empty& empty, const OptionalSize& displaySize) const
+  void Runtime::display(const Empty& empty, const Rect& rect) const
   {
     // Do nothing, just reserve space for the empty item
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
   }
 
-  void Runtime::display(Panel& panel, const OptionalSize& displaySize) const
+  void Runtime::display(const std::string& text, const Rect& rect) const
   {
-    ImVec2 size{0, 0};
-    if (displaySize.has_value())
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    float localPosX = ImGui::GetCursorPosX();
+    ImGui::PushTextWrapPos(localPosX + rect.size.x);
+    ImGui::Text("%s", text.c_str());
+    ImGui::PopTextWrapPos();
+  }
+
+   void Runtime::display(const Button& button, const Rect& rect) const
+  {
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    if (ImGui::Button(button.getLabel().c_str()))
     {
-      size = displaySize.value().to<float>();
+      button.onClick();
     }
-    int flags = kDefaultImGuiChildWindowFlags;
-    ImVec2 currentPosition{ ImGui::GetCursorScreenPos() };
-    ImGui::SetNextWindowPos(currentPosition);
-    if (ImGui::BeginChild(panel.getId().c_str(), size, flags))
+  }
+
+  void Runtime::display(CheckBox& checkBox, const Rect& rect) const
+  {
+    bool checked = checkBox.isChecked();
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    if (ImGui::Checkbox(checkBox.getLabel().c_str(), &checked))
     {
-      panel.displayContent(*this);
+      checkBox.setChecked(checked);
+    }
+  }
+
+  void Runtime::display(Panel& panel, const Rect& rect) const
+  {
+    int flags = kDefaultImGuiChildWindowFlags;
+    ImGui::SetNextWindowPos(rect.origin.to<float>());
+    if (ImGui::BeginChild(panel.getId().c_str(), rect.size.to<float>(), flags))
+    {
+      panel.displayContent(*this, rect);
     }
     ImGui::EndChild(); // For child windows `EndChild()` must be called even
                        // if `BeginChild()` returns false.
+  }
+
+  void Runtime::display(VBox& vbox, const Rect& rect) const
+  {
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    display(vbox, rect.size);
+  }
+
+  void Runtime::display(HBox& hbox, const Rect& rect) const
+  {
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    display(hbox, rect.size);
   }
 
   void Runtime::display(VBox& vbox, const OptionalSize& displaySize) const
@@ -315,10 +336,12 @@ namespace gui2
     for (int i = 0; i < numItems; ++i)
     {
       currentPosition.y = static_cast<float>(positions[i]);
-      ImGui::SetCursorScreenPos(currentPosition);
+      //ImGui::SetCursorScreenPos(currentPosition);
 
+      Vec2i itemOrigin{ math::make<Vec2i>(currentPosition) };
       Vec2i itemSize{ static_cast<int>(availableSize.x), sizes[i] };
-      items[i].widget.display(*this, itemSize);
+      Rect itemRect{ itemOrigin, itemSize };
+      items[i].widget.display(*this, itemRect);
     }
   }
 
@@ -346,27 +369,12 @@ namespace gui2
     for (int i = 0; i < numItems; ++i)
     {
       currentPosition.x = static_cast<float>(positions[i]);
-      ImGui::SetCursorScreenPos(currentPosition);
+      //ImGui::SetCursorScreenPos(currentPosition);
 
+      Vec2i itemOrigin{ math::make<Vec2i>(currentPosition) };
       Vec2i itemSize{ sizes[i], static_cast<int>(availableSize.y) };
-      items[i].widget.display(*this, itemSize);
-    }
-  }
-
-  void Runtime::display(const Button& button, const OptionalSize& displaySize) const
-  {
-    if (ImGui::Button(button.getLabel().c_str()))
-    {
-      button.onClick();
-    }
-  }
-
-  void Runtime::display(CheckBox& checkBox, const OptionalSize& displaySize) const
-  {
-    bool checked = checkBox.isChecked();
-    if (ImGui::Checkbox(checkBox.getLabel().c_str(), &checked))
-    {
-      checkBox.setChecked(checked);
+      Rect itemRect{ itemOrigin, itemSize };
+      items[i].widget.display(*this, itemRect);
     }
   }
 

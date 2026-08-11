@@ -90,6 +90,97 @@ namespace gui2
 
   private:
     std::vector<BoxItem> items_;
+
+    struct Rect1d
+    {
+      int origin{ 0 };
+      int size{ 0 };
+    };
+
+    std::vector<Rect1d> computeItemLayouts_(
+      const Rect1d& availableRect, int itemSpacing) const;
   };
 
+} // namespace gui
+
+
+// Template implementations ---------------------------------------------------
+namespace gui2
+{
+  template<LayoutOrientation orientation>
+  std::vector<BoxT::Rect1d> BoxT<orientation>::computeItemLayouts_(
+    const Rect1d& availableRect, int itemSpacing) const
+  {
+    // Size of weighted children
+    // -------------------------
+    // size = childSize + space + ... + childSize
+    // size = space * (numChildren - 1) + childSize * totalWeight
+    // childSize = (size - space * (numChildren - 1)) / totalWeight
+
+    const auto hasWeight = [](const BoxItem& item) {
+      return std::holds_alternative<Weight>(item.sizeOrWeight);
+    };
+    const auto hasSize = [](const BoxItem& item) {
+      return std::holds_alternative<Pixels>(item.sizeOrWeight);
+    };
+    const auto getWeight = [](const BoxItem& item) {
+      return std::get<Weight>(item.sizeOrWeight).value;
+    };
+    const auto getSize = [](const BoxItem& item) {
+      return std::get<Pixels>(item.sizeOrWeight).value;
+    };
+
+    int totalWeight{ 0 }, fixedSize{ 0 }, lastWeightedIndex{ 0 };
+    const int numItems{ static_cast<int>(items_.size()) };
+    for (int i = 0; i < numItems; ++i)
+    {
+      if (hasWeight(items_[i]))
+      {
+        totalWeight += getWeight(items_[i]);
+        lastWeightedIndex = i;
+      }
+      else if (hasSize(items_[i]))
+      {
+        fixedSize += getSize(items_[i]);
+      }
+      else
+      {
+        throw std::logic_error(
+          "VBox item must have either a weight or a fixed size");
+      }
+    }
+
+    if (totalWeight <= 0)
+    { // if totalWeight is 0, all children have fixed size,
+      //  we set to 1 to avoid division by zero
+      totalWeight = 1;
+    }
+
+    const int adjustSize{ availableRect.size - fixedSize };
+    const int itemSize{ std::max(0,
+      (adjustSize - (numItems - 1) * itemSpacing) / totalWeight) };
+    const int leftOverSize{ adjustSize
+      - (numItems - 1) * itemSpacing - totalWeight * itemSize };
+
+    // Apply to children
+    std::vector<Rect1d> rects;
+    rects.reserve(items_.size());
+    int pos{ availableRect.origin };
+    for (int i = 0; i < numItems; ++i)
+    {
+      const auto& item{ items_[i] };
+      int size{ hasSize(item) ? getSize(item) : getWeight(item) * itemSize };
+      if (i == lastWeightedIndex)
+      {
+        size += leftOverSize;
+      }
+      int newSize = size;
+      int newPos = pos + size + itemSpacing;
+      rects.push_back({ newPos, newSize });
+      pos = newPos;
+    }
+
+    // Return the computed rectangles for each item
+    return rects;
+  }
 } // namespace gui
