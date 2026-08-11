@@ -10,13 +10,18 @@
 
 namespace gui2
 {
-  // Concept to check if a type can be displayed by the Runtime
+  // Forward declarations
+  class Widget;
+
+  // Concept of things that Widget can hold as content:
+  // - The type is a Content type (either Primitive or Displayable), or
+  //   a ContentFactory type (a callable that returns a Content type).
+  // - The type is not Widget itself (to avoid infinite recursion and wrapping
+  //   a Widget into another Widget).
   template<class T>
-  concept Primitive =
-    requires(Runtime& rt, T& value)
-    {
-      rt.display(value);
-    };
+  concept WidgetContent =
+    (Content<T> || ContentFactory<T>) &&
+    (!std::same_as<std::remove_cvref_t<T>, Widget>);
 
   // Widget class
   // A widget is any object that can be displayed in the user interface.
@@ -29,13 +34,34 @@ namespace gui2
     };
 
     template<class T>
-    struct ValueInstance : Value
+    struct WidgetValue : Value
     {
       T value;
-      ValueInstance(T value) : value(std::move(value)) {}
+      WidgetValue(T value) : value(std::move(value)) {}
       void display(const Runtime& rt, const OptionalSize& displaySize) override
       {
-        rt.display(value, displaySize);
+        if constexpr (Content<T>)
+        {
+          displayContent(rt, value, displaySize);
+        }
+        else if constexpr (ContentFactory<T>)
+        {
+          auto&& content = value();
+          displayContent(rt, content, displaySize);
+        }
+      }
+    private:
+      template<Content U>
+      void displayContent(const Runtime& rt, U& content, const OptionalSize& displaySize)
+      {
+        if constexpr (Primitive<U>)
+        {
+          rt.display(content, displaySize);
+        }
+        else if constexpr (Displayable<U>)
+        {
+          content.display(rt, displaySize);
+        }
       }
     };
 
@@ -44,8 +70,8 @@ namespace gui2
   public:
     Widget() = default;
 
-    template<Primitive T>
-    Widget(T value) : value_{std::make_unique<ValueInstance<T>>(std::move(value))} {}
+    template<WidgetContent T>
+    Widget(T value) : value_{std::make_unique<WidgetValue<T>>(std::move(value))} {}
 
     void display(const Runtime& runtime, const OptionalSize& displaySize = {})
     {

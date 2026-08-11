@@ -27,19 +27,8 @@ namespace gui2
   class Empty;
   class Button;
   class CheckBox;
-  class Dynamic;
 
   using OptionalSize = std::optional<Vec2i>;
-
-  class Runtime;
-
-  // Concept to check if a type can be displayed by the Runtime
-  template<class T>
-  concept Displayable =
-    requires(Runtime& rt, T& value)
-    {
-      value.display(rt);
-    };
 
   class Runtime
   {
@@ -86,14 +75,6 @@ namespace gui2
     // Container items, they maybe have children which could change during display
     void display(Panel& panel, const OptionalSize& displaySize = {}) const;
 
-    // Dynamic items, they are evaluated at runtime and may change during display
-    void display(Dynamic& dynamic, const OptionalSize& displaySize = {}) const;
-    template<Displayable T>
-    void display(T& value, const OptionalSize& displaySize = {}) const
-    {
-      value.display(*this, displaySize);
-    }
-
     // Layout containers, they do not really belong in the runtime renderer,
     // their API doesn't include a "display" method. We keep them here for
     // now to make everything functional, but we should consider moving them
@@ -101,5 +82,39 @@ namespace gui2
     void display(VBox& vbox, const OptionalSize& displaySize = {}) const;
     void display(HBox& hbox, const OptionalSize& displaySize = {}) const;
   };
+
+  // Concept of primitive types:
+  // - Runtime has a display method for the type
+  template<class T>
+  concept Primitive =
+    requires(Runtime& rt, T& value)
+    {
+      rt.display(value);
+    };
+
+  // Concept of displayable types:
+  // - The type has a display method which takes a Runtime& as argument
+  template<class T>
+  concept Displayable =
+    requires(Runtime& rt, T& value)
+    {
+      value.display(rt);
+    };
+
+  // Concept of content types:
+  // - The type is either primitive or displayable
+  template<class T>
+  concept Content =
+    Primitive<T> || Displayable<T>;
+
+  // Concept of content factory types:
+  // - The type is a callable that returns a Content type
+  template<class T>
+  concept ContentFactory =
+    requires(T& value)
+    {
+      value();
+    } &&
+    Content<std::remove_cvref_t<std::invoke_result_t<T&>>>;
 
 } // namespace gui
