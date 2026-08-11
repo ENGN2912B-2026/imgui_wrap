@@ -88,6 +88,8 @@ namespace gui2
     const std::vector<BoxItem>& getItems() const { return items_; }
     std::vector<BoxItem>& getItems() { return items_; }
 
+    void display(const Runtime& rt, const Rect& rect);
+
   private:
     std::vector<BoxItem> items_;
 
@@ -108,7 +110,7 @@ namespace gui2
 namespace gui2
 {
   template<LayoutOrientation orientation>
-  std::vector<BoxT::Rect1d> BoxT<orientation>::computeItemLayouts_(
+  std::vector<typename BoxT<orientation>::Rect1d> BoxT<orientation>::computeItemLayouts_(
     const Rect1d& availableRect, int itemSpacing) const
   {
     // Size of weighted children
@@ -174,13 +176,57 @@ namespace gui2
       {
         size += leftOverSize;
       }
-      int newSize = size;
-      int newPos = pos + size + itemSpacing;
-      rects.push_back({ newPos, newSize });
-      pos = newPos;
+      rects.push_back({ pos, size });
+      pos += size + itemSpacing;
     }
 
     // Return the computed rectangles for each item
     return rects;
   }
+
+  template<LayoutOrientation orientation>
+  void BoxT<orientation>::display(const Runtime& rt, const Rect& rect)
+  {
+    // Compute the sizes and positions of the VBox items
+    Rect1d availableRect;
+    int itemSpacing = 0;
+    if constexpr (orientation == LayoutOrientation::Vertical)
+    {
+      availableRect = { rect.origin.y, rect.size.y };
+      itemSpacing = rt.getItemSpacing().y;
+    }
+    else if constexpr (orientation == LayoutOrientation::Horizontal)
+    {
+      availableRect = { rect.origin.x, rect.size.x };
+      itemSpacing = rt.getItemSpacing().x;
+    }
+    else
+    {
+      throw std::logic_error{"Invalid layout orientation"};
+    }
+    const auto rects1d = computeItemLayouts_(availableRect, itemSpacing);
+
+    // Display the items
+    const int numItems{ static_cast<int>(items_.size()) };
+    Rect itemRect{ rect };
+    for (int i = 0; i < numItems; ++i)
+    {
+      if constexpr (orientation == LayoutOrientation::Vertical)
+      {
+        itemRect.origin.y = rects1d[i].origin;
+        itemRect.size.y = rects1d[i].size;
+      }
+      else if constexpr (orientation == LayoutOrientation::Horizontal)
+      {
+        itemRect.origin.x = rects1d[i].origin;
+        itemRect.size.x = rects1d[i].size;
+      }
+      else
+      {
+        throw std::logic_error{"Invalid layout orientation"};
+      }
+      items_[i].widget.display(rt, itemRect);
+    }
+  }
+
 } // namespace gui

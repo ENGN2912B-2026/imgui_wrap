@@ -62,7 +62,7 @@ namespace gui2
     // Ends the current rendering frame.
     void frameEnd();
 
-    // Display functions
+    // Display functions ------------------------------------------------------
 
     // Primitive items which do not have state
     void display(const Empty& empty, const Rect& rect) const;
@@ -72,18 +72,18 @@ namespace gui2
     // Primitive items which have state which might change during display
     void display(CheckBox& checkBox, const Rect& rect) const;
 
-    // Container items, they maybe have children which could change during display
+    // Container items, they maybe have as children other items
     void display(Panel& panel, const Rect& rect) const;
 
-    // Layout containers, they do not really belong in the runtime renderer,
-    // their API doesn't include a "display" method. We keep them here for
-    // now to make everything functional, but we should consider moving them
-    // to a separate layout module.
-    void display(VBox& vbox, const Rect& rect) const;
-    void display(HBox& hbox, const Rect& rect) const;
+    // Other functions --------------------------------------------------------
 
-    void display(VBox& vbox, const OptionalSize& displaySize = {}) const;
-    void display(HBox& hbox, const OptionalSize& displaySize = {}) const;
+    // Gets the padding of the desktop window and child windows.
+    // This padding is used to compute the inner rectangle of the window
+    // where the content is displayed.
+    Vec2i getWindowPadding() const;
+
+    // Gets the spacing between items in a layout.
+    Vec2i getItemSpacing() const;
   };
 
   // Concept of primitive types:

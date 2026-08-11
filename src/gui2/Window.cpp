@@ -39,11 +39,12 @@ namespace gui2
     size_ = size;
   }
 
-  void Window::displayContent(const Runtime& runtime)
+  void Window::displayContent(const Runtime& rt)
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    Rect rect{ {0, 0}, size_ };
-    widget_.display(runtime, rect);
+    Vec2i pad = rt.getWindowPadding();
+    Rect rect{ pad, size_ - pad * 2 };
+    widget_.display(rt, rect);
   }
 
   void Window::setContent(Widget widget)

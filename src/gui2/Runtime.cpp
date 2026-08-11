@@ -33,92 +33,6 @@ namespace gui2
       ImGuiChildFlags_Borders
     };
 
-    //------------------------------------------------------------------------
-    // Helper functions ------------------------------------------------------
-    //------------------------------------------------------------------------
-    void computeItemLayouts_(
-      const std::vector<BoxItem>& items,
-      int currentPosition,
-      int availableSize,
-      int itemSpacing,
-      std::vector<int>& sizes,
-      std::vector<int>& positions)
-    {
-      // Size of weighted children
-      // -------------------------
-      // size = childSize + space + ... + childSize
-      // size = space * (numChildren - 1) + childSize * totalWeight
-      // childSize = (size - space * (numChildren - 1)) / totalWeight
-
-      const auto hasWeight = [](const BoxItem& item) {
-        return std::holds_alternative<Weight>(item.sizeOrWeight);
-      };
-      const auto hasSize = [](const BoxItem& item) {
-        return std::holds_alternative<Pixels>(item.sizeOrWeight);
-      };
-      const auto getWeight = [](const BoxItem& item) {
-        return std::get<Weight>(item.sizeOrWeight).value;
-      };
-      const auto getSize = [](const BoxItem& item) {
-        return std::get<Pixels>(item.sizeOrWeight).value;
-      };
-
-      sizes.clear();
-      sizes.reserve(items.size());
-
-      positions.clear();
-      positions.reserve(items.size());
-
-      int totalWeight{ 0 }, fixedSize{ 0 }, lastWeightedIndex{ 0 };
-      const int numItems{ static_cast<int>(items.size()) };
-      for (int i = 0; i < numItems; ++i)
-      {
-        if (hasWeight(items[i]))
-        {
-          totalWeight += getWeight(items[i]);
-          lastWeightedIndex = i;
-        }
-        else if (hasSize(items[i]))
-        {
-          fixedSize += getSize(items[i]);
-        }
-        else
-        {
-          throw std::logic_error(
-            "VBox item must have either a weight or a fixed size");
-        }
-      }
-
-      if (totalWeight <= 0)
-      { // if totalWeight is 0, all children have fixed size,
-        //  we set to 1 to avoid division by zero
-        totalWeight = 1;
-      }
-
-      const int adjustSize{ availableSize - fixedSize };
-      const int itemSize{ std::max(0,
-        (adjustSize - (numItems - 1) * itemSpacing) / totalWeight) };
-      const int leftOverSize{ adjustSize
-        - (numItems - 1) * itemSpacing - totalWeight * itemSize };
-
-      // Apply to children
-      int pos{ currentPosition };
-      for (int i = 0; i < numItems; ++i)
-      {
-        const auto& item{ items[i] };
-        int size{ hasSize(item) ? getSize(item) : getWeight(item) * itemSize };
-        if (i == lastWeightedIndex)
-        {
-          size += leftOverSize;
-        }
-        int newSize = size;
-        int newPos = pos + size + itemSpacing;
-        sizes.push_back(newSize);
-        positions.push_back(pos);
-        pos = newPos;
-      }
-    }
-
   } // anonymous namespace
 
   Runtime::~Runtime()
@@ -294,88 +208,22 @@ namespace gui2
     ImGui::SetNextWindowPos(rect.origin.to<float>());
     if (ImGui::BeginChild(panel.getId().c_str(), rect.size.to<float>(), flags))
     {
-      panel.displayContent(*this, rect);
+      Vec2i pad = getWindowPadding();
+      Rect innerRect{ rect.origin + pad, rect.size - pad * 2 };
+      panel.displayContent(*this, innerRect);
     }
     ImGui::EndChild(); // For child windows `EndChild()` must be called even
                        // if `BeginChild()` returns false.
   }
 
-  void Runtime::display(VBox& vbox, const Rect& rect) const
+  Vec2i Runtime::getWindowPadding() const
   {
-    ImGui::SetCursorScreenPos(rect.origin.to<float>());
-    display(vbox, rect.size);
+    return math::make<Vec2i>(ImGui::GetStyle().WindowPadding);
   }
 
-  void Runtime::display(HBox& hbox, const Rect& rect) const
+  Vec2i Runtime::getItemSpacing() const
   {
-    ImGui::SetCursorScreenPos(rect.origin.to<float>());
-    display(hbox, rect.size);
-  }
-
-  void Runtime::display(VBox& vbox, const OptionalSize& displaySize) const
-  {
-    // Get the current cursor position and the available size
-    ImVec2 currentPosition{ ImGui::GetCursorScreenPos() };
-    ImVec2 availableSize{ ImGui::GetContentRegionAvail() };
-    ImVec2 itemSpacing{ ImGui::GetStyle().ItemSpacing };
-
-    if (displaySize.has_value())
-    {
-      availableSize = displaySize.value().to<float>();
-    }
-
-    // Compute the sizes and positions of the VBox items
-    auto& items{ vbox.getItems() };
-    std::vector<int> sizes, positions;
-    computeItemLayouts_(
-      items, currentPosition.y, availableSize.y, itemSpacing.y,
-      sizes, positions);
-
-    // Display the items
-    const int numItems{ static_cast<int>(vbox.getItems().size()) };
-    for (int i = 0; i < numItems; ++i)
-    {
-      currentPosition.y = static_cast<float>(positions[i]);
-      //ImGui::SetCursorScreenPos(currentPosition);
-
-      Vec2i itemOrigin{ math::make<Vec2i>(currentPosition) };
-      Vec2i itemSize{ static_cast<int>(availableSize.x), sizes[i] };
-      Rect itemRect{ itemOrigin, itemSize };
-      items[i].widget.display(*this, itemRect);
-    }
-  }
-
-  void Runtime::display(HBox& hbox, const OptionalSize& displaySize) const
-  {
-    // Get the current cursor position and the available size
-    ImVec2 currentPosition{ ImGui::GetCursorScreenPos() };
-    ImVec2 availableSize{ ImGui::GetContentRegionAvail() };
-    ImVec2 itemSpacing{ ImGui::GetStyle().ItemSpacing };
-
-    if (displaySize.has_value())
-    {
-      availableSize = displaySize.value().to<float>();
-    }
-
-    // Compute the sizes and positions of the HBox items
-    auto& items{ hbox.getItems() };
-    std::vector<int> sizes, positions;
-    computeItemLayouts_(
-      items, currentPosition.x, availableSize.x, itemSpacing.x,
-      sizes, positions);
-
-    // Display the items
-    const int numItems{ static_cast<int>(hbox.getItems().size()) };
-    for (int i = 0; i < numItems; ++i)
-    {
-      currentPosition.x = static_cast<float>(positions[i]);
-      //ImGui::SetCursorScreenPos(currentPosition);
-
-      Vec2i itemOrigin{ math::make<Vec2i>(currentPosition) };
-      Vec2i itemSize{ sizes[i], static_cast<int>(availableSize.y) };
-      Rect itemRect{ itemOrigin, itemSize };
-      items[i].widget.display(*this, itemRect);
-    }
+    return math::make<Vec2i>(ImGui::GetStyle().ItemSpacing);
   }
 
 } // namespace gui

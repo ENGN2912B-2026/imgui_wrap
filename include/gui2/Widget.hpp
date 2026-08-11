@@ -30,7 +30,7 @@ namespace gui2
     struct Value
     {
       virtual ~Value() = default;
-      virtual void display(const Runtime&, const Rect&) = 0;
+      virtual void display(const Runtime& rt, const Rect& rect) = 0;
     };
 
     template<class T>
@@ -73,11 +73,11 @@ namespace gui2
     template<WidgetContent T>
     Widget(T value) : value_{std::make_unique<WidgetValue<T>>(std::move(value))} {}
 
-    void display(const Runtime& runtime, const Rect& rect)
+    void display(const Runtime& rt, const Rect& rect)
     {
       if (value_)
       {
-        value_->display(runtime, rect);
+        value_->display(rt, rect);
       }
     }
   };
