@@ -28,6 +28,9 @@ namespace gui2
   class Button;
   class CheckBox;
 
+  template <Orientation orientation>
+  class StackT;
+
   using OptionalSize = std::optional<Vec2i>;
 
   class Runtime
@@ -74,6 +77,8 @@ namespace gui2
 
     // Container items, they maybe have as children other items
     void display(Panel& panel, const Rect& rect) const;
+    template<Orientation orientation>
+    void display(StackT<orientation>& stack, const Rect& rect) const;
 
     // Other functions --------------------------------------------------------
 

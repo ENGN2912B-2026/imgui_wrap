@@ -4,12 +4,11 @@
 #include <gui2/Runtime.hpp>
 
 #include "../gui/impl/Backend.hpp"
-#include <gui2/Panel.hpp>
-#include <gui2/VBox.hpp>
-#include <gui2/HBox.hpp>
+#include <gui2/Empty.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
-#include <gui2/Empty.hpp>
+#include <gui2/Panel.hpp>
+#include <gui2/StackT.hpp>
 
 #include <imgui.h>
 
@@ -215,6 +214,33 @@ namespace gui2
     ImGui::EndChild(); // For child windows `EndChild()` must be called even
                        // if `BeginChild()` returns false.
   }
+
+  template<Orientation orientation>
+  void Runtime::display(StackT<orientation>& stack, const Rect& rect) const
+  {
+    Rect itemRect{ rect };
+    const auto itemSpacing = getItemSpacing();
+    for (auto& item : stack.getItems())
+    {
+      item.display(*this, itemRect);
+      if constexpr (orientation == Orientation::Vertical)
+      { // VStack
+        itemRect.origin.y += ImGui::GetItemRectSize().y + itemSpacing.y;
+      }
+      else if constexpr (orientation == Orientation::Horizontal)
+      { // HStack
+        itemRect.origin.x += ImGui::GetItemRectSize().x + itemSpacing.x;
+      }
+      else
+      { // Invalid orientation
+        throw std::logic_error{"Invalid layout orientation"};
+      }
+    }
+  }
+
+  // Explicit template instantiations for the two orientations
+  template void Runtime::display(StackT<Orientation::Horizontal>&, const Rect&) const;
+  template void Runtime::display(StackT<Orientation::Vertical>&, const Rect&) const;
 
   Vec2i Runtime::getWindowPadding() const
   {

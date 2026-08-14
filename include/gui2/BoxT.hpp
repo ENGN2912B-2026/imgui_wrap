@@ -64,17 +64,11 @@ namespace gui2
     operator BoxItem() { return {std::move(widget), std::move(weight)}; }
   };
 
-  enum class LayoutOrientation
-  {
-    Vertical,
-    Horizontal
-  };
-
-  template<LayoutOrientation orientation>
+  template<Orientation orientation>
   class BoxT
   {
   public:
-    constexpr static LayoutOrientation kOrientation = orientation;
+    constexpr static Orientation kOrientation = orientation;
 
     BoxT() = default;
 
@@ -109,7 +103,7 @@ namespace gui2
 // Template implementations ---------------------------------------------------
 namespace gui2
 {
-  template<LayoutOrientation orientation>
+  template<Orientation orientation>
   std::vector<typename BoxT<orientation>::Rect1d> BoxT<orientation>::computeItemLayouts_(
     const Rect1d& availableRect, int itemSpacing) const
   {
@@ -184,18 +178,18 @@ namespace gui2
     return rects;
   }
 
-  template<LayoutOrientation orientation>
+  template<Orientation orientation>
   void BoxT<orientation>::display(const Runtime& rt, const Rect& rect)
   {
     // Compute the sizes and positions of the VBox items
     Rect1d availableRect;
     int itemSpacing = 0;
-    if constexpr (orientation == LayoutOrientation::Vertical)
+    if constexpr (orientation == Orientation::Vertical)
     {
       availableRect = { rect.origin.y, rect.size.y };
       itemSpacing = rt.getItemSpacing().y;
     }
-    else if constexpr (orientation == LayoutOrientation::Horizontal)
+    else if constexpr (orientation == Orientation::Horizontal)
     {
       availableRect = { rect.origin.x, rect.size.x };
       itemSpacing = rt.getItemSpacing().x;
@@ -211,12 +205,12 @@ namespace gui2
     Rect itemRect{ rect };
     for (int i = 0; i < numItems; ++i)
     {
-      if constexpr (orientation == LayoutOrientation::Vertical)
+      if constexpr (orientation == Orientation::Vertical)
       {
         itemRect.origin.y = rects1d[i].origin;
         itemRect.size.y = rects1d[i].size;
       }
-      else if constexpr (orientation == LayoutOrientation::Horizontal)
+      else if constexpr (orientation == Orientation::Horizontal)
       {
         itemRect.origin.x = rects1d[i].origin;
         itemRect.size.x = rects1d[i].size;

@@ -16,4 +16,11 @@ namespace gui2
     Vec2i size{ 0, 0 };
   };
 
+  // Orientation of a layout or box.
+  enum class Orientation
+  {
+    Vertical,
+    Horizontal,
+  };
+
 } // namespace gui

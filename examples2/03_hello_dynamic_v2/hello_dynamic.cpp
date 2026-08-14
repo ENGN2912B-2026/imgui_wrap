@@ -5,6 +5,8 @@
 #include <gui2/Panel.hpp>
 #include <gui2/VBox.hpp>
 #include <gui2/HBox.hpp>
+#include <gui2/VStack.hpp>
+#include <gui2/HStack.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
 #include <gui2/Empty.hpp>
@@ -22,7 +24,7 @@ int main(int argc, char** argv)
   // Get the window
   gui2::Window& window = app.getWindow();
 
-#define USE_EXAMPLE 1
+#define USE_EXAMPLE 2
 #if USE_EXAMPLE == 1
   {
     using namespace gui2;
@@ -41,6 +43,37 @@ int main(int argc, char** argv)
     window.setContent(
       HBox{
         Fixed{200, Panel{ "Left Panel" }},
+        VBox{
+          Stretch{3, std::move(mainPanel)},
+          Stretch{1, Panel{ "Bottom Panel" }},
+        },
+      }
+    );
+  }
+#elif USE_EXAMPLE == 2
+  {
+    using namespace gui2;
+
+    bool leftPanelCheckBox = false;
+    bool checkBox = false;
+
+    Panel mainPanel{
+      VBox {
+        "Main Panel",
+        [&]{ return "Checkbox state: " + std::string(checkBox ? "Checked" : "Unchecked"); },
+        Button{ "Click Me", []() { std::println("Button clicked!"); } },
+        CheckBox{ "Check me", &checkBox },
+      }
+    };
+
+    window.setContent(
+      HBox{
+        Fixed{200, Panel{ VStack{
+          "Left Panel",
+          [&]{return CheckBox{
+            std::string(leftPanelCheckBox ? "Checked" : "Unchecked"),
+            &leftPanelCheckBox };}
+        }}},
         VBox{
           Stretch{3, std::move(mainPanel)},
           Stretch{1, Panel{ "Bottom Panel" }},
