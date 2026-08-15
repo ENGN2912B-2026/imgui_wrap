@@ -82,7 +82,7 @@ namespace gui2
     const std::vector<BoxItem>& getItems() const { return items_; }
     std::vector<BoxItem>& getItems() { return items_; }
 
-    void display(const Runtime& rt, const Rect& rect);
+    Rect display(const Runtime& rt, const Rect& rect);
 
   private:
     std::vector<BoxItem> items_;
@@ -179,7 +179,7 @@ namespace gui2
   }
 
   template<Orientation orientation>
-  void BoxT<orientation>::display(const Runtime& rt, const Rect& rect)
+  Rect BoxT<orientation>::display(const Runtime& rt, const Rect& rect)
   {
     // Compute the sizes and positions of the VBox items
     Rect1d availableRect;
@@ -196,15 +196,17 @@ namespace gui2
     }
     else
     {
-      throw std::logic_error{"Invalid layout orientation"};
+      static_assert(false, "Invalid layout orientation");
     }
     const auto rects1d = computeItemLayouts_(availableRect, itemSpacing);
 
     // Display the items
     const int numItems{ static_cast<int>(items_.size()) };
+    Rect actualRect{ Rect::empty() };
     Rect itemRect{ rect };
     for (int i = 0; i < numItems; ++i)
     {
+      // Set the position and size of the item rectangle based on the orientation
       if constexpr (orientation == Orientation::Vertical)
       {
         itemRect.origin.y = rects1d[i].origin;
@@ -217,10 +219,14 @@ namespace gui2
       }
       else
       {
-        throw std::logic_error{"Invalid layout orientation"};
+        static_assert(false, "Invalid layout orientation");
       }
-      items_[i].widget.display(rt, itemRect);
+      // Display the item and get its actual rectangle
+      const Rect itemActualRect = items_[i].widget.display(rt, itemRect);
+      // Update our actual rectangle based on the actual rectangles of the items
+      actualRect.unite(itemActualRect);
     }
+    return actualRect;
   }
 
 } // namespace gui

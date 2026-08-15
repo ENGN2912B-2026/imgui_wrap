@@ -6,11 +6,6 @@
 
 namespace gui2
 {
-  class VBox : public BoxT<Orientation::Vertical>
-  {
-  public:
-    using Base = BoxT<Orientation::Vertical>;
-    using Base::Base;
-  };
+  using VBox = BoxT<Orientation::Vertical>;
 
 } // namespace gui

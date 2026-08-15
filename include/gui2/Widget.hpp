@@ -30,7 +30,7 @@ namespace gui2
     struct Value
     {
       virtual ~Value() = default;
-      virtual void display(const Runtime& rt, const Rect& rect) = 0;
+      virtual Rect display(const Runtime& rt, const Rect& rect) = 0;
     };
 
     template<class T>
@@ -38,29 +38,37 @@ namespace gui2
     {
       T value;
       WidgetValue(T value) : value(std::move(value)) {}
-      void display(const Runtime& rt, const Rect& rect) override
+      Rect display(const Runtime& rt, const Rect& rect) override
       {
         if constexpr (Content<T>)
         {
-          displayContent(rt, value, rect);
+          return displayContent(rt, value, rect);
         }
         else if constexpr (ContentFactory<T>)
         {
           auto&& content = value();
-          displayContent(rt, content, rect);
+          return displayContent(rt, content, rect);
+        }
+        else
+        {
+          static_assert(false, "Type is not displayable");
         }
       }
     private:
       template<Content U>
-      void displayContent(const Runtime& rt, U& content, const Rect& rect)
+      Rect displayContent(const Runtime& rt, U& content, const Rect& rect)
       {
         if constexpr (Primitive<U>)
         {
-          rt.display(content, rect);
+          return rt.display(content, rect);
         }
         else if constexpr (Displayable<U>)
         {
-          content.display(rt, rect);
+          return content.display(rt, rect);
+        }
+        else
+        {
+          static_assert(false, "Type is not displayable");
         }
       }
     };
@@ -73,12 +81,13 @@ namespace gui2
     template<WidgetContent T>
     Widget(T value) : value_{std::make_unique<WidgetValue<T>>(std::move(value))} {}
 
-    void display(const Runtime& rt, const Rect& rect)
+    Rect display(const Runtime& rt, const Rect& rect)
     {
       if (value_)
       {
-        value_->display(rt, rect);
+        return value_->display(rt, rect);
       }
+      return {rect.origin, {0, 0}};
     }
   };
 

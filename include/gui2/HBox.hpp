@@ -6,11 +6,6 @@
 
 namespace gui2
 {
-  class HBox : public BoxT<Orientation::Horizontal>
-  {
-  public:
-    using Base = BoxT<Orientation::Horizontal>;
-    using Base::Base;
-  };
+  using HBox = BoxT<Orientation::Horizontal>;
 
 } // namespace gui

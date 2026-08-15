@@ -4,11 +4,10 @@
 #pragma once
 
 #include <gui2/Types.hpp>
+#include <gui2/Rect.hpp>
 
 #include <string>
 #include <memory>
-#include <vector>
-#include <optional>
 
 namespace gui
 {
@@ -22,16 +21,9 @@ namespace gui2
   //class Backend;
   using Backend = gui::Backend;
   class Panel;
-  class VBox;
-  class HBox;
   class Empty;
   class Button;
   class CheckBox;
-
-  template <Orientation orientation>
-  class StackT;
-
-  using OptionalSize = std::optional<Vec2i>;
 
   class Runtime
   {
@@ -68,17 +60,15 @@ namespace gui2
     // Display functions ------------------------------------------------------
 
     // Primitive items which do not have state
-    void display(const Empty& empty, const Rect& rect) const;
-    void display(const std::string& text, const Rect& rect) const;
-    void display(const Button& button, const Rect& rect) const;
+    Rect display(const Empty& empty, const Rect& rect) const;
+    Rect display(const std::string& text, const Rect& rect) const;
+    Rect display(const Button& button, const Rect& rect) const;
 
     // Primitive items which have state which might change during display
-    void display(CheckBox& checkBox, const Rect& rect) const;
+    Rect display(CheckBox& checkBox, const Rect& rect) const;
 
     // Container items, they maybe have as children other items
-    void display(Panel& panel, const Rect& rect) const;
-    template<Orientation orientation>
-    void display(StackT<orientation>& stack, const Rect& rect) const;
+    Rect display(Panel& panel, const Rect& rect) const;
 
     // Other functions --------------------------------------------------------
 
@@ -97,7 +87,7 @@ namespace gui2
   concept Primitive =
     requires(Runtime& rt, T& value, Rect& rect)
     {
-      rt.display(value, rect);
+      { rt.display(value, rect) } -> std::convertible_to<Rect>;
     };
 
   // Concept of displayable types:
@@ -106,7 +96,7 @@ namespace gui2
   concept Displayable =
     requires(Runtime& rt, T& value, Rect& rect)
     {
-      value.display(rt, rect);
+      { value.display(rt, rect) } -> std::convertible_to<Rect>;
     };
 
   // Concept of content types:

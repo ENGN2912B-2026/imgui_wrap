@@ -8,7 +8,6 @@
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
 #include <gui2/Panel.hpp>
-#include <gui2/StackT.hpp>
 
 #include <imgui.h>
 
@@ -31,6 +30,14 @@ namespace gui2
     constexpr int kDefaultImGuiChildWindowFlags{
       ImGuiChildFlags_Borders
     };
+
+    inline Rect getItemRect_()
+    {
+      ImVec2 pos = ImGui::GetItemRectMin();
+      ImVec2 size = ImGui::GetItemRectSize();
+      return { math::make<Vec2i>(pos).cast<int>(),
+               math::make<Vec2i>(size).cast<int>() };
+    }
 
   } // anonymous namespace
 
@@ -167,31 +174,33 @@ namespace gui2
     backend_->Render();
   }
 
-  void Runtime::display(const Empty& empty, const Rect& rect) const
-  {
-    // Do nothing, just reserve space for the empty item
+  Rect Runtime::display(const Empty& empty, const Rect& rect) const
+  { // Do nothing, just reserve space for the empty item
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    return {rect.origin, {0, 0}};
   }
 
-  void Runtime::display(const std::string& text, const Rect& rect) const
+  Rect Runtime::display(const std::string& text, const Rect& rect) const
   {
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
     float localPosX = ImGui::GetCursorPosX();
     ImGui::PushTextWrapPos(localPosX + rect.size.x);
     ImGui::Text("%s", text.c_str());
     ImGui::PopTextWrapPos();
+    return getItemRect_();
   }
 
-   void Runtime::display(const Button& button, const Rect& rect) const
+  Rect Runtime::display(const Button& button, const Rect& rect) const
   {
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
     if (ImGui::Button(button.getLabel().c_str()))
     {
       button.onClick();
     }
+    return getItemRect_();
   }
 
-  void Runtime::display(CheckBox& checkBox, const Rect& rect) const
+  Rect Runtime::display(CheckBox& checkBox, const Rect& rect) const
   {
     bool checked = checkBox.isChecked();
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
@@ -199,9 +208,10 @@ namespace gui2
     {
       checkBox.setChecked(checked);
     }
+    return getItemRect_();
   }
 
-  void Runtime::display(Panel& panel, const Rect& rect) const
+  Rect Runtime::display(Panel& panel, const Rect& rect) const
   {
     int flags = kDefaultImGuiChildWindowFlags;
     ImGui::SetNextWindowPos(rect.origin.to<float>());
@@ -211,36 +221,22 @@ namespace gui2
       Rect innerRect{ rect.origin + pad, rect.size - pad * 2 };
       panel.displayContent(*this, innerRect);
     }
+
+    // Read the actual rectangle of the child window, which may be different
+    // from the requested rectangle.
+    // Must do this before calling `ImGui::EndChild()`, because `GetWindowPos()`
+    // and `GetWindowSize()` return the position and size of the current window,
+    // which is the child window only between `BeginChild()` and `EndChild()`.
+    const Rect actualRect{
+        math::make<math::Vec2d>(ImGui::GetWindowPos()).cast<int>(),
+        math::make<math::Vec2d>(ImGui::GetWindowSize()).cast<int>()
+    };
+
     ImGui::EndChild(); // For child windows `EndChild()` must be called even
                        // if `BeginChild()` returns false.
-  }
 
-  template<Orientation orientation>
-  void Runtime::display(StackT<orientation>& stack, const Rect& rect) const
-  {
-    Rect itemRect{ rect };
-    const auto itemSpacing = getItemSpacing();
-    for (auto& item : stack.getItems())
-    {
-      item.display(*this, itemRect);
-      if constexpr (orientation == Orientation::Vertical)
-      { // VStack
-        itemRect.origin.y += ImGui::GetItemRectSize().y + itemSpacing.y;
-      }
-      else if constexpr (orientation == Orientation::Horizontal)
-      { // HStack
-        itemRect.origin.x += ImGui::GetItemRectSize().x + itemSpacing.x;
-      }
-      else
-      { // Invalid orientation
-        throw std::logic_error{"Invalid layout orientation"};
-      }
-    }
+    return actualRect;
   }
-
-  // Explicit template instantiations for the two orientations
-  template void Runtime::display(StackT<Orientation::Horizontal>&, const Rect&) const;
-  template void Runtime::display(StackT<Orientation::Vertical>&, const Rect&) const;
 
   Vec2i Runtime::getWindowPadding() const
   {

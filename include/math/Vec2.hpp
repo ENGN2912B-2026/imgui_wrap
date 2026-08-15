@@ -74,6 +74,16 @@ namespace math
       return *this;
     }
 
+    constexpr Vec2 cwiseMin(const Vec2& other) const
+    {
+      return {std::min(x, other.x), std::min(y, other.y)};
+    }
+
+    constexpr Vec2 cwiseMax(const Vec2& other) const
+    {
+      return {std::max(x, other.x), std::max(y, other.y)};
+    }
+
     bool operator==(const Vec2& other) const
     {
       return x == other.x && y == other.y;
