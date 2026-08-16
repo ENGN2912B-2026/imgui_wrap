@@ -13,35 +13,28 @@ namespace gui2
 
   }
 
-  Window::~Window() = default;
-
   const std::string& Window::getTitle() const
   {
-    std::lock_guard<std::mutex> lock(mutex_);
     return title_;
   }
 
   void Window::setTitle(const std::string& title)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
     title_ = title;
   }
 
   const Vec2i& Window::getSize() const
   {
-    std::lock_guard<std::mutex> lock(mutex_);
     return size_;
   }
 
   void Window::setSize(const Vec2i& size)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
     size_ = size;
   }
 
   void Window::displayContent(const Runtime& rt)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
     Vec2i pad = rt.getWindowPadding();
     Rect rect{ pad, size_ - pad * 2 };
     widget_.display(rt, rect);
@@ -49,7 +42,6 @@ namespace gui2
 
   void Window::setContent(Widget widget)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
     widget_ = std::move(widget);
   }
 }

@@ -63,6 +63,10 @@ int main(int argc, char** argv)
         [&]{ return "Checkbox state: " + std::string(checkBox ? "Checked" : "Unchecked"); },
         Button{ "Click Me", []() { std::println("Button clicked!"); } },
         CheckBox{ "Check me", &checkBox },
+        [&]{ return Button{ "Update title", [&](){ window.setTitle("Hello dynamic v2 - Updated!"); } }; },
+        [&]{ return Button{ "Update size", [&](){ window.setSize({800, 600}); } }; },
+        [&]{ return Button{ "Toggle left panel checkbox", [&](){ leftPanelCheckBox = !leftPanelCheckBox; } }; },
+        [&]{ return checkBox ? Widget{Button{"Click Me"}} : Widget{}; },
       }
     };
 
@@ -70,6 +74,9 @@ int main(int argc, char** argv)
       HBox{
         Fixed{200, Panel{ VStack{
           "Left Panel",
+          "Line 1",
+          Empty{},
+          "Line 2",
           [&]{return CheckBox{
             std::string(leftPanelCheckBox ? "Checked" : "Unchecked"),
             &leftPanelCheckBox };}

@@ -11,7 +11,7 @@ namespace gui2
   class Button
   {
   public:
-    Button(const std::string& label, std::function<void()> onClick)
+    Button(const std::string& label, std::function<void()> onClick = {})
       : label_(label), onClick_(std::move(onClick)) {}
 
     const std::string& getLabel() const { return label_; }

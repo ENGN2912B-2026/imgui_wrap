@@ -14,27 +14,39 @@ namespace gui2
   concept StackItem =
     std::constructible_from<Widget, T&&>;
 
+  // A container that stacks its child items either vertically or horizontally.
+  // The items are displayed in the order they are added to the stack, and with
+  // a spacing between them defined by the runtime. Their sizes are determined
+  // by their content, and the stack will expand to fit them.
   template <Orientation orientation>
   class StackT
   {
   public:
+    // The orientation of the stack (vertical or horizontal).
     constexpr static Orientation kOrientation = orientation;
 
+    // Default constructor
     StackT() = default;
-    StackT(StackT const&) = default;
-    StackT(StackT&&) = default;
-    StackT& operator=(StackT const&) = default;
-    StackT& operator=(StackT&&) = default;
 
+    // Constructor that takes a variable number of items.
+    // Each item must be constructible into a Widget. They are stored in the
+    // order they are passed to the constructor, and will be displayed in that
+    // order.
     template<StackItem... T>
     StackT(T&&... items)
     {
       (items_.emplace_back(std::forward<T>(items)), ...);
     }
 
+    // Returns a const reference to the vector of items in the stack.
     const std::vector<Widget>& getItems() const { return items_; }
+    // Returns a non-const reference to the vector of items in the stack.
     std::vector<Widget>& getItems() { return items_; }
 
+    // Displays the stack and its items using the given runtime and rectangle.
+    // The stack will display its items in the order they were added, and with
+    // a spacing between them defined by the runtime. The sizes of the items
+    // are determined by their content, and the stack will expand to fit them.
     Rect display(const Runtime& rt, const Rect& rect);
 
   private:
@@ -72,6 +84,7 @@ namespace gui2
         static_assert(false, "Invalid layout orientation");
       }
     }
+    // Return the actual rectangle that encompasses all the items in the stack
     return actualRect;
   }
 }

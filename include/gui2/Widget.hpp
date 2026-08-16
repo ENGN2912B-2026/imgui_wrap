@@ -3,10 +3,12 @@
 #pragma once
 
 #include <gui2/Runtime.hpp>
+#include <gui2/Empty.hpp>
 
 #include <string>
 #include <memory>
 #include <functional>
+#include <cassert>
 
 namespace gui2
 {
@@ -76,18 +78,20 @@ namespace gui2
     std::unique_ptr<Value> value_;
 
   public:
-    Widget() = default;
+    // Default constructor creates an empty Widget.
+    Widget() : Widget{Empty{}} {}
 
+    // Constructor that takes a value of type T, and stores it within the
+    // Widget, which takes ownership of the value.
     template<WidgetContent T>
     Widget(T value) : value_{std::make_unique<WidgetValue<T>>(std::move(value))} {}
 
+    // Display the widget using the provided Runtime and within the specified
+    // rectangle. Returns the actual rectangle used for displaying the widget.
     Rect display(const Runtime& rt, const Rect& rect)
     {
-      if (value_)
-      {
-        return value_->display(rt, rect);
-      }
-      return {rect.origin, {0, 0}};
+      assert(value_ != nullptr && "Widget has no value to display");
+      return value_->display(rt, rect);
     }
   };
 
