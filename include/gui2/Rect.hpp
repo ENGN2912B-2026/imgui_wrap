@@ -10,6 +10,12 @@ namespace gui2
   // A rectangle defined by an origin point and a size.
   struct Rect
   {
+    // A canonical constant representing that a non-negative value is not
+    // specified. This is used to indicate that a dimension (width or height)
+    // of the rectangle is unspecified. Any other negative value is considered
+    // invalid in the same context.
+    constexpr static int kNone{ -1 };
+
     // The origin point of the rectangle, representing the top-left corner.
     Vec2i origin{ 0, 0 };
     // The size of the rectangle, representing its width and height.
@@ -22,17 +28,56 @@ namespace gui2
       return { topLeft, bottomRight - topLeft };
     }
 
-    // Returns a new rectangle that is empty.
-    // An empty rectangle has a size with negative dimensions.
+    // Returns a new rectangle with no specified size.
+    // An unspecified dimension is represented by a negative value.
     static constexpr Rect empty()
     {
-      return { {0, 0}, {-1, -1} };
+      return {{0, 0}, {kNone, kNone}};
     }
 
-    // Checks if the rectangle is empty (size has negative dimensions).
+    // Checks if the rectangle has a specified width.
+    constexpr bool hasWidth() const
+    {
+      return size.x >= 0;
+    }
+
+    // Checks if the rectangle has a specified height.
+    constexpr bool hasHeight() const
+    {
+      return size.y >= 0;
+    }
+
+    // Checks if both dimensions are specified.
+    constexpr bool hasSize() const
+    {
+      return hasWidth() && hasHeight();
+    }
+
+    // Checks if at least one dimension is unspecified.
     constexpr bool isEmpty() const
     {
-      return size.x < 0 || size.y < 0;
+      return !hasSize();
+    }
+
+    // Unsets the width of the rectangle, making it unspecified.
+    Rect& unsetWidth()
+    {
+      size.x = kNone;
+      return *this;
+    }
+
+    // Unsets the height of the rectangle, making it unspecified.
+    Rect& unsetHeight()
+    {
+      size.y = kNone;
+      return *this;
+    }
+
+    // Unsets both the width and height of the rectangle, making them
+    // unspecified.
+    Rect& unsetSize()
+    {
+      return unsetWidth().unsetHeight();
     }
 
     // Returns the bottom-right corner of the rectangle if it is not empty,

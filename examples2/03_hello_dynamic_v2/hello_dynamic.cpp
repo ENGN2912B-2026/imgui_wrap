@@ -77,6 +77,10 @@ int main(int argc, char** argv)
           "Line 1",
           Empty{},
           "Line 2",
+          "",
+          "Line 3",
+          Widget{},
+          "Line 4",
           [&]{return CheckBox{
             std::string(leftPanelCheckBox ? "Checked" : "Unchecked"),
             &leftPanelCheckBox };}

@@ -176,22 +176,26 @@ namespace gui2
 
   Rect Runtime::display(const Empty& empty, const Rect& rect) const
   { // Do nothing, just reserve space for the empty item
-    ImGui::SetCursorScreenPos(rect.origin.to<float>());
-    ImGui::Dummy(rect.size.to<float>());
+    Rect itemRect{ rect };
+    if (!itemRect.hasWidth()) { itemRect.size.x = 0; }
+    if (!itemRect.hasHeight()) { itemRect.size.y = 0; }
+    ImGui::SetCursorScreenPos(itemRect.origin.to<float>());
+    ImGui::Dummy(itemRect.size.to<float>());
     return getItemRect_();
   }
 
   Rect Runtime::display(const std::string& text, const Rect& rect) const
   {
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
-    if (text.empty())
-    { // If the text is empty, we display an Empty primitive.
-      return display(Empty{}, rect);
+    if (rect.hasWidth())
+    {
+      ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + rect.size.x);
     }
-    float localPosX = ImGui::GetCursorPosX();
-    ImGui::PushTextWrapPos(localPosX + rect.size.x);
     ImGui::Text("%s", text.c_str());
-    ImGui::PopTextWrapPos();
+    if (rect.hasWidth())
+    {
+      ImGui::PopTextWrapPos();
+    }
     return getItemRect_();
   }
 

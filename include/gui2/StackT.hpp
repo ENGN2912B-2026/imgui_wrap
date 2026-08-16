@@ -61,8 +61,13 @@ namespace gui2
   template<Orientation orientation>
   Rect StackT<orientation>::display(const Runtime& rt, const Rect& rect)
   {
+    validate(orientation);
+
     Rect actualRect{ Rect::empty() };
     Rect itemRect{ rect };
+    IfVertical<orientation>([&]{itemRect.unsetHeight();});
+    IfHorizontal<orientation>([&]{itemRect.unsetWidth();});
+
     const auto itemSpacing = rt.getItemSpacing();
     for (auto& item : items_)
     {
@@ -71,18 +76,18 @@ namespace gui2
       // Update our actual rectangle based on the actual rectangles of the items
       actualRect.unite(itemActualRect);
       // Update the position of the next item rectangle based on the orientation
-      if constexpr (orientation == Orientation::Vertical)
-      { // VStack
-        itemRect.origin.y += itemActualRect.size.y + itemSpacing.y;
-      }
-      else if constexpr (orientation == Orientation::Horizontal)
-      { // HStack
-        itemRect.origin.x += itemActualRect.size.x + itemSpacing.x;
-      }
-      else
-      { // Invalid orientation
-        static_assert(false, "Invalid layout orientation");
-      }
+      IfVertical<orientation>([&]{
+        if (itemActualRect.size.y > 0)
+        { // Only add the spacing if the item has a valid height
+          itemRect.origin.y += itemActualRect.size.y + itemSpacing.y;
+        }
+      });
+      IfHorizontal<orientation>([&]{
+        if (itemActualRect.size.x > 0)
+        { // Only add the spacing if the item has a valid width
+          itemRect.origin.x += itemActualRect.size.x + itemSpacing.x;
+        }
+      });
     }
     // Return the actual rectangle that encompasses all the items in the stack
     return actualRect;
