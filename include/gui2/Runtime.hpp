@@ -20,10 +20,10 @@ namespace gui2
   // forward declaration
   //class Backend;
   using Backend = gui::Backend;
-  class Panel;
   class Empty;
   class Button;
   class CheckBox;
+  class Panel;
 
   class Runtime
   {

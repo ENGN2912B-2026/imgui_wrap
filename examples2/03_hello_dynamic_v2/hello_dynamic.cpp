@@ -111,7 +111,7 @@ int main(int argc, char** argv)
         [&]{ return Button{ "Update title", [&](){ window.setTitle("Hello dynamic v2 - Updated!"); } }; },
         [&]{ return Button{ "Update size", [&](){ window.setSize({800, 600}); } }; },
         [&]{ return Button{ "Toggle left panel checkbox", [&](){ leftPanelCheckBox = !leftPanelCheckBox; } }; },
-        [&]{ return checkBox ? Widget{Button{"Click Me"}} : Widget{}; },
+        [&]{ return checkBox ? Widget{Button{"Click Me 2"}} : Widget{}; },
       }
     };
 

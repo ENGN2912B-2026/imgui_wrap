@@ -175,12 +175,12 @@ namespace gui2
   }
 
   Rect Runtime::display(const Empty& empty, const Rect& rect) const
-  { // Do nothing, just reserve space for the empty item
-    Rect itemRect{ rect };
-    if (!itemRect.hasWidth()) { itemRect.size.x = 0; }
-    if (!itemRect.hasHeight()) { itemRect.size.y = 0; }
-    ImGui::SetCursorScreenPos(itemRect.origin.to<float>());
-    ImGui::Dummy(itemRect.size.to<float>());
+  { // Display an empty rectangle.
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    Vec2i size{ rect.size };
+    if (!rect.hasWidth()) { size.x = 0; }
+    if (!rect.hasHeight()) { size.y = 0; }
+    ImGui::Dummy(size.to<float>());
     return getItemRect_();
   }
 
@@ -211,8 +211,8 @@ namespace gui2
 
   Rect Runtime::display(CheckBox& checkBox, const Rect& rect) const
   {
-    bool checked = checkBox.isChecked();
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    bool checked = checkBox.isChecked();
     if (ImGui::Checkbox(checkBox.getLabel().c_str(), &checked))
     {
       checkBox.setChecked(checked);
@@ -226,9 +226,22 @@ namespace gui2
     ImGui::SetNextWindowPos(rect.origin.to<float>());
     if (ImGui::BeginChild(panel.getId().c_str(), rect.size.to<float>(), flags))
     {
-      Vec2i pad = getWindowPadding();
-      Rect innerRect{ rect.origin + pad, rect.size - pad * 2 };
-      panel.displayContent(*this, innerRect);
+      // Must call `ImGui::GetCursorScreenPos()` to get an initial position for
+      // the inner rectangle, which already takes into account the window padding
+      // and the current scroll position.
+      const auto origin{ math::make<math::Vec2d>(ImGui::GetCursorScreenPos()) };
+      const auto size{ math::make<math::Vec2d>(ImGui::GetContentRegionAvail()) };
+
+      const Rect innerRect{ origin.cast<int>(), size.cast<int>() };
+      const Rect contentActualRect = panel.displayContent(*this, innerRect);
+
+      // Make ImGui aware of the complete content extent produced by our layout
+      // system, so that the child window can be scrolled to show all content.
+      if (!contentActualRect.isEmpty())
+      {
+        ImGui::SetCursorScreenPos(contentActualRect.end().to<float>());
+        ImGui::Dummy(ImVec2{0, 0});
+      }
     }
 
     // Read the actual rectangle of the child window, which may be different

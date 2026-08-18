@@ -14,13 +14,19 @@ namespace gui2
   //
   // For example:
   //
-  //    Widget myWidget{ condition ? Button{"Click Me"} : Empty{} };
+  //    Widget myWidget{
+  //      condition ? Widget{Button{"Click Me"}} : Widget{Empty{}} };
   //
   // In this example, if the condition is true, a button will be displayed.
   // If the condition is false, nothing will be displayed.
   //
-  class Empty
-  {
-  };
+  // Another example:
+  //
+  //    VBox { "Line 1", Empty{}, "Line 2" }
+  //
+  // In this example, the VBox will display "Line 1" and "Line 2" with an
+  // empty space in between them.
+  //
+  class Empty {};
 
 } // namespace gui

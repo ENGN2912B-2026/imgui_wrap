@@ -37,14 +37,30 @@ namespace gui2
     Box,
   };
 
+  // A fixed-size item that can be added to a Layout. The size is specified in
+  // pixels, and the content is a Widget that will be displayed within the
+  // fixed-size area.
+  //
+  // The size must be enforced by a parent element supporting this feature, such
+  // as a Layout in Box mode. If the parent does not support fixed-size items,
+  // the size will be ignored and the content will be displayed with its natural
+  // size.
   struct Fixed
   {
+    // The fixed size of the item in pixels.
     size_t size;
+    // The content of the item, which is a Widget that will be displayed within
+    // the fixed-size area.
     Widget content;
+
+    // \brief Constructs a Fixed item with the given size and content.
+    // \param[in] _size     The fixed size of the item in pixels.
+    // \param[in] _content  The content of the item.
     Fixed(size_t _size, Widget _content)
       : size{std::move(_size)}
       , content{std::move(_content)}
     { }
+
     // Display its content.
     Rect display(const Runtime& rt, const Rect& rect)
     {
@@ -52,14 +68,37 @@ namespace gui2
     }
   };
 
+  // A stretchable item that can be added to a Layout. The weight determines
+  // how much of the available space the item will take relative to other
+  // stretchable items in the same layout.
+  //
+  // The weight value is unitless and it can only be interpreted relative to
+  // the weights of other stretchable items in the same layout. For example, if
+  // there are two stretchable items with weights 1 and 2, the first item will
+  // take 1/3 of the available space, and the second item will take 2/3 of the
+  // available space.
+  //
+  // The weight must be enforced by a parent element supporting this feature,
+  // such as a Layout in Box mode. If the parent does not support stretchable
+  // items, the weight will be ignored and the content will be displayed with
+  // its natural size.
   struct Stretch
   {
+    // The weight of the item, which determines how much of the available space
+    // the item will take relative to other stretchable items in the same layout.
     size_t weight;
+    // The content of the item, which is a Widget that will be displayed within
+    // the stretchable area.
     Widget content;
+
+    // \brief Constructs a Stretch item with the given weight and content.
+    // \param[in] _weight   The weight of the item.
+    // \param[in] _content  The content of the item.
     Stretch(size_t _weight, Widget _content)
       : weight{std::move(_weight)}
       , content{std::move(_content)}
     { }
+
     // Display its content.
     Rect display(const Runtime& rt, const Rect& rect)
     {
@@ -173,25 +212,33 @@ namespace gui2
     assert(itemRects.size() == items_.size()
       && "Mismatch between computed rectangles and items");
     Rect actualRect{ Rect::empty() };
-    //Vec2 offset{ 0, 0 };
     for (size_t i = 0; i < items_.size(); ++i)
     {
       Rect itemRect{ itemRects[i] };
-      if constexpr (M == LayoutMode::Stack)
-      { // For Stack mode, we adjust the position based on the last item's size,
-        // and the available leftover space in the orientation direction.
-        IfVertical<O>([&]{
-          if (actualRect.hasHeight())
-          { // Only adjust the position if the actual rectangle has a valid height
-            itemRect.origin.y = actualRect.endY() + itemSpacing.y;
-          }
-        });
-        IfHorizontal<O>([&]{
-          if (actualRect.hasWidth())
-          { // Only adjust the position if the actual rectangle has a valid width
-            itemRect.origin.x = actualRect.endX() + itemSpacing.x;
-          }
-        });
+      // We need to adjust the position based on the last item's size.
+      IfVertical<O>([&]{
+        if (actualRect.hasHeight())
+        { // Only adjust the position if the actual rectangle has a valid height
+          itemRect.origin.y =
+            std::max(itemRect.origin.y, actualRect.endY() + itemSpacing.y);
+        }
+      });
+      IfHorizontal<O>([&]{
+        if (actualRect.hasWidth())
+        { // Only adjust the position if the actual rectangle has a valid width
+          itemRect.origin.x =
+            std::max(itemRect.origin.x, actualRect.endX() + itemSpacing.x);
+        }
+      });
+      if (itemRect.hasWidth() && itemRect.endX() > rect.endX())
+      { // If the item rectangle exceeds the available rectangle, we unset its
+        // width to allow it to shrink.
+        itemRect.unsetWidth();
+      }
+      if (itemRect.hasHeight() && itemRect.endY() > rect.endY())
+      { // If the item rectangle exceeds the available rectangle, we unset its
+        // height to allow it to shrink.
+        itemRect.unsetHeight();
       }
       // Display the item and get its actual rectangle
       const Rect itemActualRect = items_[i].display(rt, itemRect);
@@ -199,6 +246,7 @@ namespace gui2
       // the items.
       actualRect.unite(itemActualRect);
     }
+
     // Return the actual rectangle that encompasses all the items in the stack
     return actualRect;
   }
