@@ -80,11 +80,26 @@ namespace gui2
       return unsetWidth().unsetHeight();
     }
 
-    // Returns the bottom-right corner of the rectangle if it is not empty,
-    // otherwise returns the origin.
+    // Returns the x-coordinate of the right edge of the rectangle if it has
+    // a specified width, otherwise returns the x-coordinate of the origin.
+    constexpr int endX() const
+    {
+      return hasWidth() ? origin.x + size.x : origin.x;
+    }
+
+    // Returns the y-coordinate of the bottom edge of the rectangle if it has
+    // a specified height, otherwise returns the y-coordinate of the origin.
+    constexpr int endY() const
+    {
+      return hasHeight() ? origin.y + size.y : origin.y;
+    }
+
+    // Returns a new point representing the bottom-right corner of the rectangle
+    // if both dimensions are specified. For unspecified dimensions, it returns
+    // the value of the origin for that dimension.
     constexpr Vec2i end() const
     {
-      return isEmpty() ? origin : origin + size;
+      return { endX(), endY() };
     }
 
     // Returns a new rectangle that is the union of this rectangle and another

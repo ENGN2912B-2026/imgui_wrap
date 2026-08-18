@@ -2,10 +2,4 @@
 //
 #pragma once
 
-#include <gui2/BoxT.hpp>
-
-namespace gui2
-{
-  using VBox = BoxT<Orientation::Vertical>;
-
-} // namespace gui
+#include <gui2/Layout.hpp>

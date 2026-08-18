@@ -24,7 +24,7 @@ int main(int argc, char** argv)
   // Get the window
   gui2::Window& window = app.getWindow();
 
-#define USE_EXAMPLE 2
+#define USE_EXAMPLE 3
 #if USE_EXAMPLE == 1
   {
     using namespace gui2;
@@ -89,6 +89,39 @@ int main(int argc, char** argv)
           Stretch{3, std::move(mainPanel)},
           Stretch{1, Panel{ "Bottom Panel" }},
         },
+      }
+    );
+  }
+#elif USE_EXAMPLE == 3
+  {
+    using namespace gui2;
+
+    bool showLeftPanel = true;
+
+    bool leftPanelCheckBox = false;
+    bool checkBox = false;
+
+    Panel mainPanel{
+      VBox {
+        "Main Panel",
+        CheckBox{ "Show left panel", &showLeftPanel },
+        [&]{ return "Checkbox state: " + std::string(checkBox ? "Checked" : "Unchecked"); },
+        Button{ "Click Me", []() { std::println("Button clicked!"); } },
+        CheckBox{ "Check me", &checkBox },
+        [&]{ return Button{ "Update title", [&](){ window.setTitle("Hello dynamic v2 - Updated!"); } }; },
+        [&]{ return Button{ "Update size", [&](){ window.setSize({800, 600}); } }; },
+        [&]{ return Button{ "Toggle left panel checkbox", [&](){ leftPanelCheckBox = !leftPanelCheckBox; } }; },
+        [&]{ return checkBox ? Widget{Button{"Click Me"}} : Widget{}; },
+      }
+    };
+
+    window.setContent(
+      HBox{
+        Fixed{200, Panel{ "Left Panel" }},
+        VBox{
+          Stretch{3, std::move(mainPanel)},
+          Stretch{1, Panel{ "Bottom Panel" }},
+        }
       }
     );
   }
