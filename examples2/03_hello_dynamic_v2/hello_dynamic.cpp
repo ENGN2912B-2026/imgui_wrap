@@ -117,7 +117,9 @@ int main(int argc, char** argv)
 
     window.setContent(
       HBox{
-        Fixed{200, Panel{ "Left Panel" }},
+        //[&]{ return showLeftPanel ? Widget{Fixed{200, [&]{ return showLeftPanel ? Widget{Panel{ "Left Panel" }} : Widget{}; }}} : Widget{}; },
+        [&]{ return ([&]{ return Fixed{200, [&]{ return showLeftPanel ? Widget{Panel{ "Left Panel" }} : Widget{}; }}; }); },
+        //[&]{ return Fixed{200, [&]{ return showLeftPanel ? Widget{Panel{ "Left Panel" }} : Widget{}; }}; },
         VBox{
           Stretch{3, std::move(mainPanel)},
           Stretch{1, Panel{ "Bottom Panel" }},

@@ -5,6 +5,7 @@
 #include <gui2/Widget.hpp>
 
 #include <vector>
+#include <cassert>
 
 namespace gui2
 {
@@ -170,7 +171,7 @@ namespace gui2
       "Invalid layout mode");
 
     std::vector<Rect> computeItemLayouts_(
-      const Rect& rect, const Vec2i& itemSpacing) const;
+      const Rect& rect, const Vec2i& itemSpacing);
   };
 
   using HStack = Layout<Orientation::Horizontal, LayoutMode::Stack>;
@@ -253,7 +254,7 @@ namespace gui2
 
   template<Orientation O, LayoutMode M>
   std::vector<Rect> Layout<O, M>::computeItemLayouts_(
-    const Rect& rect, const Vec2i& itemSpacing) const
+    const Rect& rect, const Vec2i& itemSpacing)
   {
     std::vector<Rect> rects(items_.size(), rect);
     if constexpr (M == LayoutMode::Stack)
@@ -289,7 +290,7 @@ namespace gui2
       const int numItems{ static_cast<int>(items_.size()) };
       for (int i = 0; i < numItems; ++i)
       {
-        if (const auto* fixed = items_[i].get<Fixed>())
+        if (const auto* fixed = items_[i].resolveAs<Fixed>())
         { // Item has a fixed size, add it to the total fixed size.
           const int size{ static_cast<int>(fixed->size) };
           itemValues[i] = kFixed | (size << 1);
@@ -297,8 +298,8 @@ namespace gui2
         }
         else
         { // Otherwise is a stretch item, add its weight to the total weight.
-          const auto* s = items_[i].get<Stretch>();
-          const int weight{ s ? static_cast<int>(s->weight) : 1 };
+          const auto* stretch = items_[i].resolveAs<Stretch>();
+          const int weight{ stretch ? static_cast<int>(stretch->weight) : 1 };
           itemValues[i] = kWeight | (weight << 1);
           totalWeight += weight;
           lastWeightedIndex = i;

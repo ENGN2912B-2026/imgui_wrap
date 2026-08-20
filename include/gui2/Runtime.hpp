@@ -8,6 +8,8 @@
 
 #include <string>
 #include <memory>
+#include <concepts>
+#include <type_traits>
 
 namespace gui
 {
@@ -101,18 +103,39 @@ namespace gui2
 
   // Concept of content types:
   // - The type is either primitive or displayable
-  template<class T>
+  template<typename T>
   concept Content =
     Primitive<T> || Displayable<T>;
 
+  namespace runtime
+  {
+    // Helper struct to determine if a type is a factory (callable that returns
+    // a Content type, or a factory that returns another factory, recursively).
+    template <typename T> struct is_factory : std::false_type{};
+  }
+
   // Concept of content factory types:
   // - The type is a callable that returns a Content type
-  template<class T>
-  concept ContentFactory =
-    requires(T& value)
-    {
-      value();
-    } &&
-    Content<std::remove_cvref_t<std::invoke_result_t<T&>>>;
+  // - The type is a callable that returns another factory type
+  template<typename F>
+  concept ContentFactory = runtime::is_factory<std::remove_cvref_t<F>>::value;
 
 } // namespace gui
+
+// Implementation -------------------------------------------------------------
+namespace gui2
+{
+  namespace runtime
+  {
+    // Specialization for callable types: the type is a factory if it returns a
+    // Content type or another factory type.
+    template<typename F>
+      requires std::invocable<F&>
+    struct is_factory<F>
+    {
+      using Result = std::remove_cvref_t<std::invoke_result_t<F&>>;
+      static constexpr bool value =
+        Content<Result> || is_factory<Result>::value;
+    };
+  }
+}
