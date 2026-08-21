@@ -5,6 +5,7 @@
 
 #include "../gui/impl/Backend.hpp"
 #include <gui2/Empty.hpp>
+#include <gui2/Separator.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
 #include <gui2/Panel.hpp>
@@ -196,6 +197,13 @@ namespace gui2
     {
       ImGui::PopTextWrapPos();
     }
+    return getItemRect_();
+  }
+
+  Rect Runtime::display(const Separator& separator, const Rect& rect) const
+  {
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    ImGui::Separator();
     return getItemRect_();
   }
 

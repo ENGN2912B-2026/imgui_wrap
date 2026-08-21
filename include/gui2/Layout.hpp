@@ -57,7 +57,7 @@ namespace gui2
     // \brief Constructs a Fixed item with the given size and content.
     // \param[in] _size     The fixed size of the item in pixels.
     // \param[in] _content  The content of the item.
-    Fixed(size_t _size, Widget _content)
+    Fixed(size_t _size, Widget _content = {})
       : size{std::move(_size)}
       , content{std::move(_content)}
     { }
@@ -95,7 +95,7 @@ namespace gui2
     // \brief Constructs a Stretch item with the given weight and content.
     // \param[in] _weight   The weight of the item.
     // \param[in] _content  The content of the item.
-    Stretch(size_t _weight, Widget _content)
+    Stretch(size_t _weight, Widget _content = {})
       : weight{std::move(_weight)}
       , content{std::move(_content)}
     { }
@@ -212,7 +212,7 @@ namespace gui2
     const auto itemRects = computeItemLayouts_(rect, itemSpacing);
     assert(itemRects.size() == items_.size()
       && "Mismatch between computed rectangles and items");
-    Rect actualRect{ Rect::empty() };
+    Rect actualRect{ Rect::empty() }, itemActualRect{ Rect::empty() };
     for (size_t i = 0; i < items_.size(); ++i)
     {
       Rect itemRect{ itemRects[i] };
@@ -220,15 +220,17 @@ namespace gui2
       IfVertical<O>([&]{
         if (actualRect.hasHeight())
         { // Only adjust the position if the actual rectangle has a valid height
-          itemRect.origin.y =
-            std::max(itemRect.origin.y, actualRect.endY() + itemSpacing.y);
+          const int spacing = itemActualRect.size.y > 0 ? itemSpacing.y : 0;
+          itemRect.origin.y = std::max(actualRect.endY() + spacing,
+                                       itemRect.origin.y);
         }
       });
       IfHorizontal<O>([&]{
         if (actualRect.hasWidth())
         { // Only adjust the position if the actual rectangle has a valid width
-          itemRect.origin.x =
-            std::max(itemRect.origin.x, actualRect.endX() + itemSpacing.x);
+          const int spacing = itemActualRect.size.x > 0 ? itemSpacing.x : 0;
+          itemRect.origin.x = std::max(actualRect.endX() + spacing,
+                                       itemRect.origin.x);
         }
       });
       if (itemRect.hasWidth() && itemRect.endX() > rect.endX())
@@ -242,7 +244,7 @@ namespace gui2
         itemRect.unsetHeight();
       }
       // Display the item and get its actual rectangle
-      const Rect itemActualRect = items_[i].display(rt, itemRect);
+      itemActualRect = items_[i].display(rt, itemRect);
       // Update the layout's actual rectangle based on actual rectangles of
       // the items.
       actualRect.unite(itemActualRect);
@@ -286,15 +288,16 @@ namespace gui2
       constexpr int kFixed{ 0x0 }, kWeight{ 0x1 };
       std::vector<int> itemValues(items_.size());
 
-      int totalWeight{ 0 }, fixedSize{ 0 }, lastWeightedIndex{ 0 };
-      const int numItems{ static_cast<int>(items_.size()) };
-      for (int i = 0; i < numItems; ++i)
+      int totalWeight{ 0 }, fixedSize{ 0 }, nonZeroItems{ 0 };
+      size_t lastWeightedIndex{ 0 };
+      for (size_t i = 0; i < items_.size(); ++i)
       {
         if (const auto* fixed = items_[i].resolveAs<Fixed>())
         { // Item has a fixed size, add it to the total fixed size.
           const int size{ static_cast<int>(fixed->size) };
           itemValues[i] = kFixed | (size << 1);
           fixedSize += size;
+          nonZeroItems += (size > 0 ? 1 : 0);
         }
         else
         { // Otherwise is a stretch item, add its weight to the total weight.
@@ -303,6 +306,7 @@ namespace gui2
           itemValues[i] = kWeight | (weight << 1);
           totalWeight += weight;
           lastWeightedIndex = i;
+          nonZeroItems += (weight > 0 ? 1 : 0);
         }
       }
 
@@ -324,13 +328,13 @@ namespace gui2
 
       const int adjustSize{ availableSize - fixedSize };
       const int itemSize{ std::max(0,
-        (adjustSize - (numItems - 1) * spacing) / totalWeight) };
+        (adjustSize - (nonZeroItems - 1) * spacing) / totalWeight) };
       const int leftOverSize{ adjustSize
-        - (numItems - 1) * spacing - totalWeight * itemSize };
+        - (nonZeroItems - 1) * spacing - totalWeight * itemSize };
 
       // Compute the item rectangles based on their types
       int pos{ 0 };
-      for (int i = 0; i < numItems; ++i)
+      for (size_t i = 0; i < items_.size(); ++i)
       {
         int size = (itemValues[i] >> 1);
         if (itemValues[i] & kWeight)
@@ -349,7 +353,10 @@ namespace gui2
           rects[i].origin.x += pos;
           rects[i].size.x = size;
         });
-        pos += size + spacing;
+        if (size > 0)
+        { // Only add spacing if the item has a non-zero size.
+          pos += size + spacing;
+        }
       }
     }
 

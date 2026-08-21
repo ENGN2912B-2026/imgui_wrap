@@ -10,16 +10,21 @@
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
 #include <gui2/Empty.hpp>
+#include <gui2/Separator.hpp>
 
 #include <print>
+#include <chrono>
 
 // This example demonstrates creation of dynamic content where items are
 // added, modified, and removed from the GUI at runtime.
 
 int main(int argc, char** argv)
 {
+  // Title of the window
+  std::string title{"Hello dynamic v2"};
+
   // Create the application
-  gui2::Application app{ "Hello dynamic v2" };
+  gui2::Application app{ title };
 
   // Get the window
   gui2::Window& window = app.getWindow();
@@ -49,6 +54,9 @@ int main(int argc, char** argv)
         },
       }
     );
+
+    // Run the application
+    app.run();
   }
 #elif USE_EXAMPLE == 2
   {
@@ -91,46 +99,96 @@ int main(int argc, char** argv)
         },
       }
     );
+
+    // Run the application
+    app.run();
   }
 #elif USE_EXAMPLE == 3
   {
     using namespace gui2;
 
-    bool showLeftPanel = true;
+    bool showSidePanel = true;
+    bool showBottomPanel = true;
 
-    bool leftPanelCheckBox = false;
-    bool checkBox = false;
+    bool sidePanelCheckBox = false;
+
+    int counter = 0;
+    auto counterButton = [&]{
+      return Button{ "Counter: " + std::to_string(counter), [&]{ ++counter; } };
+    };
+    auto resetButton = Button{ "Reset counter", [&]{ counter = 0; } };
+
+    using Clock = std::chrono::steady_clock;
+    auto previous = Clock::now();
+    bool showFPS = false;
+    double fps = 0.0;
+
+    auto updateFPS = [&]{
+      auto now = Clock::now();
+      if (showFPS)
+      {
+        double dt = std::chrono::duration<double>(now - previous).count();
+        double currentFPS = 1.0 / dt;
+        fps = fps > 0.0 ? fps * 0.99 + currentFPS * 0.01 : currentFPS;
+        window.setTitle(title + std::format(" - FPS: {:.1f}", fps));
+      }
+      previous = now;
+    };
 
     Panel mainPanel{
-      VBox {
+      VStack {
         "Main Panel",
-        CheckBox{ "Show left panel", &showLeftPanel },
-        [&]{ return "Checkbox state: " + std::string(checkBox ? "Checked" : "Unchecked"); },
-        Button{ "Click Me", []() { std::println("Button clicked!"); } },
-        CheckBox{ "Check me", &checkBox },
-        [&]{ return Button{ "Update title", [&](){ window.setTitle("Hello dynamic v2 - Updated!"); } }; },
-        [&]{ return Button{ "Update size", [&](){ window.setSize({800, 600}); } }; },
-        [&]{ return Button{ "Toggle left panel checkbox", [&](){ leftPanelCheckBox = !leftPanelCheckBox; } }; },
-        [&]{ return checkBox ? Widget{Button{"Click Me 2"}} : Widget{}; },
+        Separator{},
+        [&]{ updateFPS(); return Empty{}; },
+        CheckBox{ "Show side panel", &showSidePanel },
+        CheckBox{ "Show bottom panel", &showBottomPanel },
+        CheckBox{ "Show FPS", &showFPS },
+
+        [&]{ return Button{
+          "Reset title",
+          [&](){ window.setTitle(title); } }; },
+        [&]{ return Button{
+          "Toggle side panel checkbox",
+          [&](){ sidePanelCheckBox = !sidePanelCheckBox; } }; },
       }
     };
 
     window.setContent(
       HBox{
-        //[&]{ return showLeftPanel ? Widget{Fixed{200, [&]{ return showLeftPanel ? Widget{Panel{ "Left Panel" }} : Widget{}; }}} : Widget{}; },
-        [&]{ return ([&]{ return Fixed{200, [&]{ return showLeftPanel ? Widget{Panel{ "Left Panel" }} : Widget{}; }}; }); },
-        //[&]{ return Fixed{200, [&]{ return showLeftPanel ? Widget{Panel{ "Left Panel" }} : Widget{}; }}; },
         VBox{
+          // Main panel is always displayed.
           Stretch{3, std::move(mainPanel)},
-          Stretch{1, Panel{ "Bottom Panel" }},
-        }
+          // Bottom panel is conditionally displayed.
+          [&]{ return !showBottomPanel ? Stretch{0} : Stretch{1,
+            Panel{ VStack {
+              "Bottom Panel",
+              Separator{},
+              HStack { "Counter Controls", counterButton, resetButton,
+              },
+            }}};
+          },
+        },
+        // Side panel is conditionally displayed.
+        [&]{ return !showSidePanel ? Fixed{0} : Fixed{250,
+          Panel{ VStack {
+            "Side Panel",
+            Separator{},
+            CheckBox{ "Side checkbox", &sidePanelCheckBox },
+            [&]{ return std::string(sidePanelCheckBox ? "Checked" : "Unchecked"); },
+          }}};
+        },
       }
     );
+
+    // Run the application
+    app.run();
+
+    // IMPORTANT: we need to call `app.run()` inside the scope where all the
+    //            state variables are defined, otherwise they will be destroyed
+    //            before the display loop starts, and all the lambdas that
+    //            capture them will have dangling references.
   }
 #endif
-
-  // Run the application
-  app.run();
 
   // Success
   std::println("Finished successfully!\n");
