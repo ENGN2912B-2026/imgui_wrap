@@ -8,6 +8,7 @@
 #include <gui2/VStack.hpp>
 #include <gui2/HStack.hpp>
 #include <gui2/Separator.hpp>
+#include <gui2/Button.hpp>
 
 #include <gl/gl.h>
 #include <gl/FrameBuffer.hpp>
@@ -29,17 +30,7 @@ public:
     if (!frameBuffer_.isInitialized())
     {
       frameBuffer_.initialize(availableSize, GL_LINEAR);
-
-      timer_.start(100,
-        [this]
-        { // timer callback
-          angle_ += 7.2f;
-          if (angle_ >= 360.0f)
-          {
-            angle_ -= 360.0f;
-          }
-        }
-      );
+      startAnimation();
     }
     else if (frameBuffer_.getSize() != availableSize)
     {
@@ -56,6 +47,36 @@ public:
     drawGL_();
 
     return rect;
+  }
+
+  bool isAnimationRunning() const
+  {
+    return timer_.isRunning();
+  }
+
+  void startAnimation()
+  {
+    if (!timer_.isRunning())
+    {
+      timer_.start(100,
+        [this]
+        { // timer callback
+          angle_ += 7.2f;
+          if (angle_ >= 360.0f)
+          {
+            angle_ -= 360.0f;
+          }
+        }
+      );
+    }
+  }
+
+  void stopAnimation()
+  {
+    if (timer_.isRunning())
+    {
+      timer_.stop();
+    }
   }
 
 private:
@@ -136,13 +157,25 @@ int main(int argc, char** argv)
         Stretch{3, Panel{ VStack{
           "Main Panel",
           Separator{},
-          std::ref(widgetGL), //TODO: add controls to the GL widget
+          std::ref(widgetGL),
         }}},
         // Bottom panel
-        Stretch{1, Panel{ "Bottom Panel" } }
+        Stretch{1, Panel{ VStack{
+          "Bottom Panel",
+          Separator{},
+          [&]{ return widgetGL.isAnimationRunning()
+            ? "Animation is running" : "Animation is stopped"; },
+        }}},
       },
       // Side panel
-      Fixed{250, Panel{ "Side Panel" } }
+      Fixed{250, Panel{ VStack{
+        "Side Panel",
+        Separator{},
+        [&]{ return widgetGL.isAnimationRunning()
+          ? Button{ "Stop Animation", [&]{ widgetGL.stopAnimation(); } }
+          : Button{ "Start Animation", [&]{ widgetGL.startAnimation(); } };
+        },
+      }}},
     }
   );
 

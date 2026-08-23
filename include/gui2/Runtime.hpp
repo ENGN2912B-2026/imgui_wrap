@@ -89,12 +89,11 @@ namespace gui2
   //! \brief Contains helper templates and functions used by the Runtime class.
   namespace runtime
   {
-    // Helper struct to determine if a type is a reference wrapper.
-    template<typename T> struct is_reference_wrapper : std::false_type {};
-
-    // Helper struct to determine if a type is a reference wrapper of
-    // a Content type.
-    template<typename T> struct is_content_reference : std::false_type {};
+    //! \brief Resolves a value by removing any reference wrappers if present.
+    //! \tparam T The type of the value to resolve.
+    //! \param value The value to resolve.
+    //! \return The resolved value.
+    template<typename T> inline decltype(auto) resolve_reference(T& value);
 
     // Helper struct to determine if a type is a factory (a callable that
     // returns a Content type, or a factory that returns another factory,
@@ -104,55 +103,35 @@ namespace gui2
 
   // Concept of primitive types:
   // - Runtime has a display method for the type.
-  // - The type is not a reference wrapper.
-  //   - We exclude reference wrappers so they can be handled as
-  //     ContentReference instead of a Primitive.
   template<typename T>
   concept Primitive =
-    !runtime::is_reference_wrapper<std::remove_cvref_t<T>>::value &&
     requires(T& value, Runtime& rt, Rect& rect)
     {
-      { rt.display(value, rect) } -> std::convertible_to<Rect>;
+      { rt.display(runtime::resolve_reference(value), rect) }
+        -> std::convertible_to<Rect>;
     };
 
   // Concept of displayable types:
   // - The type has a display method that takes a Runtime and a Rect and returns
   //   a Rect.
-  // - The type is not a reference wrapper.
-  //   - We exclude reference wrappers so they can be handled as
-  //     ContentReference instead of a Displayable.
   template<typename T>
   concept Displayable =
-    !runtime::is_reference_wrapper<std::remove_cvref_t<T>>::value &&
     requires(T& value, Runtime& rt, Rect& rect)
     {
-      { value.display(rt, rect) } -> std::convertible_to<Rect>;
+      { runtime::resolve_reference(value).display(rt, rect) }
+        -> std::convertible_to<Rect>;
     };
 
   // Concept of content types:
   // - The type is either primitive or displayable.
   template<typename T>
-  concept Content =
-    Primitive<T> || Displayable<T>;
-
-  // Concept of content reference types:
-  // - The type is a reference wrapper of a Content type.
-  template<typename T>
-  concept ContentReference =
-    runtime::is_content_reference<std::remove_cvref_t<T>>::value;
+  concept Content = Primitive<T> || Displayable<T>;
 
   // Concept of content factory types:
   // - The type is a callable that returns a Content type.
   // - The type is a callable that returns another factory type.
   template<typename F>
-  concept ContentFactory =
-    runtime::is_factory<std::remove_cvref_t<F>>::value;
-
-  // Concept of content or content reference types:
-  // - The type is either a Content type or a ContentReference type.
-  template<typename T>
-  concept ContentOrReference =
-    Content<T> || ContentReference<T>;
+  concept ContentFactory = runtime::is_factory<std::remove_cvref_t<F>>::value;
 
 } // namespace gui
 
@@ -161,15 +140,27 @@ namespace gui2
 {
   namespace runtime
   {
-    // Specialization for std::reference_wrapper<T>: the type is a reference
-    // wrapper if it matches this specialization.
+    // Resolves a value by removing any reference wrappers if present.
     template<typename T>
-    struct is_reference_wrapper<std::reference_wrapper<T>> : std::true_type {};
+    inline T& resolve_reference_impl(T& value)
+    {
+      return value;
+    }
 
-    // Specialization for std::reference_wrapper<T>: the type is a content
-    // reference if T is a Content type.
-    template<Content T>
-    struct is_content_reference<std::reference_wrapper<T>> : std::true_type {};
+    // Specialization for std::reference_wrapper<T>: returns the underlying
+    // reference.
+    template<typename T>
+    inline T& resolve_reference_impl(std::reference_wrapper<T> value)
+    {
+      return value.get();
+    }
+
+    // Resolves a value by removing any reference wrappers if present.
+    template<typename T>
+    inline decltype(auto) resolve_reference(T& value)
+    {
+      return resolve_reference_impl(value);
+    }
 
     // Specialization for callable types: the type is a factory if it returns a
     // Content type or another factory type.
