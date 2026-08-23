@@ -16,12 +16,13 @@ namespace gui2
 
   // Concept of things that Widget can hold as content:
   // - The type is a Content type (either Primitive or Displayable), or
-  //   a ContentFactory type (a callable that returns a Content type).
-  // - The type is not Widget itself (to avoid infinite recursion and wrapping
-  //   a Widget into another Widget).
+  // - The type is a ContentReference type (a reference wrapper of a Content
+  //   type), or
+  // - The type is a ContentFactory type (a callable that returns a Content
+  //   type).
   template<class T>
   concept WidgetContent =
-    (Content<T> || ContentFactory<T>) &&
+    (ContentOrReference<T> || ContentFactory<T>) &&
     (!std::same_as<std::remove_cvref_t<T>, Widget>);
 
   // Widget class
@@ -76,7 +77,7 @@ namespace gui2
   private:
     class Value;
     std::unique_ptr<Value> value_;
-    template<Content T> class ContentValue;
+    template<ContentOrReference T> class ContentValue;
     template<ContentFactory T> class FactoryValue;
   };
 
@@ -85,24 +86,31 @@ namespace gui2
 // Implementation -------------------------------------------------------------
 namespace gui2
 {
+  //! \namespace widget
+  //! \brief Contains helper templates and functions used by the Widget class.
   namespace widget
   {
     // Helper template to resolve a WidgetContent type to its underlying type.
-    template<class T> struct resolved_type{};
-  }
+    template<typename T> struct resolved_type{};
 
-  //! \brief Resolves a WidgetContent type to its underlying type.
-  template<class T>
-  using resolved_type_t =
-    typename widget::resolved_type<std::remove_cvref_t<T>>::type;
+    //! \brief Resolves a WidgetContent type to its underlying type.
+    template<class T>
+    using resolved_type_t =
+      typename widget::resolved_type<std::remove_cvref_t<T>>::type;
 
-  namespace widget
-  {
     // Specialization for Content types: the resolved type is the type itself.
     template<Content T>
     struct resolved_type<T>
     {
       using type = T;
+    };
+
+    // Specialization for ContentReference types: the resolved type is the
+    // type referred to by the reference wrapper.
+    template<ContentReference T>
+    struct resolved_type<T>
+    {
+      using type = typename std::remove_cvref_t<T>::type;
     };
 
     // Specialization for ContentFactory types: the resolved type is the type
@@ -180,9 +188,10 @@ namespace gui2
     static Rect displayContent(const Runtime& rt, T& content, const Rect& rect);
   };
 
-  //! \brief Template class for holding a Content type within a Widget.
-  //! \tparam T The type of the Content.
-  template<Content T>
+  //! \brief Template class for holding a Content or ContentReference type
+  //!        within a Widget.
+  //! \tparam T The type of the Content or ContentReference.
+  template<ContentOrReference T>
   class Widget::ContentValue : public Value
   {
   public:
@@ -190,7 +199,9 @@ namespace gui2
     void* resolveAs(const std::type_info& type) override;
     Rect display(const Runtime& rt, const Rect& rect) override;
   private:
+    using Resolved = widget::resolved_type_t<T>;
     T content_;
+    Resolved& resolve_();
   };
 
   //! \brief Template class for holding a ContentFactory type within a Widget.
@@ -203,7 +214,7 @@ namespace gui2
     void* resolveAs(const std::type_info& type) override;
     Rect display(const Runtime& rt, const Rect& rect) override;
   private:
-    using Resolved = resolved_type_t<F>;
+    using Resolved = widget::resolved_type_t<F>;
     F factory_;
     std::optional<Resolved> resolved_;
     void resolve_();
@@ -216,7 +227,7 @@ namespace gui2
   template<WidgetContent T>
   std::unique_ptr<Widget::Value> Widget::Value::create(T value)
   {
-    if constexpr (Content<T>)
+    if constexpr (ContentOrReference<T>)
     {
       return std::make_unique<ContentValue<T>>(std::move(value));
     }
@@ -252,20 +263,33 @@ namespace gui2
   //---------------------------------------------------------------------------
   // Widget::ContentValue<T> class implementation -----------------------------
   //---------------------------------------------------------------------------
-  template<Content T>
+  template<ContentOrReference T>
   Rect Widget::ContentValue<T>::display(const Runtime& rt, const Rect& rect)
   {
-    return displayContent(rt, content_, rect);
+    return displayContent(rt, resolve_(), rect);
   }
 
-  template<Content T>
+  template<ContentOrReference T>
   void* Widget::ContentValue<T>::resolveAs(const std::type_info& type)
   {
-    if (typeid(content_) == type)
+    if (typeid(Resolved) == type)
     {
-      return &content_;
+      return &resolve_();
     }
     return nullptr;
+  }
+
+  template<ContentOrReference T>
+  typename Widget::ContentValue<T>::Resolved& Widget::ContentValue<T>::resolve_()
+  {
+    if constexpr (ContentReference<T>)
+    {
+      return content_.get();
+    }
+    else
+    {
+      return content_;
+    }
   }
 
   //---------------------------------------------------------------------------

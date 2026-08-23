@@ -136,7 +136,7 @@ int main(int argc, char** argv)
         Stretch{3, Panel{ VStack{
           "Main Panel",
           Separator{},
-          std::move(widgetGL), //TODO: support std::ref and add controls to the GL widget
+          std::ref(widgetGL), //TODO: add controls to the GL widget
         }}},
         // Bottom panel
         Stretch{1, Panel{ "Bottom Panel" } }
