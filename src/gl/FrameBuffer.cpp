@@ -1,61 +1,134 @@
-//  Copyright (c) 2024-2025 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
 #include <gl/gl.h>
 #include <gl/FrameBuffer.hpp>
 
 #include <stdexcept>
+#include <cassert>
 
 namespace gl
 {
   FrameBuffer::FrameBuffer(const Vec2i& size, GLint inperpolationMode)
-    : size_{ size }
-    , inperpolationMode_{ inperpolationMode }
+    : FrameBuffer{}
   {
-    // Create a frame buffer object (fbo)
-    glGenFramebuffers(1, &fbo_);
+    initialize(size, inperpolationMode);
+  }
 
-    // Create a color attachment texture
-    glGenTextures(1, &texture_);
-
-    // Create a render buffer object for depth and stencil attachment (we won't be sampling these)
-    glGenRenderbuffers(1, &rbo_);
-
-    if (size_.x > 0 && size_.y > 0)
-    { // Generate the frame buffer for the given size
-      generateFrameBuffer_();
-    }
+  FrameBuffer::FrameBuffer(FrameBuffer&& other) noexcept
+  {
+    operator=(std::move(other));
   }
 
   FrameBuffer::~FrameBuffer()
   {
-    glDeleteFramebuffers(1, &fbo_);
-    glDeleteTextures(1, &texture_);
-    glDeleteRenderbuffers(1, &rbo_);
+    if (rbo_ > 0) { glDeleteRenderbuffers(1, &rbo_); }
+    if (texture_ > 0) { glDeleteTextures(1, &texture_); }
+    if (fbo_ > 0) { glDeleteFramebuffers(1, &fbo_); }
+  }
+
+  FrameBuffer& FrameBuffer::operator=(FrameBuffer&& other) noexcept
+  {
+    if (this != &other)
+    {
+      fbo_ = other.fbo_;
+      texture_ = other.texture_;
+      rbo_ = other.rbo_;
+      size_ = other.size_;
+      interpolationMode_ = other.interpolationMode_;
+
+      // Reset the other frame buffer to a default state
+      FrameBuffer empty;
+      other.fbo_ = empty.fbo_;
+      other.texture_ = empty.texture_;
+      other.rbo_ = empty.rbo_;
+      other.size_ = empty.size_;
+      other.interpolationMode_ = empty.interpolationMode_;
+    }
+
+    return *this;
+  }
+
+  void FrameBuffer::initialize(const Vec2i& size, GLint interpolationMode)
+  {
+    if (fbo_ == 0 )
+    { // Create a frame buffer object (fbo)
+      glGenFramebuffers(1, &fbo_);
+      if (fbo_ == 0)
+      {
+        throw std::runtime_error{
+          "ERROR::FRAMEBUFFER:: Failed to create frame buffer object!"};
+      }
+    }
+
+    if (texture_ == 0)
+    { // Create a color attachment texture
+      glGenTextures(1, &texture_);
+      if (texture_ == 0)
+      {
+        throw std::runtime_error{
+          "ERROR::FRAMEBUFFER:: Failed to create texture!"};
+      }
+    }
+
+    if (rbo_ == 0)
+    { // Create a render buffer object for depth and stencil attachment (we
+      // won't be sampling these)
+      glGenRenderbuffers(1, &rbo_);
+      if (rbo_ == 0)
+      {
+        throw std::runtime_error{
+          "ERROR::FRAMEBUFFER:: Failed to create render buffer object!"};
+      }
+    }
+
+    assert(isInitialized()
+      && "Frame buffer, texture, and render buffer objects must be valid");
+    assert(fbo_ > 0 && texture_ > 0 && rbo_ > 0
+      && "Frame buffer, texture, and render buffer objects must be valid");
+
+    setSize(size);
+    setInterpolationMode(interpolationMode);
   }
 
   void FrameBuffer::setSize(const Vec2i& size)
   {
-    if (size_ != size)
-    { // New size, regenerate the texture and render buffer object
-      size_ = size;
-      generateFrameBuffer_();
+    if (isInitialized())
+    {
+      if (size_ != size)
+      { // New size, regenerate the texture and render buffer object
+        size_ = size;
+        generateFrameBuffer_();
+      }
+    }
+    else
+    { // Not initialized, call `initialize()` instead, which it also sets
+      // the size and interpolation mode.
+      initialize(size, interpolationMode_);
     }
   }
 
   void FrameBuffer::setInterpolationMode(GLint mode)
   {
-    if (inperpolationMode_ != mode)
+    if (isInitialized())
     {
-      inperpolationMode_ = mode;
+      if (interpolationMode_ != mode)
+      {
+        interpolationMode_ = mode;
 
-      if (texture_ > 0)
-      { // Update the texture parameters
-        glBindTexture(GL_TEXTURE_2D, texture_);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mode);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mode);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        if (texture_ > 0)
+        { // Update the texture parameters
+          glBindTexture(GL_TEXTURE_2D, texture_);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mode);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mode);
+          glBindTexture(GL_TEXTURE_2D, 0);
+        }
       }
+    }
+    else
+    { // Not initialized, call `initialize()` instead, which it also sets
+      // the size and interpolation mode.
+      initialize(size_, mode);
     }
   }
 
@@ -77,8 +150,8 @@ namespace gl
     // Create a color attachment texture
     glBindTexture(GL_TEXTURE_2D, texture_);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size_.x, size_.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, inperpolationMode_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, inperpolationMode_);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, interpolationMode_);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interpolationMode_);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_, 0);
 
     // Create a render buffer object for depth and stencil attachment (we won't be sampling these)

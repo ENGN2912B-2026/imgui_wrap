@@ -107,6 +107,7 @@ int main(int argc, char** argv)
   {
     using namespace gui2;
 
+    bool showLeftSide = true;
     bool showSidePanel = true;
     bool showBottomPanel = true;
 
@@ -155,9 +156,9 @@ int main(int argc, char** argv)
 
     window.setContent(
       HBox{
-        VBox{
+        [&] { return showLeftSide ? Widget{VBox{
           // Main panel is always displayed.
-          Stretch{3, std::move(mainPanel)},
+          Stretch{3, std::ref(mainPanel)},
           // Bottom panel is conditionally displayed.
           [&]{ return !showBottomPanel ? Stretch{0} : Stretch{1,
             Panel{ VStack {
@@ -167,7 +168,7 @@ int main(int argc, char** argv)
               },
             }}};
           },
-        },
+        }} : Fixed{0}; },
         // Side panel is conditionally displayed.
         [&]{ return !showSidePanel ? Fixed{0} : Fixed{250,
           Panel{ VStack {
@@ -175,6 +176,8 @@ int main(int argc, char** argv)
             Separator{},
             CheckBox{ "Side checkbox", &sidePanelCheckBox },
             [&]{ return std::string(sidePanelCheckBox ? "Checked" : "Unchecked"); },
+            "",
+            CheckBox{ "Show left side", &showLeftSide },
           }}};
         },
       }

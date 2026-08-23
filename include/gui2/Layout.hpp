@@ -243,6 +243,28 @@ namespace gui2
         // height to allow it to shrink.
         itemRect.unsetHeight();
       }
+      if (!itemRect.hasWidth())
+      { // If the item rectangle has no width, we assign the available width
+        // as an optional to inform the item how much space it can use.
+        const int x1 = actualRect.hasWidth()
+          ? std::max(itemRect.origin.x, actualRect.endX()) : itemRect.origin.x;
+        const int x2 = actualRect.hasWidth()
+          ? std::max(rect.endX(), actualRect.endX()) : rect.endX();
+        const int availableWidth = x2 - x1;
+        if (availableWidth > 0) { itemRect.setOptionalWidth(availableWidth); }
+        else { itemRect.unsetHeight(); }
+      }
+      if (!itemRect.hasHeight())
+      { // If the item rectangle has no height, we assign the available height
+        // as an optional to inform the item how much space it can use.
+        const int y1 = actualRect.hasHeight()
+          ? std::max(itemRect.origin.y, actualRect.endY()) : itemRect.origin.y;
+        const int y2 = actualRect.hasHeight()
+          ? std::max(rect.endY(), actualRect.endY()) : rect.endY();
+        const int availableHeight = y2 - y1;
+        if (availableHeight > 0) { itemRect.setOptionalHeight(availableHeight); }
+        else { itemRect.unsetHeight(); }
+      }
       // Display the item and get its actual rectangle
       itemActualRect = items_[i].display(rt, itemRect);
       // Update the layout's actual rectangle based on actual rectangles of
