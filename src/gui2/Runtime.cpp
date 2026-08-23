@@ -6,6 +6,7 @@
 #include "../gui/impl/Backend.hpp"
 #include <gui2/Empty.hpp>
 #include <gui2/Separator.hpp>
+#include <gui2/Image.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
 #include <gui2/Panel.hpp>
@@ -214,6 +215,18 @@ namespace gui2
     {
       button.onClick();
     }
+    return getItemRect_();
+  }
+
+  Rect Runtime::display(const Image& image, const Rect& rect) const
+  {
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    ImGui::Image(
+      (ImTextureID)(intptr_t)image.getTextureID(),
+      rect.getAvailableSize().to<float>(), // we need an actual size for the image
+      ImVec2(0, 1),
+      ImVec2(1, 0)
+    );
     return getItemRect_();
   }
 

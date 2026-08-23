@@ -3,19 +3,15 @@
 
 #include <gui2/Application.hpp>
 #include <gui2/Panel.hpp>
-#include <gui2/VBox.hpp>
-#include <gui2/HBox.hpp>
-#include <gui2/VStack.hpp>
-#include <gui2/HStack.hpp>
+#include <gui2/Layout.hpp>
 #include <gui2/Separator.hpp>
 #include <gui2/Button.hpp>
+#include <gui2/Image.hpp>
 
 #include <gl/gl.h>
 #include <gl/FrameBuffer.hpp>
 
 #include <timer/Timer.hpp>
-
-#include <imgui.h> //tmp
 
 #include <print>
 
@@ -37,16 +33,13 @@ public:
       frameBuffer_.setSize(availableSize);
     }
 
-    ImGui::Image(
-      (ImTextureID)(intptr_t)frameBuffer_.getTexture(),
-      frameBuffer_.getSize().to<float>(),
-      ImVec2(0, 1),
-      ImVec2(1, 0)
-    );
+    // Display the frame buffer's texture as an image in the GUI
+    const Rect actualRect{ rt.display(Image{ frameBuffer_.getTexture() }, rect) };
 
+    // Draw the OpenGL content into the frame buffer
     drawGL_();
 
-    return rect;
+    return actualRect;
   }
 
   bool isAnimationRunning() const

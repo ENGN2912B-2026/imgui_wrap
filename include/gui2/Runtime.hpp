@@ -24,6 +24,7 @@ namespace gui2
   using Backend = gui::Backend;
   class Empty;
   class Separator;
+  class Image;
   class Button;
   class CheckBox;
   class Panel;
@@ -67,6 +68,7 @@ namespace gui2
     Rect display(const Separator& separator, const Rect& rect) const;
     Rect display(const std::string& text, const Rect& rect) const;
     Rect display(const Button& button, const Rect& rect) const;
+    Rect display(const Image& image, const Rect& rect) const;
 
     // Primitive items which have state which might change during display
     Rect display(CheckBox& checkBox, const Rect& rect) const;

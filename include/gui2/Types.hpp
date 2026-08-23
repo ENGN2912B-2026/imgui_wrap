@@ -7,5 +7,6 @@
 namespace gui2
 {
   using math::Vec2i;
+  using math::Vec2f;
 
 } // namespace gui
