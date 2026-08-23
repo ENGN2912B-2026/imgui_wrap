@@ -102,7 +102,7 @@ namespace gl
 
     //! \brief Gets the OpenGL texture ID of the frame buffer's color attachment.
     //! \return The OpenGL texture ID of the frame buffer's color attachment.
-    unsigned getTexture() const { return texture_; }
+    GLuint getTexture() const { return texture_; }
 
   private:
     Vec2i size_               = {0, 0};

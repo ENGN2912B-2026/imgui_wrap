@@ -15,6 +15,14 @@
 
 #include <print>
 
+// This example shows how to integrate OpenGL rendering into a GUI application.
+//
+// It demonstrates how to create a custom widget that uses OpenGL to render
+// content and how to display that content within a GUI panel. The example also
+// includes a timer to animate the OpenGL content, and buttons to start and stop
+// the animation.
+//
+
 using namespace gui2;
 
 class WidgetGL
@@ -124,7 +132,7 @@ private:
 
 static_assert(Displayable<WidgetGL>, "WidgetGL should be a Displayable");
 
-// This example shows how to integrate OpenGL rendering into a GUI application.
+
 int main(int argc, char** argv)
 {
   using namespace gui2;
