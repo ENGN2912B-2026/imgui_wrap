@@ -4,6 +4,7 @@
 #pragma once
 
 #include <gl/gl.h>
+#include <gl/Texture.hpp>
 #include <math/Vec2.hpp>
 
 namespace gl
@@ -50,7 +51,7 @@ namespace gl
 
     //! \brief Checks if the frame buffer is initialized.
     //! \return true if the frame buffer is initialized, false otherwise.
-    bool isInitialized() const { return fbo_ > 0 && texture_ > 0 && rbo_ > 0; }
+    bool isInitialized() const;
 
     //! \brief Initializes the frame buffer with the given size and
     //!        interpolation mode.
@@ -100,14 +101,14 @@ namespace gl
     //! be directed to the default frame buffer until `bind()` is called again.
     void unbind() const;
 
-    //! \brief Gets the OpenGL texture ID of the frame buffer's color attachment.
-    //! \return The OpenGL texture ID of the frame buffer's color attachment.
-    GLuint getTexture() const { return texture_; }
+    //! \brief Gets the OpenGL texture of the frame buffer's color attachment.
+    //! \return The OpenGL texture of the frame buffer's color attachment.
+    const Texture& getTexture() const { return texture_; }
 
   private:
     Vec2i size_               = {0, 0};
     GLuint fbo_               = 0U;
-    GLuint texture_           = 0U;
+    Texture texture_          = {};
     GLuint rbo_               = 0U;
     GLint interpolationMode_  = GL_LINEAR;
 

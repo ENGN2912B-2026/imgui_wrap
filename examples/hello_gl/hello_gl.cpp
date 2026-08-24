@@ -1,4 +1,4 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
 #include <gl/gl.h>
@@ -42,7 +42,7 @@ public:
     frameBuffer_->setSize(math::make<gui::Vec2i>(ImGui::GetContentRegionAvail()));
 
     ImGui::Image(
-      (ImTextureID)(intptr_t)frameBuffer_->getTexture(),
+      (ImTextureID)(intptr_t)frameBuffer_->getTexture().getId(),
       frameBuffer_->getSize().to<float>(),
       ImVec2(0, 1),
       ImVec2(1, 0)

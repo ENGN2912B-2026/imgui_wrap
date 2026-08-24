@@ -1,7 +1,6 @@
 //  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
-#include <gl/gl.h>
 #include <gl/FrameBuffer.hpp>
 
 #include <stdexcept>
@@ -23,7 +22,7 @@ namespace gl
   FrameBuffer::~FrameBuffer()
   {
     if (rbo_ > 0) { glDeleteRenderbuffers(1, &rbo_); }
-    if (texture_ > 0) { glDeleteTextures(1, &texture_); }
+    texture_.unitialize();
     if (fbo_ > 0) { glDeleteFramebuffers(1, &fbo_); }
   }
 
@@ -32,7 +31,7 @@ namespace gl
     if (this != &other)
     {
       fbo_ = other.fbo_;
-      texture_ = other.texture_;
+      texture_ = std::move(other.texture_);
       rbo_ = other.rbo_;
       size_ = other.size_;
       interpolationMode_ = other.interpolationMode_;
@@ -40,13 +39,18 @@ namespace gl
       // Reset the other frame buffer to a default state
       FrameBuffer empty;
       other.fbo_ = empty.fbo_;
-      other.texture_ = empty.texture_;
+      other.texture_ = std::move(empty.texture_);
       other.rbo_ = empty.rbo_;
       other.size_ = empty.size_;
       other.interpolationMode_ = empty.interpolationMode_;
     }
 
     return *this;
+  }
+
+  bool FrameBuffer::isInitialized() const
+  {
+    return fbo_ > 0 && texture_.isInitialized() && rbo_ > 0;
   }
 
   void FrameBuffer::initialize(const Vec2i& size, GLint interpolationMode)
@@ -61,14 +65,9 @@ namespace gl
       }
     }
 
-    if (texture_ == 0)
+    if (!texture_.isInitialized())
     { // Create a color attachment texture
-      glGenTextures(1, &texture_);
-      if (texture_ == 0)
-      {
-        throw std::runtime_error{
-          "ERROR::FRAMEBUFFER:: Failed to create texture!"};
-      }
+      texture_.initialize();
     }
 
     if (rbo_ == 0)
@@ -84,7 +83,7 @@ namespace gl
 
     assert(isInitialized()
       && "Frame buffer, texture, and render buffer objects must be valid");
-    assert(fbo_ > 0 && texture_ > 0 && rbo_ > 0
+    assert(fbo_ > 0 && texture_.isInitialized() && rbo_ > 0
       && "Frame buffer, texture, and render buffer objects must be valid");
 
     setSize(size);
@@ -115,13 +114,9 @@ namespace gl
       if (interpolationMode_ != mode)
       {
         interpolationMode_ = mode;
-
-        if (texture_ > 0)
+        if (texture_.isInitialized())
         { // Update the texture parameters
-          glBindTexture(GL_TEXTURE_2D, texture_);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mode);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mode);
-          glBindTexture(GL_TEXTURE_2D, 0);
+          texture_.setInterpolationMode(interpolationMode_);
         }
       }
     }
@@ -148,11 +143,9 @@ namespace gl
     bind();
 
     // Create a color attachment texture
-    glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size_.x, size_.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, interpolationMode_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interpolationMode_);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_, 0);
+    texture_.initialize(size_, interpolationMode_);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           texture_.getId(), 0);
 
     // Create a render buffer object for depth and stencil attachment (we won't be sampling these)
     glBindRenderbuffer(GL_RENDERBUFFER, rbo_);
@@ -164,13 +157,13 @@ namespace gl
 
     // Unbind everything
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
     unbind();
 
     // Check if the frame buffer is complete
     if (!bufferComplete)
     {
-      throw std::runtime_error("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+      throw std::runtime_error{
+        "ERROR::FRAMEBUFFER:: Framebuffer is not complete!"};
     }
   }
 

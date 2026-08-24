@@ -42,7 +42,8 @@ public:
     }
 
     // Display the frame buffer's texture as an image in the GUI
-    const Rect actualRect{ rt.display(Image{ frameBuffer_.getTexture() }, rect) };
+    const Rect actualRect{
+      rt.display(Image{ frameBuffer_.getTexture().getId() }, rect) };
 
     // Draw the OpenGL content into the frame buffer
     drawGL_();
