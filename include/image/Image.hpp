@@ -111,6 +111,11 @@ namespace image
       initialize(size);
     }
 
+    //! \brief Constructs an Image object with the given width and height.
+    //! \param[in] width The width of the image.
+    //! \param[in] height The height of the image.
+    Image(int width, int height) : Image{math::Vec2i{width, height}} {}
+
     //! \brief Initializes the Image object with the given size.
     //! \param[in] size The size of the image.
     void initialize(math::Vec2i size)

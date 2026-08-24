@@ -96,6 +96,11 @@ namespace gl
     //! \return The OpenGL texture Id of the frame buffer's color attachment.
     GLuint getId() const { return id_; }
 
+    //! \brief Gets the size of the texture in pixels.
+    //! \return The size of the texture in pixels.
+    //! \throw std::runtime_error if the texture is not initialized.
+    Vec2i getSize() const;
+
     //! \brief Sets the interpolation mode for this texture.
     //! \param[in] interpolationMode  The interpolation mode of the texture.
     //!                               This is a valid OpenGL texture parameter,

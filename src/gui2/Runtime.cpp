@@ -12,6 +12,7 @@
 #include <gui2/Panel.hpp>
 
 #include <imgui.h>
+#include <imgui_zoomable_image.h>
 
 #ifdef USE_IMPLOT
 # include <implot.h>
@@ -238,6 +239,18 @@ namespace gui2
     {
       checkBox.setChecked(checked);
     }
+    return getItemRect_();
+  }
+
+  Rect Runtime::display(ImageZoom& imageZoom, const Rect& rect) const
+  {
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    static_assert(sizeof(ImGuiImage::State) == sizeof(ImageZoom::ZoomState),
+                  "Size of ImGuiImage::State and ImageZoom::ZoomState must be equal");
+    ImGuiImage::Zoomable(
+      imageZoom.getTextureId(),
+      rect.getAvailableSize().to<float>(),
+      reinterpret_cast<ImGuiImage::State*>(&imageZoom.getZoomState()));
     return getItemRect_();
   }
 

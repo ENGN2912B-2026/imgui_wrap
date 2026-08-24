@@ -115,6 +115,28 @@ namespace gl
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
+  Vec2i Texture::getSize() const
+  {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::TEXTURE:: "
+        "Cannot get size of uninitialized texture!"};
+    }
+
+    // Bind the texture to get its parameters
+    bind();
+
+    // Get the texture size
+    GLint width, height;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+    // Unbind the texture after getting its parameters
+    unbind();
+
+    return Vec2i{ width, height };
+  }
+
   void Texture::setInterpolationMode(GLint interpolationMode)
   {
     if (!isInitialized())
