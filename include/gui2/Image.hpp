@@ -3,6 +3,7 @@
 #pragma once
 
 #include <gui2/Types.hpp>
+#include <gl/Texture.hpp>
 
 #include <stdint.h>
 
@@ -28,6 +29,10 @@ namespace gui2
     //! \brief Constructs an Image object with the given texture Id and size.
     //! \param[in] textureId The texture Id of the image.
     Image(TextureId textureId) : textureId_{textureId} {}
+
+    //! \brief Constructs an Image object from a gl::Texture object.
+    //! \param[in] texture The gl::Texture object to create the image from.
+    Image(const gl::Texture& texture) : Image{texture.getId()} {}
 
     //! \brief Gets the texture Id of the image.
     //! \return The texture Id of the image.
@@ -63,6 +68,19 @@ namespace gui2
       zoomState_.textureSize = textureSize.cast<float>();
       zoomState_.zoomPanEnabled = enableZoomPan;
       zoomState_.maintainAspectRatio = maintainAspectRatio;
+    }
+
+    //! \brief Constructs an ImageZoom object from a gl::Texture object.
+    //! \param[in] texture The gl::Texture object to create the image from.
+    //! \param[in] enableZoomPan Whether to enable zoom and pan functionality.
+    //! \param[in] maintainAspectRatio Whether to maintain the aspect ratio of
+    //!                                the image.
+    ImageZoom(const gl::Texture& texture,
+              bool enableZoomPan = true,
+              bool maintainAspectRatio = false) :
+      ImageZoom{
+        texture.getId(), texture.getSize(), enableZoomPan, maintainAspectRatio}
+    {
     }
 
     //! \brief Zoom and pan state of an image.

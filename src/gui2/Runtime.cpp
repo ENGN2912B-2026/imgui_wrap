@@ -224,10 +224,7 @@ namespace gui2
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
     ImGui::Image(
       (ImTextureID)(intptr_t)image.getTextureId(),
-      rect.getAvailableSize().to<float>(), // we need an actual size for the image
-      ImVec2(0, 1),
-      ImVec2(1, 0)
-    );
+      rect.getAvailableSize().to<float>()); // we need an actual size for the image
     return getItemRect_();
   }
 

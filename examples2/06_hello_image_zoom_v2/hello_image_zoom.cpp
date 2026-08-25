@@ -26,15 +26,28 @@ image::ImageRgb8 createTestImage()
 {
   constexpr size_t checkerSize{ 20 };
   image::ImageRgb8 image{ 320, 240 };
-  for (size_t y = 0; y < image.getHeight(); ++y)
+  // make a checkerboard pattern (exclude the first row and column)
+  for (size_t y = 1; y < image.getHeight(); ++y)
   {
     auto* row = image.getRow(y);
-    for (size_t x = 0; x < image.getWidth(); ++x)
+    for (size_t x = 1; x < image.getWidth(); ++x)
     {
       const bool isWhite = ((x / checkerSize) % 2) == ((y / checkerSize) % 2);
       const uint8_t colorValue = isWhite ? 200 : 50;
       row[x] = image::Rgb8{colorValue, colorValue, colorValue};
     }
+  }
+  // make a red column at the left side of the image
+  for (size_t y = 0; y < image.getHeight(); ++y)
+  {
+    auto* row = image.getRow(y);
+    row[0] = image::Rgb8{255, 0, 0};
+  }
+  // make a green row at the top of the image
+  for (size_t x = 0; x < image.getWidth(); ++x)
+  {
+    auto* row = image.getRow(0);
+    row[x] = image::Rgb8{0, 255, 0};
   }
   return image;
 }
@@ -47,7 +60,7 @@ public:
     if (!texture_.isInitialized())
     { // Create a test image and load it into an OpenGL texture
       texture_.initialize(createTestImage(), GL_NEAREST);
-      imageZoom_ = ImageZoom{ texture_.getId(), texture_.getSize(), true, true };
+      imageZoom_ = ImageZoom{ texture_, true, true };
     }
 
     // Display the frame buffer's texture as an image in the GUI

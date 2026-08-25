@@ -51,7 +51,7 @@ public:
     }
 
     // Display the frame buffer's texture as an image in the GUI
-    return rt.display(Image{ texture_.getId() }, rect);
+    return rt.display(Image{ texture_ }, rect);
   }
 private:
   gl::Texture texture_;

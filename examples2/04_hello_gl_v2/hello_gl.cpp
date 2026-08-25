@@ -41,14 +41,11 @@ public:
       frameBuffer_.setSize(availableSize);
     }
 
-    // Display the frame buffer's texture as an image in the GUI
-    const Rect actualRect{
-      rt.display(Image{ frameBuffer_.getTexture().getId() }, rect) };
-
     // Draw the OpenGL content into the frame buffer
     drawGL_();
 
-    return actualRect;
+    // Display the frame buffer's texture as an image in the GUI
+    return rt.display(Image{ frameBuffer_.getTexture() }, rect);
   }
 
   bool isAnimationRunning() const
@@ -90,7 +87,7 @@ private:
   {
     if (frameBuffer_.isInitialized())
     {
-      configureViewport_(-1, 1, -1 , 1);
+      configureViewport_(-1, -1, 1 , 1);
 
       frameBuffer_.bind();
 
@@ -115,7 +112,7 @@ private:
     glLoadIdentity();
 
     //set the projection transformation
-    glOrtho(x1, x2, y1, y2, -1, 1);
+    glOrtho(x1, x2, y2, y1, -1, 1); // flip y-axis to match GUI coordinates
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
   }
