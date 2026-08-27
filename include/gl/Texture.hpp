@@ -78,7 +78,7 @@ namespace gl
     //! \brief Deletes the texture and releases the OpenGL resources.
     //!
     //! If the texture is not initialized, this method does nothing.
-    void unitialize();
+    void uninitialize();
 
     //! \brief Binds the frame buffer for rendering.
     //!

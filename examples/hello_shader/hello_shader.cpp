@@ -161,7 +161,12 @@ public:
 
     initGL();
 
+    // Set the size of the frame buffer to match the available size
     frameBuffer_->setSize(math::make<gui::Vec2i>(ImGui::GetContentRegionAvail()));
+
+    // Make the viewport occupy the whole canvas
+    const gui::Vec2i& canvasSize{ frameBuffer_->getSize() };
+    glViewport(0, 0, canvasSize.x, canvasSize.y);
 
     ImGui::Image(
       (ImTextureID)(intptr_t)frameBuffer_->getTexture().getId(),
@@ -177,8 +182,6 @@ public:
   {
     if (frameBuffer_ != nullptr)
     {
-      configureViewport(-1, 1, -1 , 1);
-
       frameBuffer_->bind();
 
       glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -189,22 +192,6 @@ public:
 
       frameBuffer_->unbind();
     }
-  }
-
-  void configureViewport(int x1, int y1, int x2, int y2)
-  {
-    assert(frameBuffer_ != nullptr);
-
-    //make the viewport occupy the whole canvas
-    const gui::Vec2i& canvasSize{ frameBuffer_->getSize() };
-    glViewport(0, 0, canvasSize.x, canvasSize.y);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    //set the projection transformation
-    glOrtho(x1, x2, y1, y2, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
   }
 
   void drawTriangle()

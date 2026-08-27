@@ -87,7 +87,7 @@ private:
   {
     if (frameBuffer_.isInitialized())
     {
-      configureViewport_(-1, -1, 1 , 1);
+      configureViewport_(-1, -1, 1, 1);
 
       frameBuffer_.bind();
 

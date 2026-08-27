@@ -15,7 +15,7 @@ namespace gl
 
   Texture::~Texture()
   {
-    unitialize();
+    uninitialize();
   }
 
   Texture& Texture::operator=(Texture&& other) noexcept
@@ -96,7 +96,7 @@ namespace gl
     unbind();
   }
 
-  void Texture::unitialize()
+  void Texture::uninitialize()
   {
     if (id_ > 0)
     {

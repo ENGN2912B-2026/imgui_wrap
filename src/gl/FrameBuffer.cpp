@@ -22,7 +22,7 @@ namespace gl
   FrameBuffer::~FrameBuffer()
   {
     if (rbo_ > 0) { glDeleteRenderbuffers(1, &rbo_); }
-    texture_.unitialize();
+    texture_.uninitialize();
     if (fbo_ > 0) { glDeleteFramebuffers(1, &fbo_); }
   }
 

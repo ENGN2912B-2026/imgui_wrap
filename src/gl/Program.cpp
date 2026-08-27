@@ -1,48 +1,130 @@
-//  Copyright (c) 2025 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2025-2026 Daniel Moreno. All rights reserved.
 //
 
-#include <gl/gl.h>
 #include <gl/Program.hpp>
 
-#include <vector>
 #include <stdexcept>
+#include <cassert>
 
 namespace gl
 {
-  Program::Program()
+  Program::Program(
+    const Shader& vertexShader,
+    const Shader& fragmentShader,
+    const std::vector<std::pair<unsigned, std::string>>& attributes) : Program{}
   {
-    program_ = glCreateProgram();
-  }
-
-  Program::~Program()
-  {
-    glDeleteProgram(program_);
+    initialize(vertexShader, fragmentShader, attributes);
   }
 
   Program::Program(
     const std::string& vertexShader,
     const std::string& fragmentShader,
+    const std::vector<std::pair<unsigned, std::string>>& attributes) : Program{}
+  {
+    initialize(vertexShader, fragmentShader, attributes);
+  }
+
+  Program::Program(Program&& other) noexcept
+  {
+    operator=(std::move(other));
+  }
+
+  Program::~Program()
+  {
+    uninitialize();
+  }
+
+  Program& Program::operator=(Program&& other) noexcept
+  {
+    if (this != &other)
+    {
+      program_ = other.program_;
+
+      // Reset the other program to a default state
+      Program empty;
+      other.program_ = empty.program_;
+    }
+    return *this;
+  }
+
+  void Program::initialize()
+  {
+    if (!isInitialized())
+    {
+      program_ = glCreateProgram();
+    }
+  }
+
+  void Program::initialize(
+    const Shader& vertexShader,
+    const Shader& fragmentShader,
     const std::vector<std::pair<unsigned, std::string>>& attributes)
   {
-    program_ = glCreateProgram();
-    attachShader(Shader(GL_VERTEX_SHADER));
-    shaders_.back().source(vertexShader.c_str());
-    shaders_.back().compile();
-    attachShader(Shader(GL_FRAGMENT_SHADER));
-    shaders_.back().source(fragmentShader.c_str());
-    shaders_.back().compile();
+    if (!isInitialized())
+    {
+      initialize();
+    }
+    assert(isInitialized() && "Program object must be valid");
+
+    // Attach the shaders and link the program
+    attachShader(vertexShader);
+    attachShader(fragmentShader);
     bindAttributeLocations(attributes);
     link();
   }
 
-  void Program::attachShader(Shader shader)
+  void Program::initialize(
+    const std::string& vertexShader,
+    const std::string& fragmentShader,
+    const std::vector<std::pair<unsigned, std::string>>& attributes)
   {
-    shaders_.emplace_back(std::move(shader));
-    glAttachShader(program_, shaders_.back().get());
+    Shader vertexShaderObj{ GL_VERTEX_SHADER, vertexShader };
+    Shader fragmentShaderObj{ GL_FRAGMENT_SHADER, fragmentShader };
+    initialize(vertexShaderObj, fragmentShaderObj, attributes);
+  }
+
+  void Program::uninitialize()
+  {
+    if (isInitialized())
+    {
+      glDeleteProgram(program_);
+      program_ = 0;
+    }
+  }
+
+  void Program::attachShader(const Shader& shader)
+  {
+    if (!shader.isCompiled())
+    {
+      throw std::invalid_argument{ "ERROR::PROGRAM:: "
+        "Cannot attach uncompiled shader!"};
+    }
+    if (!isInitialized())
+    {
+      initialize();
+    }
+    glAttachShader(program_, shader.getId());
+  }
+
+  bool Program::isLinked() const
+  {
+    if (isInitialized())
+    {
+      GLint status;
+      glGetProgramiv(program_, GL_LINK_STATUS, &status);
+      return status == GL_TRUE;
+    }
+    return false;
   }
 
   void Program::link()
   {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::PROGRAM:: "
+        "Cannot link uninitialized program!"};
+    }
+
     // Link the program
     glLinkProgram(program_);
 
