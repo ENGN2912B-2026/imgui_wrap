@@ -225,9 +225,6 @@ private:
   }
 };
 
-static_assert(Displayable<WidgetGL>, "WidgetGL should be a Displayable");
-
-
 int main(int argc, char** argv)
 {
   using namespace gui2;

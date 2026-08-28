@@ -6,10 +6,8 @@
 #include <gui2/Layout.hpp>
 #include <gui2/Separator.hpp>
 #include <gui2/Button.hpp>
-#include <gui2/Image.hpp>
 
-#include <gl/gl.h>
-#include <gl/FrameBuffer.hpp>
+#include <gui2/WidgetGL.hpp>
 
 #include <timer/Timer.hpp>
 
@@ -25,27 +23,20 @@
 
 using namespace gui2;
 
-class WidgetGL
+class ViewerGL : public WidgetGL
 {
 public:
-  Rect display(const Runtime& rt, const Rect& rect)
+  virtual void initialize(const Vec2i& availableSize) override
   {
-    const Vec2i availableSize{ rect.getAvailableSize() };
-    if (!frameBuffer_.isInitialized())
-    {
-      frameBuffer_.initialize(availableSize, GL_LINEAR);
-      startAnimation();
-    }
-    else if (frameBuffer_.getSize() != availableSize)
-    {
-      frameBuffer_.setSize(availableSize);
-    }
+    WidgetGL::initialize(availableSize);
+    startAnimation();
+  }
 
-    // Draw the OpenGL content into the frame buffer
-    drawGL_();
-
-    // Display the frame buffer's texture as an image in the GUI
-    return rt.display(Image{ frameBuffer_.getTexture() }, rect);
+  virtual void drawGL() override
+  {
+    configureViewport_(-1, -1, 1, 1);
+    WidgetGL::drawGL();
+    drawTriangle_();
   }
 
   bool isAnimationRunning() const
@@ -79,27 +70,8 @@ public:
   }
 
 private:
-  gl::FrameBuffer frameBuffer_;
   timer::Timer timer_;
   float angle_ = 0.0f;
-
-  void drawGL_()
-  {
-    if (frameBuffer_.isInitialized())
-    {
-      configureViewport_(-1, -1, 1, 1);
-
-      frameBuffer_.bind();
-
-      glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-      drawTriangle_();
-
-      frameBuffer_.unbind();
-    }
-  }
 
   void configureViewport_(int x1, int y1, int x2, int y2)
   {
@@ -128,9 +100,6 @@ private:
   }
 };
 
-static_assert(Displayable<WidgetGL>, "WidgetGL should be a Displayable");
-
-
 int main(int argc, char** argv)
 {
   using namespace gui2;
@@ -145,7 +114,7 @@ int main(int argc, char** argv)
   Window& window = app.getWindow();
 
   // Create the OpenGL widget
-  WidgetGL widgetGL;
+  ViewerGL viewerGL;
 
   // Set the content of the window to include the OpenGL widget and other
   // GUI elements
@@ -156,13 +125,13 @@ int main(int argc, char** argv)
         Stretch{3, Panel{ VStack{
           "Main Panel",
           Separator{},
-          std::ref(widgetGL),
+          std::ref(viewerGL),
         }}},
         // Bottom panel
         Stretch{1, Panel{ VStack{
           "Bottom Panel",
           Separator{},
-          [&]{ return widgetGL.isAnimationRunning()
+          [&]{ return viewerGL.isAnimationRunning()
             ? "Animation is running" : "Animation is stopped"; },
         }}},
       },
@@ -170,9 +139,9 @@ int main(int argc, char** argv)
       Fixed{250, Panel{ VStack{
         "Side Panel",
         Separator{},
-        [&]{ return widgetGL.isAnimationRunning()
-          ? Button{ "Stop Animation", [&]{ widgetGL.stopAnimation(); } }
-          : Button{ "Start Animation", [&]{ widgetGL.startAnimation(); } };
+        [&]{ return viewerGL.isAnimationRunning()
+          ? Button{ "Stop Animation", [&]{ viewerGL.stopAnimation(); } }
+          : Button{ "Start Animation", [&]{ viewerGL.startAnimation(); } };
         },
       }}},
     }
