@@ -222,10 +222,15 @@ namespace gui2
   Rect Runtime::display(const Image& image, const Rect& rect) const
   {
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
-    ImGui::Image(
-      (ImTextureID)(intptr_t)image.getTextureId(),
-      rect.getAvailableSize().to<float>()); // we need an actual size for the image
-    return getItemRect_();
+    if (const auto textureId = image.getTextureId(); textureId > 0)
+    {
+      ImGui::Image(
+        (ImTextureID)(intptr_t)textureId,
+        rect.getAvailableSize().to<float>()); // we need an actual size for the image
+      return getItemRect_();
+    }
+    // If the image is not valid (textureId <= 0), we display an empty rectangle.
+    return display(Empty{}, rect);
   }
 
   Rect Runtime::display(CheckBox& checkBox, const Rect& rect) const

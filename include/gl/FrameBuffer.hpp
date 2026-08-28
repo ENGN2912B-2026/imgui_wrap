@@ -16,6 +16,13 @@ namespace gl
   class FrameBuffer
   {
   public:
+    //! \brief Forward declaration of the AutoUnbind class.
+    //!
+    //! A helper class that automatically unbinds the frame buffer when it goes
+    //! out of scope. This is useful for ensuring that the frame buffer is
+    //! properly unbound after rendering, even if an exception is thrown.
+    class AutoUnbind;
+
     //! \brief Default constructor.
     //!
     //! The frame buffer is not initialized, and the size is set to (0, 0).
@@ -63,7 +70,7 @@ namespace gl
     //! The frame buffer is initialized with the given size and interpolation
     //! mode. If the frame buffer is already initialized, but with a different
     //! size or interpolation mode, it is updated accordingly.
-    void initialize(const Vec2i& size, GLint interpolationMode);
+    void initialize(const Vec2i& size, GLint interpolationMode = GL_LINEAR);
 
     //! \brief Sets the size of the frame buffer.
     //! \param[in] size  The new size of the frame buffer in pixels.
@@ -95,6 +102,13 @@ namespace gl
     //! be directed to this frame buffer until `unbind()` is called.
     void bind() const;
 
+    //! \brief Binds the frame buffer for rendering and returns an AutoUnbind
+    //!        object that will automatically unbind the frame buffer when it
+    //!        goes out of scope.
+    //! \return An AutoUnbind object that will automatically unbind the frame
+    //!         buffer when it goes out of scope.
+    AutoUnbind bindScoped() const;
+
     //! \brief Unbinds the frame buffer, restoring the default frame buffer.
     //!
     //! After calling this method, all subsequent OpenGL rendering commands will
@@ -116,3 +130,37 @@ namespace gl
   };
 
 } // namespace gl
+
+
+// Implementation -------------------------------------------------------------
+namespace gl
+{
+  //! \brief A helper class that automatically unbinds the frame buffer when it
+  //!        goes out of scope.
+  class FrameBuffer::AutoUnbind
+  {
+  public:
+    // \brief Constructs an AutoUnbind object and binds the given frame buffer.
+    //! \param[in] frameBuffer  The frame buffer to bind.
+    AutoUnbind(const FrameBuffer& frameBuffer)
+    {
+      glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previous_);
+      frameBuffer.bind();
+    }
+    //! \brief Destructor that automatically unbinds the frame buffer.
+    ~AutoUnbind()
+    {
+      glBindFramebuffer(GL_DRAW_FRAMEBUFFER, previous_);
+    }
+    //! \brief Deleted copy constructor to prevent copying.
+    AutoUnbind(const AutoUnbind&) = delete;
+    //! \brief Deleted move constructor to prevent moving.
+    AutoUnbind(AutoUnbind&&) = delete;
+    //! \brief Deleted copy assignment operator to prevent copying.
+    AutoUnbind& operator=(const AutoUnbind&) = delete;
+    //! \brief Deleted move assignment operator to prevent moving.
+    AutoUnbind& operator=(AutoUnbind&&) = delete;
+  private:
+    GLint previous_;
+  };
+}

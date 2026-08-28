@@ -6,10 +6,9 @@
 #include <gui2/Layout.hpp>
 #include <gui2/Separator.hpp>
 #include <gui2/Button.hpp>
-#include <gui2/Image.hpp>
 
-#include <gl/gl.h>
-#include <gl/FrameBuffer.hpp>
+#include <gui2/WidgetGL.hpp>
+
 #include <gl/Program.hpp>
 
 #include <timer/Timer.hpp>
@@ -21,28 +20,20 @@
 
 using namespace gui2;
 
-class WidgetGL
+class ViewerGL : public WidgetGL
 {
 public:
-  Rect display(const Runtime& rt, const Rect& rect)
+  virtual void initialize(const Vec2i& availableSize) override
   {
-    const Vec2i availableSize{ rect.getAvailableSize() };
-    if (!program_.isInitialized())
-    {
-      initialize_(availableSize);
-      startAnimation();
-    }
-    else if (frameBuffer_.getSize() != availableSize)
-    {
-      frameBuffer_.setSize(availableSize);
-    }
-    configureViewport_(availableSize);
+    WidgetGL::initialize(availableSize);
+    initializeShaders_();
+    startAnimation();
+  }
 
-    // Draw the OpenGL content into the frame buffer
-    drawGL_();
-
-    // Display the frame buffer's texture as an image in the GUI
-    return rt.display(Image{ frameBuffer_.getTexture() }, rect);
+  virtual void drawGL() override
+  {
+    WidgetGL::drawGL();
+    drawTriangle_();
   }
 
   bool isAnimationRunning() const
@@ -75,7 +66,12 @@ public:
     }
   }
 
-  ~WidgetGL()
+  const std::string& getGlslVersionString() const
+  {
+    return glslVersionString_;
+  }
+
+  ~ViewerGL()
   {
     stopAnimation();
     if (VAO)
@@ -89,19 +85,17 @@ public:
   }
 
 private:
-  gl::FrameBuffer frameBuffer_;
   gl::Program program_;
   GLuint VBO, VAO;
   timer::Timer timer_;
   float angle_ = 0.0f;
+  std::string glslVersionString_;
 
-  void initialize_(const Vec2i& frameBufferSize)
+  void initializeShaders_()
   {
-    // Initialize the frame buffer
-    frameBuffer_.initialize(frameBufferSize, GL_LINEAR);
-
     // Initialize the shader program
     const size_t glslVersion{ gl::Shader::getShadingLanguageVersion() };
+    glslVersionString_ = std::to_string(glslVersion);
     //std::cout << "GLSL Version: " << glslVersion << std::endl; //TODO show in UI
     std::string vertexShader, fragmentShader;
     if (glslVersion == 140)
@@ -199,23 +193,6 @@ private:
     };
   }
 
-  void drawGL_()
-  {
-    frameBuffer_.bind();
-
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    drawTriangle_();
-
-    frameBuffer_.unbind();
-}
-
-  void configureViewport_(const Vec2i& viewportSize)
-  {
-    glViewport(0, 0, viewportSize.x, viewportSize.y);
-  }
-
   void drawTriangle_()
   {
     // update the vertex data
@@ -265,7 +242,7 @@ int main(int argc, char** argv)
   Window& window = app.getWindow();
 
   // Create the OpenGL widget
-  WidgetGL widgetGL;
+  ViewerGL viewerGL;
 
   // Set the content of the window to include the OpenGL widget and other
   // GUI elements
@@ -276,23 +253,24 @@ int main(int argc, char** argv)
         Stretch{3, Panel{ VStack{
           "Main Panel",
           Separator{},
-          std::ref(widgetGL),
+          std::ref(viewerGL),
         }}},
         // Bottom panel
         Stretch{1, Panel{ VStack{
           "Bottom Panel",
           Separator{},
-          [&]{ return widgetGL.isAnimationRunning()
+          [&]{ return viewerGL.isAnimationRunning()
             ? "Animation is running" : "Animation is stopped"; },
+          [&]{ return "GLSL Version: " + viewerGL.getGlslVersionString(); },
         }}},
       },
       // Side panel
       Fixed{250, Panel{ VStack{
         "Side Panel",
         Separator{},
-        [&]{ return widgetGL.isAnimationRunning()
-          ? Button{ "Stop Animation", [&]{ widgetGL.stopAnimation(); } }
-          : Button{ "Start Animation", [&]{ widgetGL.startAnimation(); } };
+        [&]{ return viewerGL.isAnimationRunning()
+          ? Button{ "Stop Animation", [&]{ viewerGL.stopAnimation(); } }
+          : Button{ "Start Animation", [&]{ viewerGL.startAnimation(); } };
         },
       }}},
     }

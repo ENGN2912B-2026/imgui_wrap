@@ -132,6 +132,11 @@ namespace gl
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
   }
 
+  FrameBuffer::AutoUnbind FrameBuffer::bindScoped() const
+  {
+    return AutoUnbind{ *this };
+  }
+
   void FrameBuffer::unbind() const
   {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
