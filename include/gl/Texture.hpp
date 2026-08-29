@@ -3,49 +3,35 @@
 
 #pragma once
 
-#include <gl/gl.hpp>
-#include <math/Vec2.hpp>
+#include <gl/Handler.hpp>
+#include <gl/AutoUnbind.hpp>
 #include <image/Image.hpp>
 
 namespace gl
 {
-  using math::Vec2i;
-
   //! \brief A simple texture class that can be used to manage OpenGL textures.
-  class Texture
+  class Texture : public Handler
   {
   public:
-    //! \brief Forward declaration of the AutoUnbind class.
-    //!
-    //! A helper class that automatically unbinds the texture when it goes out
-    //! of scope.
-    class AutoUnbind;
+    //! \brief AutoUnbind is a helper class that automatically unbinds the
+    //!        texture when it goes out of scope. This is useful for ensuring
+    //!        that the texture is properly unbound, even if an exception is
+    //!        thrown.
+    using AutoUnbind = gl::AutoUnbind<Texture>;
+
+    //! \brief Deleted copy constructor and copy assignment operator, and
+    //!        default move constructor and move assignment operator.
+    GL_NO_COPY_DEFAULT_MOVE(Texture)
 
     //! \brief Default constructor.
     //!
     //! The texture is not initialized, and the size is set to (0, 0).
     Texture() = default;
 
-    //! \brief Copy constructor.
-    Texture(const Texture&) = delete;
-
-    //! \brief Move constructor.
-    Texture(Texture&&) noexcept;
-
     //! \brief Destructor.
     //!
     //! The texture is deleted, and the OpenGL resources are released.
-    ~Texture();
-
-    //! \brief Copy assignment operator.
-    Texture& operator=(const Texture&) = delete;
-
-    //! \brief Move assignment operator.
-    Texture& operator=(Texture&&) noexcept;
-
-    //! \brief Checks if the texture is initialized.
-    //! \return true if the texture is initialized, false otherwise.
-    bool isInitialized() const { return id_ > 0; }
+    ~Texture() { uninitialize(); }
 
     //! \brief Initializes the texture.
     //! \throw std::runtime_error if the texture fails to be initialized.
@@ -86,30 +72,6 @@ namespace gl
     //! If the texture is not initialized, this method does nothing.
     void uninitialize();
 
-    //! \brief Binds the texture as `GL_TEXTURE_2D` for subsequent OpenGL
-    //!        texture operations.
-    //!
-    //! After calling this method, all subsequent OpenGL texture 2D commands
-    //! will be directed to this texture until `unbind()` is called.
-    void bind() const;
-
-    //! \brief Binds the texture as `GL_TEXTURE_2D` and returns an AutoUnbind
-    //!        object that will automatically unbind the frame buffer when it
-    //!        goes out of scope.
-    //! \return An AutoUnbind object that will automatically unbind the frame
-    //!         buffer when it goes out of scope.
-    AutoUnbind bindScoped() const;
-
-    //! \brief Unbinds the texture, restoring the default texture binding.
-    //!
-    // After calling this method, all subsequent OpenGL texture 2D commands will
-    // be directed to the default texture until `bind()` is called again.
-    void unbind() const;
-
-    //! \brief Gets the OpenGL texture Id of the frame buffer's color attachment.
-    //! \return The OpenGL texture Id of the frame buffer's color attachment.
-    GLuint getId() const { return id_; }
-
     //! \brief Gets the size of the texture in pixels.
     //! \return The size of the texture in pixels.
     //! \throw std::runtime_error if the texture is not initialized.
@@ -140,41 +102,27 @@ namespace gl
     //! texture will be resized to match the image size.
     void uploadImage(const image::ImageRgb8& image);
 
-  private:
-    GLuint id_ = 0U;
+    //! \brief Binds the texture as `GL_TEXTURE_2D` and returns an AutoUnbind
+    //!        object that will automatically unbind the texture when it goes
+    //!        out of scope.
+    //! \return An AutoUnbind object that will automatically unbind the texture
+    //!         when it goes out of scope.
+    AutoUnbind bindScoped() const;
+
+    //! \brief Binds a texture as `GL_TEXTURE_2D`.
+    //! \param[in] id The OpenGL ID of the texture to bind.
+    static void bind(GLuint id) { glBindTexture(GL_TEXTURE_2D, id); }
+
+    //! \brief Unbinds the current texture, restoring the default texture
+    //!        binding.
+    static void unbind() { glBindTexture(GL_TEXTURE_2D, 0); }
+
+    //! \brief Gets the OpenGL ID of the currently bound texture.
+    //! \return The OpenGL ID of the currently bound texture.
+    static GLuint getBoundId();
   };
+
+  //! \brief Static assertion to ensure that Texture is AutoUnbindable.
+  static_assert(AutoUnbindable<Texture>, "Texture must be AutoUnbindable");
 
 } // namespace gl
-
-// Implementation -------------------------------------------------------------
-namespace gl
-{
-  //! \brief A helper class that automatically unbinds the texture when it
-  //!        goes out of scope.
-  class Texture::AutoUnbind
-  {
-  public:
-    // \brief Constructs an AutoUnbind object and binds the given texture.
-    //! \param[in] texture  The texture to bind.
-    AutoUnbind(const Texture& texture)
-    {
-      glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous_);
-      texture.bind();
-    }
-    //! \brief Destructor that automatically unbinds the texture.
-    ~AutoUnbind()
-    {
-      glBindTexture(GL_TEXTURE_2D, previous_);
-    }
-    //! \brief Deleted copy constructor to prevent copying.
-    AutoUnbind(const AutoUnbind&) = delete;
-    //! \brief Deleted move constructor to prevent moving.
-    AutoUnbind(AutoUnbind&&) = delete;
-    //! \brief Deleted copy assignment operator to prevent copying.
-    AutoUnbind& operator=(const AutoUnbind&) = delete;
-    //! \brief Deleted move assignment operator to prevent moving.
-    AutoUnbind& operator=(AutoUnbind&&) = delete;
-  private:
-    GLint previous_;
-  };
-}

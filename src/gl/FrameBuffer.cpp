@@ -15,6 +15,7 @@ namespace gl
   }
 
   FrameBuffer::FrameBuffer(FrameBuffer&& other) noexcept
+    : Handler{ std::move(other) }
   {
     operator=(std::move(other));
   }
@@ -26,15 +27,16 @@ namespace gl
 
   FrameBuffer& FrameBuffer::operator=(FrameBuffer&& other) noexcept
   {
+    // Move the base Handler part of the FrameBuffer
+    Handler::operator=(std::move(other));
+
     if (this != &other)
     {
-      fbo_ = std::move(other.fbo_);
       texture_ = std::move(other.texture_);
       renderBuffer_ = std::move(other.renderBuffer_);
 
       // Reset the other frame buffer to a default state
       FrameBuffer empty;
-      other.fbo_ = std::move(empty.fbo_);
       other.texture_ = std::move(empty.texture_);
       other.renderBuffer_ = std::move(empty.renderBuffer_);
     }
@@ -44,31 +46,28 @@ namespace gl
 
   bool FrameBuffer::isInitialized() const
   {
-    return fbo_ > 0 && texture_.isInitialized() && renderBuffer_.isInitialized();
+    return Handler::isInitialized()
+      && texture_.isInitialized() && renderBuffer_.isInitialized();
   }
 
   void FrameBuffer::initialize()
   {
-    if (fbo_ == 0 )
-    { // Create a frame buffer object (fbo)
-      glGenFramebuffers(1, &fbo_);
-      if (fbo_ == 0)
+    if (!isInitialized())
+    { // Create a frame buffer object
+      glGenFramebuffers(1, &getIdRef());
+
+      // Initialize the texture
+      texture_.initialize();
+
+      // Initialize the render buffer object
+      renderBuffer_.initialize();
+
+      if (!isInitialized())
       {
         throw std::runtime_error{
           "ERROR::FRAMEBUFFER:: Failed to create frame buffer object!"};
       }
     }
-
-    // Initialize the texture
-    texture_.initialize();
-
-    // Initialize the render buffer object
-    renderBuffer_.initialize();
-
-    assert(isInitialized()
-      && "Frame buffer, texture, and render buffer objects must be valid");
-    assert(fbo_ > 0 && texture_.isInitialized() && renderBuffer_.isInitialized()
-      && "Frame buffer, texture, and render buffer objects must be valid");
 
     // Create the attachments for the frame buffer --------------------------
 
@@ -103,10 +102,10 @@ namespace gl
   {
     renderBuffer_.uninitialize();
     texture_.uninitialize();
-    if (fbo_ > 0)
-    {
-      glDeleteFramebuffers(1, &fbo_);
-      fbo_ = 0U;
+    if (isInitialized())
+    { // Delete the frame buffer object
+      glDeleteFramebuffers(1, &getIdRef());
+      getIdRef() = 0U;
     }
   }
 
@@ -147,19 +146,16 @@ namespace gl
     return texture_.getSize();
   }
 
-  void FrameBuffer::bind() const
-  {
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-  }
-
   FrameBuffer::AutoUnbind FrameBuffer::bindScoped() const
   {
     return AutoUnbind{ *this };
   }
 
-  void FrameBuffer::unbind() const
+  GLuint FrameBuffer::getBoundId()
   {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    GLint id = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &id);
+    return static_cast<GLuint>(id);
   }
 
   void FrameBuffer::ensureCompleteIfNonEmpty_(const Vec2i& size)

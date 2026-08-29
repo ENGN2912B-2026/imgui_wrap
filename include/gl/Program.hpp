@@ -4,6 +4,7 @@
 #pragma once
 
 #include <gl/Shader.hpp>
+#include <gl/AutoUnbind.hpp>
 
 #include <array>
 #include <vector>
@@ -16,9 +17,19 @@ namespace gl
   //! This class encapsulates an OpenGL shader program, allowing the user to
   //! create a program from vertex and fragment shader source code, attach
   //! shaders, link the program, and set uniform variables.
-  class Program
+  class Program : public Handler
   {
   public:
+    //! \brief AutoUnbind is a helper class that automatically unbinds the
+    //!        program when it goes out of scope. This is useful for ensuring
+    //!        that the program is properly unbound, even if an exception is
+    //!        thrown.
+    using AutoUnbind = gl::AutoUnbind<Program>;
+
+    //! \brief Deleted copy constructor and copy assignment operator, and
+    //!        default move constructor and move assignment operator.
+    GL_NO_COPY_DEFAULT_MOVE(Program)
+
     //! \brief Default constructor.
     Program() = default;
 
@@ -53,24 +64,8 @@ namespace gl
     Program(const std::string& vertexShader, const std::string& fragmentShader,
             const std::vector<std::pair<GLuint, std::string>>& attributes = {});
 
-    //! \brief Copy constructor.
-    Program(const Program&) = delete;
-
-    //! \brief Move constructor.
-    Program(Program&&) noexcept;
-
     //! \brief Destructor.
-    ~Program();
-
-    //! \brief Copy assignment operator.
-    Program& operator=(const Program&) = delete;
-
-    //! \brief Move assignment operator.
-    Program& operator=(Program&&) noexcept;
-
-    //! \brief Checks if the shader program is initialized.
-    //! \return true if the shader program is initialized, false otherwise.
-    bool isInitialized() const { return program_ > 0; }
+    ~Program() { uninitialize(); }
 
     //! \brief Initializes the shader program.
     //! \note If the program is already initialized, this method does nothing.
@@ -143,10 +138,10 @@ namespace gl
     void link();
 
     //! \brief Uses the shader program for rendering.
-    void use() const;
+    void use() const { bind(getId()); }
 
     //! \brief Stops using the shader program for rendering.
-    void unuse() const;
+    void unuse() const { bind(0); }
 
     //! \brief Binds attribute locations before linking the program.
     //! \param[in] attributes  A vector of pairs specifying attribute locations
@@ -166,11 +161,22 @@ namespace gl
     void setUniform3f(const char* name, const std::array<float,3>& value) const;
     void setUniform4f(const char* name, const std::array<float,4>& value) const;
 
-    //! \brief Gets the OpenGL program handle.
-    //! \return The OpenGL program handle.
-    GLuint getId() const { return program_; }
+    //! \brief Binds the program and returns an AutoUnbind object that will
+    //!        automatically unbind the program when it goes out of scope.
+    //! \return An AutoUnbind object that will automatically unbind the program
+    //!         when it goes out of scope.
+    AutoUnbind bindScoped() const;
 
-  private:
-    GLuint program_ = 0;
+    //! \brief Binds a program.
+    //! \param[in] id The OpenGL ID of the program to bind.
+    static void bind(GLuint id) { glUseProgram(id); }
+
+    //! \brief Gets the OpenGL ID of the currently bound program.
+    //! \return The OpenGL ID of the currently bound program.
+    static GLuint getBoundId();
   };
+
+  //! \brief Static assertion to ensure that Program is AutoUnbindable.
+  static_assert(AutoUnbindable<Program>, "Program must be AutoUnbindable");
+
 } // namespace gl

@@ -19,34 +19,11 @@ namespace gl
     initialize(type, source);
   }
 
-  Shader::Shader(Shader&& other) noexcept
-  {
-    operator=(std::move(other));
-  }
-
-  Shader::~Shader()
-  {
-    uninitialize();
-  }
-
-  Shader& Shader::operator=(Shader&& other) noexcept
-  {
-    if (this != &other)
-    {
-      shader_ = other.shader_;
-
-      // Reset the other shader to a default state
-      Shader empty;
-      other.shader_ = empty.shader_;
-    }
-    return *this;
-  }
-
   void Shader::initialize(GLuint type)
   {
     if (!isInitialized())
     {
-      shader_ = glCreateShader(type);
+      getIdRef() = glCreateShader(type);
     }
   }
 
@@ -67,8 +44,8 @@ namespace gl
   {
     if (isInitialized())
     {
-      glDeleteShader(shader_);
-      shader_ = 0;
+      glDeleteShader(getId());
+      getIdRef() = 0;
     }
   }
 
@@ -77,7 +54,7 @@ namespace gl
     if (isInitialized())
     {
       GLint length;
-      glGetShaderiv(shader_, GL_SHADER_SOURCE_LENGTH, &length);
+      glGetShaderiv(getId(), GL_SHADER_SOURCE_LENGTH, &length);
       return length > 0;
     }
     return false;
@@ -91,7 +68,7 @@ namespace gl
         "Cannot set source of uninitialized shader!"};
     }
     const char* sourceCStr = source.c_str();
-    glShaderSource(shader_, 1, &sourceCStr, nullptr);
+    glShaderSource(getId(), 1, &sourceCStr, nullptr);
   }
 
   std::string Shader::getSource() const
@@ -103,14 +80,14 @@ namespace gl
     }
 
     GLint length;
-    glGetShaderiv(shader_, GL_SHADER_SOURCE_LENGTH, &length);
+    glGetShaderiv(getId(), GL_SHADER_SOURCE_LENGTH, &length);
     if (length <= 0)
     {
       return "";
     }
 
     std::vector<char> source(length);
-    glGetShaderSource(shader_, length, nullptr, source.data());
+    glGetShaderSource(getId(), length, nullptr, source.data());
     return std::string(source.data(), length - 1); // Exclude null terminator
   }
 
@@ -119,7 +96,7 @@ namespace gl
     if (isInitialized())
     {
       int status;
-      glGetShaderiv(shader_, GL_COMPILE_STATUS, &status);
+      glGetShaderiv(getId(), GL_COMPILE_STATUS, &status);
       return status == GL_TRUE;
     }
     return false;
@@ -139,16 +116,16 @@ namespace gl
     }
 
     // Compile the shader
-    glCompileShader(shader_);
+    glCompileShader(getId());
 
     // Check compilation status
     int status_, length_;
-    glGetShaderiv(shader_, GL_COMPILE_STATUS, &status_);
+    glGetShaderiv(getId(), GL_COMPILE_STATUS, &status_);
     if (status_ == GL_FALSE)
     {
-      glGetShaderiv(shader_, GL_INFO_LOG_LENGTH, &length_);
+      glGetShaderiv(getId(), GL_INFO_LOG_LENGTH, &length_);
       std::vector<char> infoLog_(length_);
-      glGetShaderInfoLog(shader_, length_, nullptr, infoLog_.data());
+      glGetShaderInfoLog(getId(), length_, nullptr, infoLog_.data());
       throw std::runtime_error(infoLog_.data());
     }
   }

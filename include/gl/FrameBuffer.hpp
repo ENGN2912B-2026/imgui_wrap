@@ -10,30 +10,30 @@ namespace gl
 {
   //! \brief A simple frame buffer class that can be used to render OpenGL
   //         content.
-  class FrameBuffer
+  class FrameBuffer : public Handler
   {
   public:
-    //! \brief Forward declaration of the AutoUnbind class.
-    //!
-    //! A helper class that automatically unbinds the frame buffer when it goes
-    //! out of scope. This is useful for ensuring that the frame buffer is
-    //! properly unbound after rendering, even if an exception is thrown.
-    class AutoUnbind;
+    //! \brief AutoUnbind is a helper class that automatically unbinds the
+    //!        frame buffer when it goes out of scope. This is useful for
+    //!        ensuring that the frame buffer is properly unbound, even if
+    //!        an exception is thrown.
+    using AutoUnbind = gl::AutoUnbind<FrameBuffer>;
 
     //! \brief Default constructor.
     //!
     //! The frame buffer is not initialized, and the size is set to (0, 0).
     FrameBuffer() = default;
 
-    //! \brief Constructs a frame buffer with the given size and interpolation
-    //!        mode.
+    //! \brief Constructs a frame buffer with the given size and texture
+    //!        interpolation mode.
     //! \param[in] size               The size of the frame buffer in pixels.
-    //! \param[in] interpolationMode  The interpolation mode of the texture.
-    //!                               This is a valid OpenGL texture parameter,
-    //!                               such as GL_LINEAR or GL_NEAREST.
+    //! \param[in] interpolationMode  The interpolation mode of the frame
+    //!                               buffer's texture. This is a valid OpenGL
+    //!                               texture parameter, such as GL_LINEAR
+    //!                               or GL_NEAREST.
     //!
-    //! The frame buffer is initialized with the given size and interpolation
-    //! mode.
+    //! The frame buffer is initialized with the given size and texture
+    //! interpolation mode.
     FrameBuffer(const Vec2i& size, GLint interpolationMode = GL_LINEAR);
 
     //! \brief Copy constructor.
@@ -98,70 +98,38 @@ namespace gl
     //! \throw std::runtime_error if the frame buffer is not initialized.
     Vec2i getSize() const;
 
-    //! \brief Binds the frame buffer as `GL_DRAW_FRAMEBUFFER` for subsequent
-    //!        OpenGL rendering operations.
-    //!
-    //! After calling this method, all subsequent OpenGL rendering commands will
-    //! be directed to this frame buffer until `unbind()` is called.
-    void bind() const;
-
-    //! \brief Binds the frame buffer as `GL_DRAW_FRAMEBUFFER` for subsequent
-    //!        OpenGL rendering operations and returns an AutoUnbind object that
-    //!        will automatically unbind the frame buffer when it goes out of
-    //!        scope.
-    //! \return An AutoUnbind object that will automatically unbind the frame
-    //!         buffer when it goes out of scope.
-    AutoUnbind bindScoped() const;
-
-    //! \brief Unbinds the frame buffer, restoring the default frame buffer.
-    //!
-    //! After calling this method, all subsequent OpenGL rendering commands will
-    //! be directed to the default frame buffer until `bind()` is called again.
-    void unbind() const;
-
     //! \brief Gets the OpenGL texture of the frame buffer's color attachment.
     //! \return The OpenGL texture of the frame buffer's color attachment.
     const Texture& getTexture() const { return texture_; }
 
+    //! \brief Binds the frame buffer as `GL_FRAMEBUFFER` and returns an
+    //!        AutoUnbind object that will automatically unbind the frame buffer
+    //!        when it goes out of scope.
+    //! \return An AutoUnbind object that will automatically unbind the frame
+    //!         buffer when it goes out of scope.
+    AutoUnbind bindScoped() const;
+
+    //! \brief Binds a frame buffer as `GL_FRAMEBUFFER`.
+    //! \param[in] id The OpenGL ID of the frame buffer to bind.
+    static void bind(GLuint id) {  glBindFramebuffer(GL_FRAMEBUFFER, id); }
+
+    //! \brief Unbinds the current frame buffer, restoring the default
+    //!        frame buffer.
+    static void unbind() { bind(0); }
+
+    //! \brief Gets the OpenGL ID of the currently bound frame buffer.
+    //! \return The OpenGL ID of the currently bound frame buffer.
+    static GLuint getBoundId();
+
   private:
-    GLuint fbo_                = 0U;
     Texture texture_           = {};
     RenderBuffer renderBuffer_ = {};
 
     void ensureCompleteIfNonEmpty_(const Vec2i& size);
   };
 
-} // namespace gl
+  //! \brief Static assertion to ensure that FrameBuffer is AutoUnbindable.
+  static_assert(AutoUnbindable<FrameBuffer>, "FrameBuffer must be AutoUnbindable");
 
-// Implementation -------------------------------------------------------------
-namespace gl
-{
-  //! \brief A helper class that automatically unbinds the frame buffer when it
-  //!        goes out of scope.
-  class FrameBuffer::AutoUnbind
-  {
-  public:
-    // \brief Constructs an AutoUnbind object and binds the given frame buffer.
-    //! \param[in] frameBuffer  The frame buffer to bind.
-    AutoUnbind(const FrameBuffer& frameBuffer)
-    {
-      glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previous_);
-      frameBuffer.bind();
-    }
-    //! \brief Destructor that automatically unbinds the frame buffer.
-    ~AutoUnbind()
-    {
-      glBindFramebuffer(GL_DRAW_FRAMEBUFFER, previous_);
-    }
-    //! \brief Deleted copy constructor to prevent copying.
-    AutoUnbind(const AutoUnbind&) = delete;
-    //! \brief Deleted move constructor to prevent moving.
-    AutoUnbind(AutoUnbind&&) = delete;
-    //! \brief Deleted copy assignment operator to prevent copying.
-    AutoUnbind& operator=(const AutoUnbind&) = delete;
-    //! \brief Deleted move assignment operator to prevent moving.
-    AutoUnbind& operator=(AutoUnbind&&) = delete;
-  private:
-    GLint previous_;
-  };
-}
+
+} // namespace gl

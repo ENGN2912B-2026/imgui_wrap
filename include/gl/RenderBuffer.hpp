@@ -13,7 +13,10 @@ namespace gl
   class RenderBuffer : public Handler
   {
   public:
-    //! \brief Forward declaration of the AutoUnbind class.
+    //! \brief AutoUnbind is a helper class that automatically unbinds the
+    //!        render buffer when it goes out of scope. This is useful for
+    //!        ensuring that the render buffer is properly unbound, even if
+    //!        an exception is thrown.
     using AutoUnbind = gl::AutoUnbind<RenderBuffer>;
 
     //! \brief Deleted copy constructor and copy assignment operator, and

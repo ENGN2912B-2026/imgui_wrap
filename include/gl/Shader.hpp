@@ -3,16 +3,20 @@
 
 #pragma once
 
-#include <gl/gl.hpp>
+#include <gl/Handler.hpp>
 
 #include <string>
 
 namespace gl
 {
   //! \brief A simple shader class that can be used to manage OpenGL shaders.
-  class Shader
+  class Shader : public Handler
   {
   public:
+    //! \brief Deleted copy constructor and copy assignment operator, and
+    //!        default move constructor and move assignment operator.
+    GL_NO_COPY_DEFAULT_MOVE(Shader)
+
     //! \brief Default constructor.
     Shader() = default;
 
@@ -31,24 +35,8 @@ namespace gl
     //! \throw std::runtime_error if the shader fails to compile.
     Shader(GLuint type, const std::string& source);
 
-    //! \brief Copy constructor.
-    Shader(const Shader&) = delete;
-
-    //! \brief Move constructor.
-    Shader(Shader&&) noexcept;
-
     //! \brief Destructor.
-    ~Shader();
-
-    //! \brief Copy assignment operator.
-    Shader& operator=(const Shader&) = delete;
-
-    //! \brief Move assignment operator.
-    Shader& operator=(Shader&&) noexcept;
-
-    //! \brief Checks if the shader is initialized.
-    //! \return true if the shader is initialized, false otherwise.
-    bool isInitialized() const { return shader_ > 0; }
+    ~Shader() { uninitialize(); }
 
     //! \brief Initializes a shader of the specified type.
     //! \param[in] type The type of shader to create. This is a valid OpenGL
@@ -96,19 +84,12 @@ namespace gl
     //!        source code, or fails to compile.
     void compile();
 
-    //! \brief Gets the OpenGL shader handle.
-    //! \return The OpenGL shader handle.
-    GLuint getId() const { return shader_; }
-
     //! \brief Gets the shading language version supported by the OpenGL context.
     //! \return The shading language version as an integer, e.g., 140 for
     //!         GLSL 1.40, 150 for GLSL 1.50, etc.
     //! \throw std::runtime_error if the shading language version cannot be
     //!        determined.
     static size_t getShadingLanguageVersion();
-
-  private:
-    GLuint shader_ = 0;
   };
 
 } // namespace gl

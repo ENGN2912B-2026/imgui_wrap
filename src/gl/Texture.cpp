@@ -8,42 +8,16 @@
 
 namespace gl
 {
-  Texture::Texture(Texture&& other) noexcept
-  {
-    operator=(std::move(other));
-  }
-
-  Texture::~Texture()
-  {
-    uninitialize();
-  }
-
-  Texture& Texture::operator=(Texture&& other) noexcept
-  {
-    if (this != &other)
-    {
-      id_ = other.id_;
-
-      // Reset the other texture to a default state
-      Texture empty;
-      other.id_ = empty.id_;
-    }
-    return *this;
-  }
-
   void Texture::initialize()
   {
-    if (id_ == 0)
+    if (!isInitialized())
     { // Create a color attachment texture
-      glGenTextures(1, &id_);
-      if (id_ == 0)
+      glGenTextures(1, &getIdRef());
+      if (!isInitialized())
       {
         throw std::runtime_error{"ERROR::TEXTURE:: Failed to create texture!"};
       }
     }
-
-    assert(isInitialized() && "Texture object must be valid");
-    assert(id_ > 0 && "Texture object must be valid");
 
     // Set default texture parameters for wrapping and filtering
     const auto autoUnbind = AutoUnbind{ *this };
@@ -80,21 +54,11 @@ namespace gl
 
   void Texture::uninitialize()
   {
-    if (id_ > 0)
+    if (isInitialized())
     {
-      glDeleteTextures(1, &id_);
-      id_ = 0;
+      glDeleteTextures(1, &getIdRef());
+      getIdRef() = 0;
     }
-  }
-
-  void Texture::bind() const
-  {
-    glBindTexture(GL_TEXTURE_2D, id_);
-  }
-
-  void Texture::unbind() const
-  {
-    glBindTexture(GL_TEXTURE_2D, 0);
   }
 
   Vec2i Texture::getSize() const
@@ -181,6 +145,18 @@ namespace gl
       glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.getWidth(), image.getHeight(),
                       GL_RGB, GL_UNSIGNED_BYTE, image.getData());
     }
+  }
+
+  Texture::AutoUnbind Texture::bindScoped() const
+  {
+    return AutoUnbind{ *this };
+  }
+
+  GLuint Texture::getBoundId()
+  {
+    GLint id = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &id);
+    return static_cast<GLuint>(id);
   }
 
 } // namespace gl

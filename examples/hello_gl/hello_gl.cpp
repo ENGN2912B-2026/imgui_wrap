@@ -57,15 +57,13 @@ public:
     {
       configureViewport(-1, 1, -1 , 1);
 
-      frameBuffer_->bind();
+      const auto autoUnbind = frameBuffer_->bindScoped();
 
       glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
       drawTriangle();
-
-      frameBuffer_->unbind();
     }
   }
 
