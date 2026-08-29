@@ -14,6 +14,7 @@
 #include <timer/Timer.hpp>
 
 #include <print>
+#include <cmath>
 
 // This example shows how to use OpenGL shaders in a GUI application.
 //

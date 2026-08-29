@@ -108,6 +108,12 @@ endif(USE_GUI_TEST_ENGINE)
 
 # NativeFileDialog Extended ##################################################
 if (USE_NATIVEFILEDIALOG_EXTENDED)
+  # if (LINUX)
+  #   # For Linux we prefer to use "Portal" instead GTK
+  #   # Requires `libdbus-1-dev`
+  #   set(NFD_PORTAL 1)
+  # endif()
+  # Default is to use GTK3 on Linux, which requires `libgtk-3-dev`
   add_subdirectory(nativefiledialog-extended)
 endif(USE_NATIVEFILEDIALOG_EXTENDED)
 

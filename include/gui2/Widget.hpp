@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <typeinfo>
+#include <functional>
 
 namespace gui2
 {

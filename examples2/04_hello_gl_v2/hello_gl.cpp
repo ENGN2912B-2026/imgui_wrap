@@ -12,6 +12,7 @@
 #include <timer/Timer.hpp>
 
 #include <print>
+#include <cmath>
 
 // This example shows how to integrate OpenGL rendering into a GUI application.
 //
