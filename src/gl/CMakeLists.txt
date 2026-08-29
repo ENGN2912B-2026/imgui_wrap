@@ -2,6 +2,7 @@
 target_sources(imgui_wrap
   PRIVATE
     FrameBuffer.cpp
+    RenderBuffer.cpp
     Texture.cpp
     Program.cpp
     Shader.cpp

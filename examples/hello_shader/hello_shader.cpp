@@ -1,7 +1,6 @@
 //  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
-#include <gl/gl.h>
 #include <gl/FrameBuffer.hpp>
 #include <gl/Program.hpp>
 #include <gui/gui.hpp>
@@ -56,6 +55,7 @@ public:
     if (!frameBuffer_)
     {
       frameBuffer_ = std::make_unique<gl::FrameBuffer>();
+      frameBuffer_->initialize();
     }
 
     if (!program_)

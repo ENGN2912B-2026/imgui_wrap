@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <gl/gl.h>
+#include <gl/gl.hpp>
 #include <math/Vec2.hpp>
 #include <image/Image.hpp>
 
@@ -15,6 +15,12 @@ namespace gl
   class Texture
   {
   public:
+    //! \brief Forward declaration of the AutoUnbind class.
+    //!
+    //! A helper class that automatically unbinds the texture when it goes out
+    //! of scope.
+    class AutoUnbind;
+
     //! \brief Default constructor.
     //!
     //! The texture is not initialized, and the size is set to (0, 0).
@@ -80,16 +86,24 @@ namespace gl
     //! If the texture is not initialized, this method does nothing.
     void uninitialize();
 
-    //! \brief Binds the frame buffer for rendering.
+    //! \brief Binds the texture as `GL_TEXTURE_2D` for subsequent OpenGL
+    //!        texture operations.
     //!
-    //! After calling this method, all subsequent OpenGL rendering commands will
-    //! be directed to this frame buffer until `unbind()` is called.
+    //! After calling this method, all subsequent OpenGL texture 2D commands
+    //! will be directed to this texture until `unbind()` is called.
     void bind() const;
 
-    //! \brief Unbinds the frame buffer, restoring the default frame buffer.
+    //! \brief Binds the texture as `GL_TEXTURE_2D` and returns an AutoUnbind
+    //!        object that will automatically unbind the frame buffer when it
+    //!        goes out of scope.
+    //! \return An AutoUnbind object that will automatically unbind the frame
+    //!         buffer when it goes out of scope.
+    AutoUnbind bindScoped() const;
+
+    //! \brief Unbinds the texture, restoring the default texture binding.
     //!
-    //! After calling this method, all subsequent OpenGL rendering commands will
-    //! be directed to the default frame buffer until `bind()` is called again.
+    // After calling this method, all subsequent OpenGL texture 2D commands will
+    // be directed to the default texture until `bind()` is called again.
     void unbind() const;
 
     //! \brief Gets the OpenGL texture Id of the frame buffer's color attachment.
@@ -101,6 +115,11 @@ namespace gl
     //! \throw std::runtime_error if the texture is not initialized.
     Vec2i getSize() const;
 
+    //! \brief Sets the size of the texture in pixels.
+    //! \param[in] size  The new size of the texture in pixels.
+    //! \throw std::runtime_error if the texture is not initialized.
+    void setSize(const Vec2i& size);
+
     //! \brief Sets the interpolation mode for this texture.
     //! \param[in] interpolationMode  The interpolation mode of the texture.
     //!                               This is a valid OpenGL texture parameter,
@@ -108,8 +127,54 @@ namespace gl
     //! \throw std::runtime_error if the texture is not initialized.
     void setInterpolationMode(GLint interpolationMode);
 
+    //! \brief Uploads an image to the texture.
+    //! \param[in] image  The image to upload.
+    //! \throw std::runtime_error if the texture is not initialized, or if the
+    //!        image is not tightly packed.
+    //!
+    //! This method uploads the given image data to the texture. The texture
+    //! must be initialized before calling this method. The image must be
+    //! tightly packed, meaning that the row stride of the image must be equal
+    //! to the width of the image multiplied by the size of the pixel type.
+    //! If the size of the image does not match the size of the texture, the
+    //! texture will be resized to match the image size.
+    void uploadImage(const image::ImageRgb8& image);
+
   private:
     GLuint id_ = 0U;
   };
 
 } // namespace gl
+
+// Implementation -------------------------------------------------------------
+namespace gl
+{
+  //! \brief A helper class that automatically unbinds the texture when it
+  //!        goes out of scope.
+  class Texture::AutoUnbind
+  {
+  public:
+    // \brief Constructs an AutoUnbind object and binds the given texture.
+    //! \param[in] texture  The texture to bind.
+    AutoUnbind(const Texture& texture)
+    {
+      glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous_);
+      texture.bind();
+    }
+    //! \brief Destructor that automatically unbinds the texture.
+    ~AutoUnbind()
+    {
+      glBindTexture(GL_TEXTURE_2D, previous_);
+    }
+    //! \brief Deleted copy constructor to prevent copying.
+    AutoUnbind(const AutoUnbind&) = delete;
+    //! \brief Deleted move constructor to prevent moving.
+    AutoUnbind(AutoUnbind&&) = delete;
+    //! \brief Deleted copy assignment operator to prevent copying.
+    AutoUnbind& operator=(const AutoUnbind&) = delete;
+    //! \brief Deleted move assignment operator to prevent moving.
+    AutoUnbind& operator=(AutoUnbind&&) = delete;
+  private:
+    GLint previous_;
+  };
+}

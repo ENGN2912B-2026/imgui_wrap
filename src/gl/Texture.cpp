@@ -44,6 +44,13 @@ namespace gl
 
     assert(isInitialized() && "Texture object must be valid");
     assert(id_ > 0 && "Texture object must be valid");
+
+    // Set default texture parameters for wrapping and filtering
+    const auto autoUnbind = AutoUnbind{ *this };
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   }
 
   void Texture::initialize(const Vec2i& size, GLint interpolationMode)
@@ -51,49 +58,24 @@ namespace gl
     // Ensure the texture is initialized
     initialize();
 
-    // Bind
-    bind();
-
-    // Upload the image data to the texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y,
-                 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    // Set the size of the texture
+    setSize(size);
 
     // Set interpolation mode
     setInterpolationMode(interpolationMode);
-
-    // Unbind
-    unbind();
   }
 
   void Texture::initialize(const image::ImageRgb8& image,
                            GLint interpolationMode)
   {
-    const int expectedRowStride = image.getWidth() * sizeof(image::Rgb8);
-    if (image.getRowStride() != expectedRowStride)
-    {
-      throw std::invalid_argument{"ERROR::TEXTURE:: "
-        "Image is not tightly packed!"};
-    }
-
     // Ensure the texture is initialized
     initialize();
 
-    // Bind
-    bind();
-
-    // Set pixel storage modes for unpacking the image data
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0); // Ensure no row padding is used
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // Use single byte alignment
-
     // Upload the image data to the texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.getWidth(), image.getHeight(),
-                 0, GL_RGB, GL_UNSIGNED_BYTE, image.getData());
+    uploadImage(image);
 
     // Set interpolation mode
     setInterpolationMode(interpolationMode);
-
-    // Unbind
-    unbind();
   }
 
   void Texture::uninitialize()
@@ -124,17 +106,31 @@ namespace gl
     }
 
     // Bind the texture to get its parameters
-    bind();
+    const auto autoUnbind = AutoUnbind{ *this };
 
     // Get the texture size
     GLint width, height;
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
 
-    // Unbind the texture after getting its parameters
-    unbind();
-
     return Vec2i{ width, height };
+  }
+
+  void Texture::setSize(const Vec2i& size)
+  {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::TEXTURE:: "
+        "Cannot set size of uninitialized texture!"};
+    }
+
+    // Bind the texture to set its parameters
+    const auto autoUnbind = AutoUnbind{ *this };
+
+    // Allocate storage for the texture without uploading any data
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y,
+                 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+
   }
 
   void Texture::setInterpolationMode(GLint interpolationMode)
@@ -146,14 +142,45 @@ namespace gl
     }
 
     // Bind the texture to set its parameters
-    bind();
+    const auto autoUnbind = AutoUnbind{ *this };
 
     // Set texture parameters for filtering
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, interpolationMode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interpolationMode);
+  }
 
-    // Unbind the texture after setting its parameters
-    unbind();
+  void Texture::uploadImage(const image::ImageRgb8& image)
+  {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::TEXTURE:: "
+        "Cannot upload image to uninitialized texture!"};
+    }
+
+    const int expectedRowStride = image.getWidth() * sizeof(image::Rgb8);
+    if (image.getRowStride() != expectedRowStride)
+    {
+      throw std::invalid_argument{"ERROR::TEXTURE:: "
+        "Image is not tightly packed!"};
+    }
+
+    // Bind the texture to upload the image data
+    const auto autoUnbind = AutoUnbind{ *this };
+
+    // Set pixel storage modes for unpacking the image data
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0); // Ensure no row padding is used
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // Use single byte alignment
+
+    if (getSize() != image.getSize())
+    { // Allocate a new texture size and upload the image data
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.getWidth(), image.getHeight(),
+                   0, GL_RGB, GL_UNSIGNED_BYTE, image.getData());
+    }
+    else
+    { // Upload the image data to the existing texture size
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.getWidth(), image.getHeight(),
+                      GL_RGB, GL_UNSIGNED_BYTE, image.getData());
+    }
   }
 
 } // namespace gl

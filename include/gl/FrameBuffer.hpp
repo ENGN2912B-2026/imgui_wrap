@@ -3,14 +3,11 @@
 
 #pragma once
 
-#include <gl/gl.h>
+#include <gl/RenderBuffer.hpp>
 #include <gl/Texture.hpp>
-#include <math/Vec2.hpp>
 
 namespace gl
 {
-  using math::Vec2i;
-
   //! \brief A simple frame buffer class that can be used to render OpenGL
   //         content.
   class FrameBuffer
@@ -60,6 +57,13 @@ namespace gl
     //! \return true if the frame buffer is initialized, false otherwise.
     bool isInitialized() const;
 
+    //! \brief Initializes the frame buffer.
+    //! \throw std::runtime_error if the texture fails to be initialized.
+    //!
+    //! Initializes the texture without allocating any storage. If the texture
+    //! is already initialized, this method does nothing.
+    void initialize();
+
     //! \brief Initializes the frame buffer with the given size and
     //!        interpolation mode.
     //! \param[in] size               The size of the frame buffer in pixels.
@@ -72,6 +76,15 @@ namespace gl
     //! size or interpolation mode, it is updated accordingly.
     void initialize(const Vec2i& size, GLint interpolationMode = GL_LINEAR);
 
+    //! \brief Deletes the frame buffer and releases the OpenGL resources.
+    //!
+    //! If the frame buffer is not initialized, this method does nothing.
+    void uninitialize();
+
+    //! \brief Checks if the frame buffer is complete.
+    //! \return true if the frame buffer is complete, false otherwise.
+    bool isComplete() const;
+
     //! \brief Sets the size of the frame buffer.
     //! \param[in] size  The new size of the frame buffer in pixels.
     //!
@@ -82,29 +95,20 @@ namespace gl
 
     //! \brief Gets the size of the frame buffer.
     //! \return The size of the frame buffer in pixels.
-    const Vec2i& getSize() const { return size_; }
+    //! \throw std::runtime_error if the frame buffer is not initialized.
+    Vec2i getSize() const;
 
-    //! \brief Sets the interpolation mode of the frame buffer's texture.
-    //! \param[in] mode  The new interpolation mode.
-    //!
-    //! If the frame buffer is already initialized, the texture's interpolation
-    //! mode is updated accordingly. If the frame buffer is not initialized, it
-    //! is initialized with the current size and the new interpolation mode.
-    void setInterpolationMode(GLint mode);
-
-    //! \brief Gets the interpolation mode of the frame buffer's texture.
-    //! \return The interpolation mode of the frame buffer's texture.
-    const GLint getInterpolationMode() const { return interpolationMode_; }
-
-    //! \brief Binds the frame buffer for rendering.
+    //! \brief Binds the frame buffer as `GL_DRAW_FRAMEBUFFER` for subsequent
+    //!        OpenGL rendering operations.
     //!
     //! After calling this method, all subsequent OpenGL rendering commands will
     //! be directed to this frame buffer until `unbind()` is called.
     void bind() const;
 
-    //! \brief Binds the frame buffer for rendering and returns an AutoUnbind
-    //!        object that will automatically unbind the frame buffer when it
-    //!        goes out of scope.
+    //! \brief Binds the frame buffer as `GL_DRAW_FRAMEBUFFER` for subsequent
+    //!        OpenGL rendering operations and returns an AutoUnbind object that
+    //!        will automatically unbind the frame buffer when it goes out of
+    //!        scope.
     //! \return An AutoUnbind object that will automatically unbind the frame
     //!         buffer when it goes out of scope.
     AutoUnbind bindScoped() const;
@@ -120,17 +124,14 @@ namespace gl
     const Texture& getTexture() const { return texture_; }
 
   private:
-    Vec2i size_               = {0, 0};
-    GLuint fbo_               = 0U;
-    Texture texture_          = {};
-    GLuint rbo_               = 0U;
-    GLint interpolationMode_  = GL_LINEAR;
+    GLuint fbo_                = 0U;
+    Texture texture_           = {};
+    RenderBuffer renderBuffer_ = {};
 
-    void generateFrameBuffer_();
+    void ensureCompleteIfNonEmpty_(const Vec2i& size);
   };
 
 } // namespace gl
-
 
 // Implementation -------------------------------------------------------------
 namespace gl

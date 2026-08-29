@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <gl/gl.h>
 #include <gui/gui.hpp>
 #include <imgui_zoomable_image.h>
 

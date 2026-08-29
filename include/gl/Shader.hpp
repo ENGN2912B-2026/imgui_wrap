@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <gl/gl.h>
+#include <gl/gl.hpp>
 
 #include <string>
 

@@ -1,7 +1,6 @@
 //  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
-#include <gl/gl.h>
 #include <gl/FrameBuffer.hpp>
 #include <gui/gui.hpp>
 #include <timer/Timer.hpp>
@@ -37,6 +36,7 @@ public:
     if (!frameBuffer_)
     {
       frameBuffer_ = new gl::FrameBuffer();
+      frameBuffer_->initialize();
     }
 
     frameBuffer_->setSize(math::make<gui::Vec2i>(ImGui::GetContentRegionAvail()));

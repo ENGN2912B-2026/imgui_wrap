@@ -1,4 +1,4 @@
-//  Copyright (c) 2025 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2025-2026 Daniel Moreno. All rights reserved.
 //
 
 // This example shows how to display an OpenGL rendered image.
@@ -6,7 +6,7 @@
 //   https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
 //
 
-#include <gl/gl.h>
+#include <gl/gl.hpp>
 #include <gui/gui.hpp>
 
 namespace
