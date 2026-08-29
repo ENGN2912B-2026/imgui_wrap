@@ -11,8 +11,8 @@
 
 #include <nfd.h>
 
-// This example shows how to create an image, fill it with a gradient pattern,
-// and display it in a GUI window using `gl::Texture` and `gui2::Image`.
+// This example shows how to open a dialog for let a user select a file, and
+// display the selected filename in a GUI window.
 //
 
 using namespace gui2;
