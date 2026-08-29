@@ -1,15 +1,18 @@
 [submodule "3rd-party/imgui"]
-	path = 3rd-party/imgui
-	url = ../../ocornut/imgui.git
+  path = 3rd-party/imgui
+  url = ../../ocornut/imgui.git
 [submodule "3rd-party/imgui_test_engine"]
-	path = 3rd-party/imgui_test_engine
-	url = ../../ocornut/imgui_test_engine.git
+  path = 3rd-party/imgui_test_engine
+  url = ../../ocornut/imgui_test_engine.git
 [submodule "3rd-party/glfw"]
-	path = 3rd-party/glfw
-	url = ../../glfw/glfw.git
+  path = 3rd-party/glfw
+  url = ../../glfw/glfw.git
 [submodule "3rd-party/implot"]
-	path = 3rd-party/implot
-	url = ../../epezent/implot.git
+  path = 3rd-party/implot
+  url = ../../epezent/implot.git
 [submodule "3rd-party/imgui_zoomable_image"]
-	path = 3rd-party/imgui_zoomable_image
-	url = ../../danielm5/imgui_zoomable_image.git
+  path = 3rd-party/imgui_zoomable_image
+  url = ../../danielm5/imgui_zoomable_image.git
+[submodule "3rd-party/nativefiledialog-extended"]
+  path = 3rd-party/nativefiledialog-extended
+  url = ../../btzy/nativefiledialog-extended.git

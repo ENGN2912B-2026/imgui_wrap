@@ -106,6 +106,11 @@ if (USE_GUI_TEST_ENGINE)
 
 endif(USE_GUI_TEST_ENGINE)
 
+# NativeFileDialog Extended ##################################################
+if (USE_NATIVEFILEDIALOG_EXTENDED)
+  add_subdirectory(nativefiledialog-extended)
+endif(USE_NATIVEFILEDIALOG_EXTENDED)
+
 # GLAD OpenGL Loader-Generator ###############################################
 if (USE_GLAD)
   add_library(glad STATIC

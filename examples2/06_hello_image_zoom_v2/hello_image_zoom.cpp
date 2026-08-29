@@ -76,8 +76,6 @@ static_assert(Displayable<ImageWidget>, "ImageWidget should be a Displayable");
 
 int main(int argc, char** argv)
 {
-  using namespace gui2;
-
   // Title of the window
   std::string title{"GUI: Hello Image Zoom v2!"};
 

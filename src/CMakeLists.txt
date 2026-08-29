@@ -23,6 +23,11 @@ if (USE_GUI_TEST_ENGINE)
 
 endif(USE_GUI_TEST_ENGINE)
 
+# if (USE_NATIVEFILEDIALOG_EXTENDED)
+#   target_link_libraries(imgui_wrap PUBLIC nfd)
+#   target_compile_definitions(imgui_wrap PUBLIC USE_NFD)
+# endif(USE_NATIVEFILEDIALOG_EXTENDED)
+
 if (USE_ROBOTO_WEBFONT)
   target_link_libraries(imgui_wrap PUBLIC file_embed)
   target_compile_definitions(imgui_wrap PUBLIC USE_ROBOTO_WEBFONT)

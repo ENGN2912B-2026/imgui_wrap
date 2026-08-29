@@ -102,8 +102,6 @@ private:
 
 int main(int argc, char** argv)
 {
-  using namespace gui2;
-
   // Title of the window
   std::string title{"GUI: Hello GL v2"};
 
