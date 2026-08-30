@@ -8,6 +8,14 @@ option(USE_NATIVEFILEDIALOG_EXTENDED "Enable NativeFileDialog Extended" ON)
 option(USE_GLAD "Enable GLAD OpenGL loader-generator" ON)
 option(USE_ROBOTO_WEBFONT "Enable Roboto webfont" ON)
 
+option(USE_GUI_V1 "Enable Gui version 1" OFF)
+option(USE_GUI_V2 "Enable Gui version 2" ON)
+option(BUILD_GUI_EXAMPLES "Build GUI examples" ${IMGUI_WRAP_STANDALONE_BUILD})
+
+message(STATUS "USE_GUI_V1: ${USE_GUI_V1}")
+message(STATUS "USE_GUI_V2: ${USE_GUI_V2}")
+message(STATUS "BUILD_GUI_EXAMPLES: ${BUILD_GUI_EXAMPLES}")
+
 set(IMGUI_DIR ${PROJECT_SOURCE_DIR}/3rd-party/imgui)
 checkout_submodules(${IMGUI_DIR})
 
@@ -33,3 +41,8 @@ endif()
 if (USE_ROBOTO_WEBFONT)
   FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/../fonts/roboto-regular-webfont.ttf)
 endif(USE_ROBOTO_WEBFONT)
+
+
+if (BUILD_GUI_EXAMPLES)
+  include(cmake/gui_example.cmake)
+endif(BUILD_GUI_EXAMPLES)

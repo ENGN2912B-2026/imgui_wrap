@@ -2,17 +2,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "CodeLLDB Launch [any]",
-            "type": "lldb",
-            "request": "launch",
-            "program": "${command:cmake.launchTargetPath}",
-            "args": [],
-            "stopOnEntry": false,
-            "cwd": "${command:cmake.launchTargetDirectory}",
-            "env": {},
-            "terminal": "integrated"
-        },
-        {
             "name": "(Windows) Launch [win]",
             "type": "cppvsdbg",
             "request": "launch",
@@ -24,20 +13,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "(Linux) Launch [gdb]",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${command:cmake.launchTargetPath}",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${command:cmake.launchTargetDirectory}",
-            "environment": [],
-            "console": "integratedTerminal",
-            "MIMode": "gdb",
-            "miDebuggerPath": "/usr/bin/gdb"
-        },
-        {
-            "name": "(lldb) Launch [mac]",
+            "name": "(macOS) Launch [lldb]",
             "type": "cppdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
@@ -47,6 +23,19 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb"
+        },
+        {
+            "name": "(Linux) Launch [gdb]",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${command:cmake.launchTargetDirectory}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb"
         },
         {
             "name": "Python Debugger: Current File",

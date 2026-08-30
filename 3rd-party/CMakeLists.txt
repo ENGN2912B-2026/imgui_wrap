@@ -6,6 +6,7 @@ if (USE_GLFW_GL3)
     set(GLFW_BUILD_X11 1)
   endif()
   add_subdirectory(glfw)
+  target_compile_definitions(glfw PUBLIC USE_GLFW_GL3)
 endif(USE_GLFW_GL3)
 
 # Dear ImGui #################################################################
@@ -26,11 +27,6 @@ if (USE_GLFW_GL3)
   target_sources(imgui PRIVATE
     imgui/backends/imgui_impl_glfw.cpp
     imgui/backends/imgui_impl_opengl3.cpp
-  )
-
-  target_compile_definitions(imgui
-    PUBLIC
-      -DUSE_GLFW_GL3
   )
 
   target_link_libraries(imgui PUBLIC glfw)
@@ -58,8 +54,8 @@ if (USE_IMPLOT)
   )
 
   target_include_directories(implot PUBLIC implot)
-
   target_link_libraries(implot PUBLIC imgui)
+  target_compile_definitions(implot PUBLIC USE_IMPLOT)
 
   # if (USE_GLFW_GL3)
   #   target_compile_definitions(implot PUBLIC -DUSE_GLFW_GL3)
@@ -104,25 +100,21 @@ if (USE_GUI_TEST_ENGINE)
     target_link_libraries(imgui_test_engine PUBLIC -lpthread)
   endif()
 
+  if (USE_IMPLOT)
+    target_link_libraries(implot PUBLIC imgui_test_engine)
+  endif(USE_IMPLOT)
+
 endif(USE_GUI_TEST_ENGINE)
 
 # NativeFileDialog Extended ##################################################
 if (USE_NATIVEFILEDIALOG_EXTENDED)
-  # if (LINUX)
-  #   # For Linux we prefer to use "Portal" instead GTK
-  #   # Requires `libdbus-1-dev`
-  #   set(NFD_PORTAL 1)
-  # endif()
-  # Default is to use GTK3 on Linux, which requires `libgtk-3-dev`
+  # Default is to use GTK3 in Linux, which requires `libgtk-3-dev`
   add_subdirectory(nativefiledialog-extended)
 endif(USE_NATIVEFILEDIALOG_EXTENDED)
 
 # GLAD OpenGL Loader-Generator ###############################################
 if (USE_GLAD)
-  add_library(glad STATIC
-    glad/src/gl.c
-  )
-
+  add_library(glad STATIC glad/src/gl.c)
   target_include_directories(glad PUBLIC glad/include)
-
+  target_compile_definitions(glad PUBLIC USE_GLAD)
 endif(USE_GLAD)
