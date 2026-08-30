@@ -6,11 +6,10 @@ HOST_TYPE=$HOSTTYPE
 HOST_ID="${HOST_OS}-${HOST_TYPE}"
 
 # Convert HOST_ID to lowercase
-if ((BASH_VERSINFO[0] < 3))
-then
-  HOST_ID=$(tr '[:lower:]' '[:upper:]' <<< $HOST_ID)
+if ((BASH_VERSINFO[0] < 4)); then
+    HOST_ID=$(tr '[:upper:]' '[:lower:]' <<< "$HOST_ID")
 else
-  HOST_ID=${HOST_ID,,}
+    HOST_ID=${HOST_ID,,}
 fi
 
 echo "Host OS: $HOST_OS"

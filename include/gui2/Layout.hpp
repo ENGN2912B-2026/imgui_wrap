@@ -10,10 +10,13 @@
 namespace gui2
 {
   // Concept of things that can be items in a Layout:
-  // - The type is constructible into a Widget.
+  // - The type is a Widget, or
+  // - The type is a WidgetContent type (either Content or ContentFactory).
+  //   which can be stored in a Widget.
   template<typename T>
   concept LayoutItem =
-    std::constructible_from<Widget, T&&>;
+    std::same_as<std::remove_cvref_t<T>, Widget> ||
+    WidgetContent<T>;
 
   // The layout orientation determines the direction in which the items are
   // arranged.
@@ -314,7 +317,7 @@ namespace gui2
       size_t lastWeightedIndex{ 0 };
       for (size_t i = 0; i < items_.size(); ++i)
       {
-        if (const auto* fixed = items_[i].resolveAs<Fixed>())
+        if (const auto* fixed = items_[i].template resolveAs<Fixed>())
         { // Item has a fixed size, add it to the total fixed size.
           const int size{ static_cast<int>(fixed->size) };
           itemValues[i] = kFixed | (size << 1);
@@ -323,7 +326,7 @@ namespace gui2
         }
         else
         { // Otherwise is a stretch item, add its weight to the total weight.
-          const auto* stretch = items_[i].resolveAs<Stretch>();
+          const auto* stretch = items_[i].template resolveAs<Stretch>();
           const int weight{ stretch ? static_cast<int>(stretch->weight) : 1 };
           itemValues[i] = kWeight | (weight << 1);
           totalWeight += weight;
