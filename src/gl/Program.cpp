@@ -1,71 +1,124 @@
-//  Copyright (c) 2025 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2025-2026 Daniel Moreno. All rights reserved.
 //
 
-#include <gl/gl.h>
 #include <gl/Program.hpp>
 
-#include <vector>
 #include <stdexcept>
+#include <cassert>
 
 namespace gl
 {
-  Program::Program()
+  Program::Program(
+    const Shader& vertexShader,
+    const Shader& fragmentShader,
+    const std::vector<std::pair<unsigned, std::string>>& attributes) : Program{}
   {
-    program_ = glCreateProgram();
-  }
-
-  Program::~Program()
-  {
-    glDeleteProgram(program_);
+    initialize(vertexShader, fragmentShader, attributes);
   }
 
   Program::Program(
     const std::string& vertexShader,
     const std::string& fragmentShader,
+    const std::vector<std::pair<unsigned, std::string>>& attributes) : Program{}
+  {
+    initialize(vertexShader, fragmentShader, attributes);
+  }
+
+  void Program::initialize()
+  {
+    if (!isInitialized())
+    {
+      getIdRef() = glCreateProgram();
+      if (!isInitialized())
+      {
+        throw std::runtime_error{ "ERROR::PROGRAM:: Failed to create program!"};
+      }
+    }
+  }
+
+  void Program::initialize(
+    const Shader& vertexShader,
+    const Shader& fragmentShader,
     const std::vector<std::pair<unsigned, std::string>>& attributes)
   {
-    program_ = glCreateProgram();
-    attachShader(Shader(GL_VERTEX_SHADER));
-    shaders_.back().source(vertexShader.c_str());
-    shaders_.back().compile();
-    attachShader(Shader(GL_FRAGMENT_SHADER));
-    shaders_.back().source(fragmentShader.c_str());
-    shaders_.back().compile();
+    if (!isInitialized())
+    {
+      initialize();
+    }
+    assert(isInitialized() && "Program object must be valid");
+
+    // Attach the shaders and link the program
+    attachShader(vertexShader);
+    attachShader(fragmentShader);
     bindAttributeLocations(attributes);
     link();
   }
 
-  void Program::attachShader(Shader shader)
+  void Program::initialize(
+    const std::string& vertexShader,
+    const std::string& fragmentShader,
+    const std::vector<std::pair<unsigned, std::string>>& attributes)
   {
-    shaders_.emplace_back(std::move(shader));
-    glAttachShader(program_, shaders_.back().get());
+    Shader vertexShaderObj{ GL_VERTEX_SHADER, vertexShader };
+    Shader fragmentShaderObj{ GL_FRAGMENT_SHADER, fragmentShader };
+    initialize(vertexShaderObj, fragmentShaderObj, attributes);
+  }
+
+  void Program::uninitialize()
+  {
+    if (isInitialized())
+    {
+      glDeleteProgram(getId());
+      getIdRef() = 0;
+    }
+  }
+
+  void Program::attachShader(const Shader& shader)
+  {
+    if (!shader.isCompiled())
+    {
+      throw std::invalid_argument{ "ERROR::PROGRAM:: "
+        "Cannot attach uncompiled shader!"};
+    }
+    if (!isInitialized())
+    {
+      initialize();
+    }
+    glAttachShader(getId(), shader.getId());
+  }
+
+  bool Program::isLinked() const
+  {
+    if (isInitialized())
+    {
+      GLint status;
+      glGetProgramiv(getId(), GL_LINK_STATUS, &status);
+      return status == GL_TRUE;
+    }
+    return false;
   }
 
   void Program::link()
   {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::PROGRAM:: "
+        "Cannot link uninitialized program!"};
+    }
+
     // Link the program
-    glLinkProgram(program_);
+    glLinkProgram(getId());
 
     // Check the link status
     int status_, length_;
-    glGetProgramiv(program_, GL_LINK_STATUS, &status_);
+    glGetProgramiv(getId(), GL_LINK_STATUS, &status_);
     if (status_ == GL_FALSE)
     {
-      glGetProgramiv(program_, GL_INFO_LOG_LENGTH, &length_);
+      glGetProgramiv(getId(), GL_INFO_LOG_LENGTH, &length_);
       std::vector<char> infoLog_(length_);
-      glGetProgramInfoLog(program_, length_, nullptr, infoLog_.data());
+      glGetProgramInfoLog(getId(), length_, nullptr, infoLog_.data());
       throw std::runtime_error(infoLog_.data());
     }
-  }
-
-  void Program::use() const
-  {
-    glUseProgram(program_);
-  }
-
-  void Program::unuse() const
-  {
-    glUseProgram(0);
   }
 
   void Program::bindAttributeLocations(
@@ -73,62 +126,74 @@ namespace gl
   {
     for (const auto& [index, name] : attributes)
     {
-      glBindAttribLocation(program_, index, name.c_str());
+      glBindAttribLocation(getId(), index, name.c_str());
     }
   }
 
   void Program::setUniform1i(const char* name, int32_t value) const
   {
-    const int location{ glGetUniformLocation(program_, name) };
+    const int location{ glGetUniformLocation(getId(), name) };
     glUniform1i(location, value);
   }
 
   void Program::setUniform2i(
     const char* name, const std::array<int32_t, 2>& value) const
   {
-    const int location{ glGetUniformLocation(program_, name) };
+    const int location{ glGetUniformLocation(getId(), name) };
     glUniform2i(location, value[0], value[1]);
   }
 
   void Program::setUniform3i(
     const char* name, const std::array<int32_t, 3>& value) const
   {
-    const int location{ glGetUniformLocation(program_, name) };
+    const int location{ glGetUniformLocation(getId(), name) };
     glUniform3i(location, value[0], value[1], value[2]);
   }
 
   void Program::setUniform4i(
     const char* name, const std::array<int32_t, 4>& value) const
   {
-    const int location{ glGetUniformLocation(program_, name) };
+    const int location{ glGetUniformLocation(getId(), name) };
     glUniform4i(location, value[0], value[1], value[2], value[3]);
   }
 
   void Program::setUniform1f(const char* name, float value) const
   {
-    const int location{ glGetUniformLocation(program_, name) };
+    const int location{ glGetUniformLocation(getId(), name) };
     glUniform1f(location, value);
   }
 
   void Program::setUniform2f(
     const char* name, const std::array<float, 2>& value) const
   {
-    const int location{ glGetUniformLocation(program_, name) };
+    const int location{ glGetUniformLocation(getId(), name) };
     glUniform2f(location, value[0], value[1]);
   }
 
   void Program::setUniform3f(
     const char* name, const std::array<float, 3>& value) const
   {
-    const int location{ glGetUniformLocation(program_, name) };
+    const int location{ glGetUniformLocation(getId(), name) };
     glUniform3f(location, value[0], value[1], value[2]);
   }
 
   void Program::setUniform4f(
     const char* name, const std::array<float, 4>& value) const
   {
-    const int location{ glGetUniformLocation(program_, name) };
+    const int location{ glGetUniformLocation(getId(), name) };
     glUniform4f(location, value[0], value[1], value[2], value[3]);
+  }
+
+  Program::AutoUnbind Program::bindScoped() const
+  {
+    return AutoUnbind{ *this };
+  }
+
+  GLuint Program::getBoundId()
+  {
+    GLint id = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &id);
+    return static_cast<GLuint>(id);
   }
 
 } // namespace gl

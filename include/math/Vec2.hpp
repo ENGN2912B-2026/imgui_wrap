@@ -1,9 +1,10 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
 #pragma once
 
 #include <array>
+#include <algorithm> // require for std::min, std::max (on MacOS)
 
 namespace math
 {
@@ -72,6 +73,16 @@ namespace math
       x /= scalar;
       y /= scalar;
       return *this;
+    }
+
+    constexpr Vec2 cwiseMin(const Vec2& other) const
+    {
+      return {std::min(x, other.x), std::min(y, other.y)};
+    }
+
+    constexpr Vec2 cwiseMax(const Vec2& other) const
+    {
+      return {std::max(x, other.x), std::max(y, other.y)};
     }
 
     bool operator==(const Vec2& other) const

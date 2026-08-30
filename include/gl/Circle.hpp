@@ -1,9 +1,8 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
 #pragma once
 
-#include <gl/gl.h>
 #include <gl/Shape.hpp>
 #include <gl/Program.hpp>
 

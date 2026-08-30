@@ -1,4 +1,4 @@
-//  Copyright (c) 2024-2025 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
 #include <timer/Timer.hpp>
@@ -11,9 +11,13 @@ namespace timer
   {
   }
 
+  Timer::Timer(Timer&& other) noexcept = default;
+
   Timer::~Timer()
   {
   }
+
+  Timer& Timer::operator=(Timer&& other) noexcept = default;
 
   void Timer::start(size_t milliseconds, Callback callback)
   {

@@ -1,11 +1,11 @@
-//  Copyright (c) 2025 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2025-2026 Daniel Moreno. All rights reserved.
 //
 
 // This example shows how to display an OpenGL rendered image using WidgetGL
 // with zoom and pan capabilities.
 //
 
-#include <gl/gl.h>
+#include <gl/gl.hpp>
 #include <gui/gui.hpp>
 #include <gui/Image.hpp>
 

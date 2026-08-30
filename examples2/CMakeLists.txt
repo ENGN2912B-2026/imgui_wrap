@@ -1,0 +1,10 @@
+
+add_subdirectory(01_hello_gui_v2)
+add_subdirectory(02_hello_layout_v2)
+add_subdirectory(03_hello_dynamic_v2)
+add_subdirectory(04_hello_gl_v2)
+add_subdirectory(05_hello_image_v2)
+add_subdirectory(06_hello_image_zoom_v2)
+add_subdirectory(07_hello_shader_v2)
+add_subdirectory(08_hello_file_v2)
+add_subdirectory(09_hello_plot_v2)

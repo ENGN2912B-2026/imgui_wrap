@@ -1,103 +1,169 @@
-//  Copyright (c) 2024-2025 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
-#include <gl/gl.h>
 #include <gl/FrameBuffer.hpp>
 
 #include <stdexcept>
+#include <cassert>
 
 namespace gl
 {
   FrameBuffer::FrameBuffer(const Vec2i& size, GLint inperpolationMode)
-    : size_{ size }
-    , inperpolationMode_{ inperpolationMode }
+    : FrameBuffer{}
   {
-    // Create a frame buffer object (fbo)
-    glGenFramebuffers(1, &fbo_);
+    initialize(size, inperpolationMode);
+  }
 
-    // Create a color attachment texture
-    glGenTextures(1, &texture_);
-
-    // Create a render buffer object for depth and stencil attachment (we won't be sampling these)
-    glGenRenderbuffers(1, &rbo_);
-
-    if (size_.x > 0 && size_.y > 0)
-    { // Generate the frame buffer for the given size
-      generateFrameBuffer_();
-    }
+  FrameBuffer::FrameBuffer(FrameBuffer&& other) noexcept
+    : Handler{ std::move(other) }
+  {
+    operator=(std::move(other));
   }
 
   FrameBuffer::~FrameBuffer()
   {
-    glDeleteFramebuffers(1, &fbo_);
-    glDeleteTextures(1, &texture_);
-    glDeleteRenderbuffers(1, &rbo_);
+    uninitialize();
+  }
+
+  FrameBuffer& FrameBuffer::operator=(FrameBuffer&& other) noexcept
+  {
+    // Move the base Handler part of the FrameBuffer
+    Handler::operator=(std::move(other));
+
+    if (this != &other)
+    {
+      texture_ = std::move(other.texture_);
+      renderBuffer_ = std::move(other.renderBuffer_);
+
+      // Reset the other frame buffer to a default state
+      FrameBuffer empty;
+      other.texture_ = std::move(empty.texture_);
+      other.renderBuffer_ = std::move(empty.renderBuffer_);
+    }
+
+    return *this;
+  }
+
+  bool FrameBuffer::isInitialized() const
+  {
+    return Handler::isInitialized()
+      && texture_.isInitialized() && renderBuffer_.isInitialized();
+  }
+
+  void FrameBuffer::initialize()
+  {
+    if (!isInitialized())
+    { // Create a frame buffer object
+      glGenFramebuffers(1, &getIdRef());
+
+      // Initialize the texture
+      texture_.initialize();
+
+      // Initialize the render buffer object
+      renderBuffer_.initialize();
+
+      if (!isInitialized())
+      {
+        throw std::runtime_error{
+          "ERROR::FRAMEBUFFER:: Failed to create frame buffer object!"};
+      }
+    }
+
+    // Create the attachments for the frame buffer --------------------------
+
+    // Bind the frame buffer for the duration of this scope
+    const AutoUnbind autoUnbind{ *this };
+
+    // Create a color attachment texture
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D, texture_.getId(), 0);
+
+    // Create a render buffer object for depth and stencil attachment (we
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                              GL_RENDERBUFFER, renderBuffer_.getId());
+  }
+
+  void FrameBuffer::initialize(const Vec2i& size, GLint interpolationMode)
+  {
+    // Ensure the frame buffer is initialized
+    initialize();
+
+    // Set the size
+    setSize(size);
+
+    // Set the interpolation mode for the texture
+    texture_.setInterpolationMode(interpolationMode);
+
+    // Ensure the frame buffer is complete
+    ensureCompleteIfNonEmpty_(size);
+  }
+
+  void FrameBuffer::uninitialize()
+  {
+    renderBuffer_.uninitialize();
+    texture_.uninitialize();
+    if (isInitialized())
+    { // Delete the frame buffer object
+      glDeleteFramebuffers(1, &getIdRef());
+      getIdRef() = 0U;
+    }
+  }
+
+  bool FrameBuffer::isComplete() const
+  {
+    if (isInitialized())
+    { // Check if the frame buffer is complete
+      const AutoUnbind autoUnbind{ *this };
+      const auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+      return status == GL_FRAMEBUFFER_COMPLETE;
+    }
+    return false;
   }
 
   void FrameBuffer::setSize(const Vec2i& size)
   {
-    if (size_ != size)
-    { // New size, regenerate the texture and render buffer object
-      size_ = size;
-      generateFrameBuffer_();
-    }
-  }
-
-  void FrameBuffer::setInterpolationMode(GLint mode)
-  {
-    if (inperpolationMode_ != mode)
+    if (!isInitialized())
     {
-      inperpolationMode_ = mode;
-
-      if (texture_ > 0)
-      { // Update the texture parameters
-        glBindTexture(GL_TEXTURE_2D, texture_);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mode);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mode);
-        glBindTexture(GL_TEXTURE_2D, 0);
-      }
+      throw std::runtime_error{ "ERROR::FRAMEBUFFER:: "
+        "Cannot set size of uninitialized frame buffer!"};
     }
+
+    // Update the size of the texture and render buffer
+    texture_.setSize(size);
+    renderBuffer_.setSize(size);
+
+    // Ensure the frame buffer is complete
+    ensureCompleteIfNonEmpty_(size);
   }
 
-  void FrameBuffer::bind() const
+  Vec2i FrameBuffer::getSize() const
   {
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-  }
-
-  void FrameBuffer::unbind() const
-  {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  }
-
-  void FrameBuffer::generateFrameBuffer_()
-  {
-    // Bind the frame buffer object (fbo)
-    bind();
-
-    // Create a color attachment texture
-    glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size_.x, size_.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, inperpolationMode_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, inperpolationMode_);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_, 0);
-
-    // Create a render buffer object for depth and stencil attachment (we won't be sampling these)
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo_);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size_.x, size_.y);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo_);
-
-    const bool bufferComplete{
-      glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE };
-
-    // Unbind everything
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    unbind();
-
-    // Check if the frame buffer is complete
-    if (!bufferComplete)
+    if (!isInitialized())
     {
-      throw std::runtime_error("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+      throw std::runtime_error{ "ERROR::FRAMEBUFFER:: "
+        "Cannot get size of uninitialized frame buffer!"};
+    }
+    return texture_.getSize();
+  }
+
+  FrameBuffer::AutoUnbind FrameBuffer::bindScoped() const
+  {
+    return AutoUnbind{ *this };
+  }
+
+  GLuint FrameBuffer::getBoundId()
+  {
+    GLint id = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &id);
+    return static_cast<GLuint>(id);
+  }
+
+  void FrameBuffer::ensureCompleteIfNonEmpty_(const Vec2i& size)
+  {
+    if (size.x > 0 && size.y > 0 && !isComplete())
+    {
+      throw std::runtime_error{
+        "ERROR::FRAMEBUFFER:: Framebuffer is not complete!"};
     }
   }
 

@@ -14,17 +14,18 @@ jobs:
 
   build-ubuntu:
     name: Ubuntu-Build (GLFW_GL3)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
-      # ubuntu-24-04 default GCC is version 13 which does not support C++23 very well
-      # we override the compiler for Cmake to GCC 14 for now
-      CC: gcc-14
-      CXX: g++-14
+      # ubuntu-26-04: Fix the version of GCC to 15 to have a consistent build
+      # environment. The default GCC version is 15, but it could change in the
+      # future.
+      CC: gcc-15
+      CXX: g++-15
 
     steps:
 
     - name: Checkout source code
-      uses: actions/checkout@v5.0.0
+      uses: actions/checkout@v7.0.1
 
     - name: Install Linux Dependencies
       run: |
@@ -34,25 +35,29 @@ jobs:
           libxinerama-dev \
           libxcursor-dev  \
           libxi-dev       \
-          libgl-dev
+          libgl-dev       \
+          libgtk-3-dev
 
     - name: Configure and Build
       run: ${{github.workspace}}/build.sh
 
   build-tests-ubuntu:
     name: Ubuntu-Build (Tests)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     env:
       PRESET_NAME: gcc-linux-release
-      # ubuntu-24-04 default GCC is version 13 which does not support C++23 very well
-      # we override the compiler for Cmake to GCC 14 for now
-      CMAKE_CONFIG_OPTIONS: -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14 -DUSE_GLFW_GL3=0 -DUSE_GUI_TEST_ENGINE=1
+      # ubuntu-26-04: Fix the version of GCC to 15 to have a consistent build
+      # environment. The default GCC version is 15, but it could change in the
+      # future.
+      CC: gcc-15
+      CXX: g++-15
+      CMAKE_CONFIG_OPTIONS: -DUSE_GLFW_GL3=0 -DUSE_NATIVEFILEDIALOG_EXTENDED=0 -DUSE_GUI_TEST_ENGINE=1
 
     steps:
 
     - name: Checkout source code
-      uses: actions/checkout@v5.0.0
+      uses: actions/checkout@v7.0.1
 
     - name: Configure and Build
       run: |

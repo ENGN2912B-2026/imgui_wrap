@@ -1,4 +1,4 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
 #pragma once
@@ -27,6 +27,9 @@ namespace gui
       ImGuiViewport* viewport,
       int x, int y, int w, int h,
       unsigned int* pixels_rgba, void* user_data) override;
+
+    void SetWindowTitle(const char* title) override;
+    void SetWindowSize(const ImVec2& size) override;
   };
 
 } // namespace gui

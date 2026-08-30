@@ -1,7 +1,6 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
-#include <gl/gl.h>
 #include <gl/Shader.hpp>
 
 #include <vector>
@@ -10,34 +9,123 @@
 
 namespace gl
 {
-  Shader::Shader(unsigned type)
+  Shader::Shader(GLuint type) : Shader{}
   {
-    shader_ = glCreateShader(type);
+    initialize(type);
   }
 
-  Shader::~Shader()
+  Shader::Shader(GLuint type, const std::string& source) : Shader{}
   {
-    glDeleteShader(shader_);
+    initialize(type, source);
   }
 
-  void Shader::source(const char* source)
+  void Shader::initialize(GLuint type)
   {
-    glShaderSource(shader_, 1, &source, nullptr);
+    if (!isInitialized())
+    {
+      getIdRef() = glCreateShader(type);
+    }
+  }
+
+  void Shader::initialize(GLuint type, const std::string& source)
+  {
+    // Ensure the shader is uninitialized before initializing it with a new type
+    // and source code
+    uninitialize();
+    // Initialize the shader with the specified type
+    initialize(type);
+    // Set the source code
+    setSource(source);
+    // Compile the shader
+    compile();
+  }
+
+  void Shader::uninitialize()
+  {
+    if (isInitialized())
+    {
+      glDeleteShader(getId());
+      getIdRef() = 0;
+    }
+  }
+
+  bool Shader::hasSource() const
+  {
+    if (isInitialized())
+    {
+      GLint length;
+      glGetShaderiv(getId(), GL_SHADER_SOURCE_LENGTH, &length);
+      return length > 0;
+    }
+    return false;
+  }
+
+  void Shader::setSource(const std::string& source)
+  {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::SHADER:: "
+        "Cannot set source of uninitialized shader!"};
+    }
+    const char* sourceCStr = source.c_str();
+    glShaderSource(getId(), 1, &sourceCStr, nullptr);
+  }
+
+  std::string Shader::getSource() const
+  {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::SHADER:: "
+        "Cannot get source of uninitialized shader!"};
+    }
+
+    GLint length;
+    glGetShaderiv(getId(), GL_SHADER_SOURCE_LENGTH, &length);
+    if (length <= 0)
+    {
+      return "";
+    }
+
+    std::vector<char> source(length);
+    glGetShaderSource(getId(), length, nullptr, source.data());
+    return std::string(source.data(), length - 1); // Exclude null terminator
+  }
+
+  bool Shader::isCompiled() const
+  {
+    if (isInitialized())
+    {
+      int status;
+      glGetShaderiv(getId(), GL_COMPILE_STATUS, &status);
+      return status == GL_TRUE;
+    }
+    return false;
   }
 
   void Shader::compile()
   {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::SHADER:: "
+        "Cannot compile uninitialized shader!"};
+    }
+    if (!hasSource())
+    {
+      throw std::runtime_error{ "ERROR::SHADER:: "
+        "Cannot compile shader without source code!"};
+    }
+
     // Compile the shader
-    glCompileShader(shader_);
+    glCompileShader(getId());
 
     // Check compilation status
     int status_, length_;
-    glGetShaderiv(shader_, GL_COMPILE_STATUS, &status_);
+    glGetShaderiv(getId(), GL_COMPILE_STATUS, &status_);
     if (status_ == GL_FALSE)
     {
-      glGetShaderiv(shader_, GL_INFO_LOG_LENGTH, &length_);
+      glGetShaderiv(getId(), GL_INFO_LOG_LENGTH, &length_);
       std::vector<char> infoLog_(length_);
-      glGetShaderInfoLog(shader_, length_, nullptr, infoLog_.data());
+      glGetShaderInfoLog(getId(), length_, nullptr, infoLog_.data());
       throw std::runtime_error(infoLog_.data());
     }
   }

@@ -1,10 +1,10 @@
-//  Copyright (c) 2025 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2025-2026 Daniel Moreno. All rights reserved.
 //
 
 #pragma once
 
-#include <gl/gl.h>
 #include <gui/gui.hpp>
+#include <imgui_zoomable_image.h>
 
 namespace gui
 {
@@ -24,17 +24,23 @@ namespace gui
 
     bool hasTexture() const { return textureId() > 0U; }
 
-    float zoomValue() const { return 1.0f / scale_; }
+    float zoomValue() const { return zoomState_.zoomLevel; }
 
-    float scale() const { return scale_; }
+    float scale() const { return 1.0f / zoomState_.zoomLevel; }
 
-    Vec2f translation() const { return translation_; }
+    Vec2f translation() const
+    {
+      return { zoomState_.panOffset.x, zoomState_.panOffset.y };
+    }
 
-    Vec2f mousePosition() const { return mousePosition_; }
+    Vec2f mousePosition() const
+    {
+      return { zoomState_.mousePosition.x, zoomState_.mousePosition.y };
+    }
 
-    bool isPanZoomEnabled() const { return enablePanZoom_; }
+    bool isPanZoomEnabled() const { return zoomState_.zoomPanEnabled; }
 
-    void setPanZoomEnabled(bool enabled) { enablePanZoom_ = enabled; }
+    void setPanZoomEnabled(bool enabled) { zoomState_.zoomPanEnabled = enabled; }
 
   protected:
     virtual ImTextureID textureId() const { return 0U; };
@@ -43,9 +49,6 @@ namespace gui
 
   private:
     // private data members
-    float scale_;
-    Vec2f translation_;
-    Vec2f mousePosition_;
-    bool enablePanZoom_;
+    ImGuiImage::State zoomState_;
   };
 }

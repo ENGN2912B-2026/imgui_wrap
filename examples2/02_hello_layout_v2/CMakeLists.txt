@@ -1,0 +1,3 @@
+
+add_gui_executable(hello_layout_v2 hello_layout.cpp)
+target_link_libraries(hello_layout_v2 PUBLIC imgui_wrap)

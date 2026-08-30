@@ -1,0 +1,3 @@
+
+add_gui_executable(hello_shader_v2 hello_shader.cpp)
+target_link_libraries(hello_shader_v2 PUBLIC imgui_wrap)

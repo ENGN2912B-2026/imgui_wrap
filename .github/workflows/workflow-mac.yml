@@ -2,6 +2,18 @@ name: Build and Test (macOS)
 
 on:
   workflow_dispatch: # manually trigger the workflow
+    inputs:
+    runner:
+      description: Runner
+      required: true
+      type: choice
+      options:
+        - macos-14          # macOS 14 (Sonoma) - arm64
+        - macos-14-large    # macOS 14 (Sonoma) - x64
+        - macos-15          # macOS 15 (Sequoia) - arm64
+        - macos-15-intel    # macOS 15 (Sequoia) - x64
+        - macos-26          # macOS 26 (Tahoe) - arm64
+        - macos-26-intel    # macOS 26 (Tahoe) - x64
 
 permissions:
   checks: write
@@ -16,7 +28,7 @@ jobs:
     steps:
 
     - name: Checkout source code
-      uses: actions/checkout@v5.0.0
+      uses: actions/checkout@v7.0.1
 
     - name: Configure and Build
       run: ${{github.workspace}}/build.sh
@@ -32,7 +44,7 @@ jobs:
     steps:
 
     - name: Checkout source code
-      uses: actions/checkout@v5.0.0
+      uses: actions/checkout@v7.0.1
 
     - name: Configure and Build
       run: |

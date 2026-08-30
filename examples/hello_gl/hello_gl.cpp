@@ -1,7 +1,6 @@
-//  Copyright (c) 2024 Daniel Moreno. All rights reserved.
+//  Copyright (c) 2024-2026 Daniel Moreno. All rights reserved.
 //
 
-#include <gl/gl.h>
 #include <gl/FrameBuffer.hpp>
 #include <gui/gui.hpp>
 #include <timer/Timer.hpp>
@@ -37,12 +36,13 @@ public:
     if (!frameBuffer_)
     {
       frameBuffer_ = new gl::FrameBuffer();
+      frameBuffer_->initialize();
     }
 
     frameBuffer_->setSize(math::make<gui::Vec2i>(ImGui::GetContentRegionAvail()));
 
     ImGui::Image(
-      (ImTextureID)(intptr_t)frameBuffer_->getTexture(),
+      (ImTextureID)(intptr_t)frameBuffer_->getTexture().getId(),
       frameBuffer_->getSize().to<float>(),
       ImVec2(0, 1),
       ImVec2(1, 0)
@@ -57,15 +57,13 @@ public:
     {
       configureViewport(-1, 1, -1 , 1);
 
-      frameBuffer_->bind();
+      const auto autoUnbind = frameBuffer_->bindScoped();
 
       glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
       drawTriangle();
-
-      frameBuffer_->unbind();
     }
   }
 

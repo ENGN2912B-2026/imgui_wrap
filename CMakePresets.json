@@ -53,13 +53,24 @@
       "name": "msvc-win64",
       "hidden": true,
       "inherits": ["win64"],
-      "generator": "Visual Studio 17 2022",
       "toolset": "host=x64",
       "architecture": "x64",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe"
       }
+    },
+    {
+      "name": "msvc-2026-win64",
+      "hidden": true,
+      "inherits": ["msvc-win64"],
+      "generator": "Visual Studio 18 2026"
+    },
+    {
+      "name": "msvc-2022-win64",
+      "hidden": true,
+      "inherits": ["msvc-win64"],
+      "generator": "Visual Studio 17 2022"
     },
     {
       "name": "clang-unix-make",
@@ -103,12 +114,20 @@
       "inherits": ["gcc-unix-make","linux","ninja"]
     },
     {
-      "name": "msvc-win64-debug",
-      "inherits": ["msvc-win64","debug-config"]
+      "name": "msvc-2026-win64-debug",
+      "inherits": ["msvc-2026-win64","debug-config"]
     },
     {
-      "name": "msvc-win64-release",
-      "inherits": ["msvc-win64","release-config"]
+      "name": "msvc-2026-win64-release",
+      "inherits": ["msvc-2026-win64","release-config"]
+    },
+    {
+      "name": "msvc-2022-win64-debug",
+      "inherits": ["msvc-2022-win64","debug-config"]
+    },
+    {
+      "name": "msvc-2022-win64-release",
+      "inherits": ["msvc-2022-win64","release-config"]
     },
     {
       "name": "clang-macos-debug",
@@ -137,14 +156,26 @@
   ],
   "buildPresets": [
     {
-      "name": "msvc-win64-debug",
-      "configurePreset": "msvc-win64-debug",
+      "name": "msvc-2026-win64-debug",
+      "configurePreset": "msvc-2026-win64-debug",
       "configuration": "Debug",
       "jobs": 4
     },
     {
-      "name": "msvc-win64-release",
-      "configurePreset": "msvc-win64-release",
+      "name": "msvc-2026-win64-release",
+      "configurePreset": "msvc-2026-win64-release",
+      "configuration": "Release",
+      "jobs": 4
+    },
+    {
+      "name": "msvc-2022-win64-debug",
+      "configurePreset": "msvc-2022-win64-debug",
+      "configuration": "Debug",
+      "jobs": 4
+    },
+    {
+      "name": "msvc-2022-win64-release",
+      "configurePreset": "msvc-2022-win64-release",
       "configuration": "Release",
       "jobs": 4
     },

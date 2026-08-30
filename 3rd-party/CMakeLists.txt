@@ -31,7 +31,6 @@ if (USE_GLFW_GL3)
   target_compile_definitions(imgui
     PUBLIC
       -DUSE_GLFW_GL3
-      -DGLFW_HAS_PER_MONITOR_DPI=1
   )
 
   target_link_libraries(imgui PUBLIC glfw)
@@ -46,12 +45,16 @@ if (USE_GLFW_GL3)
 
 endif(USE_GLFW_GL3)
 
+# ImGui Zoomable Image########################################################
+add_library(imgui_zoomable_image INTERFACE)
+target_include_directories(imgui_zoomable_image INTERFACE imgui_zoomable_image)
+
 # ImPlot #####################################################################
 if (USE_IMPLOT)
   add_library(implot STATIC
     implot/implot.cpp
     implot/implot_items.cpp
-    implot/implot_demo.cpp
+    #implot/implot_demo.cpp
   )
 
   target_include_directories(implot PUBLIC implot)
@@ -102,6 +105,17 @@ if (USE_GUI_TEST_ENGINE)
   endif()
 
 endif(USE_GUI_TEST_ENGINE)
+
+# NativeFileDialog Extended ##################################################
+if (USE_NATIVEFILEDIALOG_EXTENDED)
+  # if (LINUX)
+  #   # For Linux we prefer to use "Portal" instead GTK
+  #   # Requires `libdbus-1-dev`
+  #   set(NFD_PORTAL 1)
+  # endif()
+  # Default is to use GTK3 on Linux, which requires `libgtk-3-dev`
+  add_subdirectory(nativefiledialog-extended)
+endif(USE_NATIVEFILEDIALOG_EXTENDED)
 
 # GLAD OpenGL Loader-Generator ###############################################
 if (USE_GLAD)
