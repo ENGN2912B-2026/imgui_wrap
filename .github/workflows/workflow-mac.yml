@@ -10,11 +10,17 @@ on:
         default: macos-15
         options:
           - macos-14          # macOS 14 (Sonoma) - arm64
-          - macos-14-large    # macOS 14 (Sonoma) - x64
+          #- macos-14-large    # macOS 14 (Sonoma) - x64 (not free!) (*)
           - macos-15          # macOS 15 (Sequoia) - arm64
           - macos-15-intel    # macOS 15 (Sequoia) - x64
           - macos-26          # macOS 26 (Tahoe) - arm64
           - macos-26-intel    # macOS 26 (Tahoe) - x64
+
+# (*) Only "standard" runners are free, see:
+#
+#  - https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job?utm_source=chatgpt.com#standard-github-hosted-runners-for-public-repositories
+#
+# For a list of standard runners for public repositories.
 
 permissions:
   checks: write

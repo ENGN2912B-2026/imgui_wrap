@@ -246,8 +246,11 @@ namespace gui2
       return std::make_unique<FactoryValue<T>>(std::move(value));
     }
     else
-    {
-      static_assert(false,
+    { // We have multiple static_asserts here to provide more specific error
+      // messages for different cases.
+      static_assert(Content<T>, "T is not Content");
+      static_assert(ContentFactory<T>, "T is not ContentFactory");
+      static_assert(Content<T> || ContentFactory<T>,
         "Type is not `WidgetContent` (neither `Content` nor `ContentFactory`)");
     }
   }
@@ -264,8 +267,11 @@ namespace gui2
       return content.display(rt, rect);
     }
     else
-    {
-      static_assert(false,
+    { // We have multiple static_asserts here to provide more specific error
+      // messages for different cases.
+      static_assert(Primitive<T>, "T is not Primitive");
+      static_assert(Displayable<T>, "T is not Displayable");
+      static_assert(Primitive<T> || Displayable<T>,
         "Type is not `Content` (neither `Primitive` nor `Displayable`)");
     }
   }
