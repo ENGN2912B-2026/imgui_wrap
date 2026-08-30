@@ -103,16 +103,15 @@ namespace gui
 
   void TestReporterConsole::generateReport(ImGuiTestEngine* engine, std::ostream& os)
   {
-    int count_tested = 0;
-    int count_success = 0;
-    ImGuiTestEngine_GetResult(engine, count_tested, count_success);
+    ImGuiTestEngineResultSummary summary;
+    ImGuiTestEngine_GetResultSummary(engine, &summary);
 
 #ifdef _WIN32
     bool wasAnsiEnabled;
     enableAnsiEscape(os, true, &wasAnsiEnabled);
 #endif
 
-    if (count_tested == 0)
+    if (summary.CountTested == 0)
     {
       try
       {
@@ -126,7 +125,7 @@ namespace gui
       return;
     }
 
-    if (count_success < count_tested)
+    if (summary.CountSuccess < summary.CountTested)
     {
       os << "\nFailing tests:\n";
       for (ImGuiTest* test : engine->TestsAll)
@@ -138,13 +137,13 @@ namespace gui
       }
     }
 
-    const bool failed{ count_success != count_tested };
+    const bool failed{ summary.CountSuccess != summary.CountTested };
     try
     {
       os
         << setColor(failed ? ColorCode::Red : ColorCode::Green)
         << "\nTests Result: " << (failed ? "Errors" : "OK") << "\n"
-        << "(" << count_success << "/" << count_tested << " tests passed)\n";
+        << "(" << summary.CountSuccess << "/" << summary.CountTested << " tests passed)\n";
     }
     catch(const std::exception& e)
     {
@@ -162,17 +161,16 @@ namespace gui
 
   void TestReporterMarkdown::generateReport(ImGuiTestEngine* engine, std::ostream& os)
   {
-    int count_tested = 0;
-    int count_success = 0;
-    ImGuiTestEngine_GetResult(engine, count_tested, count_success);
+    ImGuiTestEngineResultSummary summary;
+    ImGuiTestEngine_GetResultSummary(engine, &summary);
 
-    if (count_tested == 0)
+    if (summary.CountTested == 0)
     {
       os << "⛔ No tests were run!\n";
       return;
     }
 
-    if (count_success < count_tested)
+    if (summary.CountSuccess < summary.CountTested)
     {
       os << "\nFailing tests:\n";
       for (ImGuiTest* test : engine->TestsAll)
@@ -185,10 +183,10 @@ namespace gui
       os << "\n";
     }
 
-    const bool success{ count_success == count_tested };
+    const bool success{ summary.CountSuccess == summary.CountTested };
     os
       << "Tests Result: "
       << (success ? "✅" : "❌")
-      << count_success << "/" << count_tested << " tests passed\n";
+      << summary.CountSuccess << "/" << summary.CountTested << " tests passed\n";
   }
 }

@@ -138,16 +138,16 @@ namespace gui
       }
     }
 
-    // Get number of number of successful tests
-    int count_tested, count_success;
-    ImGuiTestEngine_GetResult(engine, count_tested, count_success);
+    // Get test results
+    ImGuiTestEngineResultSummary summary;
+    ImGuiTestEngine_GetResultSummary(engine, &summary);
 
     // IMPORTANT: we need to destroy the Dear ImGui context BEFORE the test
     //  engine context, so .ini data may be saved.
     ImGuiTestEngine_DestroyContext(engine);
 
     // Exit with error if not all tests passed
-    if (count_tested != count_success)
+    if (summary.CountTested != summary.CountSuccess)
     {
        exit(EXIT_FAILURE); // Error
     }
