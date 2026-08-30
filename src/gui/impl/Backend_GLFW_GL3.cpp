@@ -109,10 +109,19 @@ namespace gui
    bool Backend_GLFW_GL3::InitCreateWindow(
     const char* window_title, ImVec2 window_size)
   {
+    // The code in this function is based on the  example
+    // `examples/example_glfw_opengl3/main.cpp` from the ImGui library.
+    //
+    // Review that code from time to time to ensure that this code is up to date
+    // with the latest ImGui version.
+    //
+
     // Setup window
     glfwSetErrorCallback(ErrorCallback_);
     if (!glfwInit())
+    {
       return false;
+    }
 
     // Decide GL+GLSL versions
 #if __APPLE__
@@ -130,6 +139,7 @@ namespace gui
     //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
+
     // Create window with graphics context
     GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
     DpiScale = DpiAware ? GetDPI_(primaryMonitor) : 1.0f;
@@ -139,7 +149,9 @@ namespace gui
       static_cast<int>(window_size.x), static_cast<int>(window_size.y),
       window_title, nullptr, nullptr);
     if (window == nullptr)
+    {
       return false;
+    }
     glfwMakeContextCurrent(window);
 
   #ifdef USE_GLAD
