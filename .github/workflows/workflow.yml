@@ -46,13 +46,13 @@ jobs:
     runs-on: ubuntu-26.04
 
     env:
-      PRESET_NAME: gcc-linux-release
+      PRESET_NAME: gcc-linux-ninja-release
+      CMAKE_CONFIG_OPTIONS: -DUSE_GLFW_GL3=0 -DUSE_NATIVEFILEDIALOG_EXTENDED=0 -DUSE_GUI_TEST_ENGINE=1
       # ubuntu-26-04: Fix the version of GCC to 15 to have a consistent build
       # environment. The default GCC version is 15, but it could change in the
       # future.
       CC: gcc-15
       CXX: g++-15
-      CMAKE_CONFIG_OPTIONS: -DUSE_GLFW_GL3=0 -DUSE_NATIVEFILEDIALOG_EXTENDED=0 -DUSE_GUI_TEST_ENGINE=1
 
     steps:
 
@@ -62,7 +62,7 @@ jobs:
     - name: Configure and Build
       run: |
         cmake --preset ${{ env.PRESET_NAME }} ${{ env.CMAKE_CONFIG_OPTIONS }} && \
-        cmake --build --preset "${{ env.PRESET_NAME }}" -j
+        cmake --build --preset "${{ env.PRESET_NAME }}" --parallel
 
     - name: Run Tests
       run: |

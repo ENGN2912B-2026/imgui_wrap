@@ -28,7 +28,7 @@ if [[ $1 == "" ]]; then
       ;;
     "linux-"*)
       # Linux
-      PRESET_NAME="gcc-linux-release"
+      PRESET_NAME="gcc-linux-ninja-release"
       ;;
     *)
       # Default case
@@ -47,4 +47,4 @@ if [[ -n "$CC" && -n "$CXX" ]]; then
   CMAKE_COMPILER_ARGS="-DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX"
 fi
 
-cmake --preset "${PRESET_NAME}" ${CMAKE_COMPILER_ARGS} && cmake --build --preset "${PRESET_NAME}" -j
+cmake --preset "${PRESET_NAME}" ${CMAKE_COMPILER_ARGS} && cmake --build --preset "${PRESET_NAME}" --parallel
