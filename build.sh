@@ -20,7 +20,7 @@ if [[ $1 == "" ]]; then
   case "$HOST_ID" in
     "windows_"*)
       # Windows
-      PRESET_NAME="msvc-win64-release"
+      PRESET_NAME="msvc-2026-win64-release"
       ;;
     "darwin"*)
       # Mac OSX

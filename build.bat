@@ -2,7 +2,7 @@
 @echo off
 
 IF [%1] == [] (
-    set PRESET_NAME=msvc-win64-release
+    set PRESET_NAME=msvc-2026-win64-release
 ) ELSE (
     set PRESET_NAME=%1
 )

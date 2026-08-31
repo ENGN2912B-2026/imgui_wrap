@@ -1,0 +1,15 @@
+//  Copyright (c) 2026 Daniel Moreno. All rights reserved.
+//
+#pragma once
+
+// Include the compatibility header
+#include "source_location.hpp"
+
+#if !defined(__cpp_lib_source_location) || __cpp_lib_source_location < 201907L
+#define __cpp_lib_source_location 201907L
+#endif
+
+namespace std
+{
+  using source_location = nostd::source_location;
+}

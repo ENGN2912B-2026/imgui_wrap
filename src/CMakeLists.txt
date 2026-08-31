@@ -6,7 +6,7 @@ target_include_directories(imgui_wrap
     ${PROJECT_SOURCE_DIR}/include
 )
 
-target_link_libraries(imgui_wrap PUBLIC imgui imgui_zoomable_image)
+target_link_libraries(imgui_wrap PUBLIC imgui imgui_zoomable_image std_compat)
 
 if (USE_IMPLOT)
   target_link_libraries(imgui_wrap PUBLIC implot)

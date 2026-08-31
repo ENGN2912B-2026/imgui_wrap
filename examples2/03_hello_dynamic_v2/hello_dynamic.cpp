@@ -13,6 +13,7 @@
 #include <gui2/Separator.hpp>
 
 #include <print>
+#include <format>
 #include <chrono>
 
 // This example demonstrates creation of dynamic content where items are

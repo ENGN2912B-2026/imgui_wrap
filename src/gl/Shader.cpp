@@ -6,6 +6,7 @@
 #include <vector>
 #include <stdexcept>
 #include <cstdio>
+#include <cmath>
 
 namespace gl
 {
@@ -144,7 +145,7 @@ namespace gl
     {
       throw std::runtime_error{ "Failed to parse GLSL version" };
     }
-    return static_cast<size_t>(version * 100);
+    return static_cast<size_t>(std::round(version * 100));
   }
 
 } // namespace gl
