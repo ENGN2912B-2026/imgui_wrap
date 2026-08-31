@@ -1,0 +1,42 @@
+//  Copyright (c) 2026 Daniel Moreno. All rights reserved.
+//
+#pragma once
+
+#include <version>
+
+#if __has_include(<fmt/format.h>)
+// Use fmt library if present
+# include <fmt/format.h>
+# include <format> // make std::format also available as a convenience
+  namespace std
+  {
+    using fmt::print;
+    using fmt::println;
+  }
+#elif __has_include(<format>)
+// Use C++20 std::format
+# include <format>
+# include <iostream>
+  namespace std
+  {
+    template<class... Args>
+    void print(std::format_string<Args...> fmt, Args&&... args)
+    {
+      std::cout << std::format(fmt, std::forward<Args>(args)...);
+    }
+
+    template<class... Args>
+    void println(std::format_string<Args...> fmt, Args&&... args)
+    {
+      std::cout << std::format(fmt, std::forward<Args>(args)...)
+                << '\n';
+    }
+  }
+#else
+  // Error
+  #error "std::print and std::println are not available."
+#endif
+
+#if !defined(__cpp_lib_print) || __cpp_lib_print < 202207L
+# define __cpp_lib_print 202207L
+#endif

@@ -14,6 +14,7 @@
 #include <timer/Timer.hpp>
 
 #include <print>
+#include <format>
 #include <cmath>
 
 // This example shows how to use OpenGL shaders in a GUI application.
@@ -96,8 +97,7 @@ private:
   {
     // Initialize the shader program
     const size_t glslVersion{ gl::Shader::getShadingLanguageVersion() };
-    glslVersionString_ = std::to_string(glslVersion);
-    //std::cout << "GLSL Version: " << glslVersion << std::endl; //TODO show in UI
+    glslVersionString_ = std::format("{}.{:02}", glslVersion / 100, glslVersion % 100);
     std::string vertexShader, fragmentShader;
     if (glslVersion == 140)
     {

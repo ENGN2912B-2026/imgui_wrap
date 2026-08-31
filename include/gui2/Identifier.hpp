@@ -8,6 +8,14 @@
 
 #include <gui2/FNVHash.hpp>
 
+// Define a helper macro to use in place of `constexpr` for `std::string` if the
+// compiler does not support it. This allows
+#ifdef HAS_STD_CONSTEXPR_STRING
+# define CONSTEXPR_STR constexpr
+#else
+# define CONSTEXPR_STR
+#endif
+
 namespace gui2
 {
   // Concept for classes that provided a unique identifier value
@@ -32,7 +40,7 @@ namespace gui2
     FNV1a hash_;
     std::string name_;
   public:
-    constexpr StringId(std::string name)
+    CONSTEXPR_STR StringId(std::string name)
       : hash_{name}, name_{std::move(name)}
     {
       if (name.empty())
@@ -84,3 +92,7 @@ namespace gui2
   using AutoId = LocationId;
 
 } // namespace gui
+
+#ifdef CONSTEXPR_STR
+# undef CONSTEXPR_STR
+#endif

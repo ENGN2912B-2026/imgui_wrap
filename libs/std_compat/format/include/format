@@ -1,0 +1,15 @@
+//  Copyright (c) 2026 Daniel Moreno. All rights reserved.
+//
+#pragma once
+
+// Use fmt library for `std::format`
+#include <fmt/format.h>
+
+namespace std
+{
+  using fmt::format;
+}
+
+#if !defined(__cpp_lib_format) || __cpp_lib_format < 201907L
+# define __cpp_lib_format 201907L
+#endif
