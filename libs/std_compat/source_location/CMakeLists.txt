@@ -2,10 +2,7 @@
 # std::source_location compatibility
 
 check_cxx_source_compiles("
-#include <version>
-#ifdef __cpp_lib_source_location
-# include <source_location>
-#endif
+#include <source_location>
 int main() { auto loc = std::source_location::current(); return 0; }
 " HAS_STD_SOURCE_LOCATION)
 

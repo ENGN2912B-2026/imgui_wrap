@@ -2,10 +2,7 @@
 # std::format compatibility
 
 check_cxx_source_compiles("
-#include <version>
-#ifdef __cpp_lib_format
-# include <format>
-#endif
+#include <format>
 int main() { std::format(\"Hello, {}!\", \"World\"); return 0; }
 " HAS_STD_FORMAT)
 
