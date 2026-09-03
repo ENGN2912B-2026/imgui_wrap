@@ -1,0 +1,12 @@
+
+set(SOURCES hello_gui.cpp)
+set(LIBS imgui_wrap_gui_v1)
+
+if (USE_GUI_TEST_ENGINE)
+  set(SOURCES ${SOURCES} hello_gui_tests.cpp)
+  set(LIBS ${LIBS} imgui_test_engine)
+endif()
+
+add_gui_example(NAME hello_gui
+  LIBS ${LIBS}
+  SOURCES ${SOURCES})

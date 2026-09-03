@@ -1,3 +1,0 @@
-
-add_gui_executable(hello_image_zoom hello_image_zoom.cpp)
-target_link_libraries(hello_image_zoom PUBLIC imgui_wrap)

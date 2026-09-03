@@ -1,3 +1,0 @@
-
-add_gui_executable(hello_dynamic_v2 hello_dynamic.cpp)
-target_link_libraries(hello_dynamic_v2 PUBLIC imgui_wrap)
