@@ -9,9 +9,11 @@
 #include <gui2/Image.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
+#include <gui2/TextBox.hpp>
 #include <gui2/Panel.hpp>
 
 #include <imgui.h>
+#include <misc/cpp/imgui_stdlib.h>
 #include <imgui_zoomable_image.h>
 
 #ifdef USE_IMPLOT
@@ -235,6 +237,28 @@ namespace gui2
     {
       checkBox.setChecked(checked);
     }
+    return getItemRect_();
+  }
+
+  Rect Runtime::display(TextBox& textBox, const Rect& rect) const
+  {
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    std::string placeholder;
+    std::string id = "##" + textBox.getId();
+    std::string* text = textBox.getTextPtr() ? textBox.getTextPtr() : &placeholder;
+    ImGui::InputText(id.c_str(), text);
+
+  // if (ImGui::InputText("##inputText", &inputText,
+  //     ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory,
+  //     inputTextCallback_, this))
+  // { // User pressed enter key, we must processed the input text stored in
+  //   //  `inputText` variable.
+  //   if (!inputText.empty())
+  //   {
+  //     processExpression_(inputText);
+  //   }
+  // }
+
     return getItemRect_();
   }
 

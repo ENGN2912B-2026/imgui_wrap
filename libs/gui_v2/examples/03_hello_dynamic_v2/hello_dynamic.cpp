@@ -9,6 +9,7 @@
 #include <gui2/HStack.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
+#include <gui2/TextBox.hpp>
 #include <gui2/Empty.hpp>
 #include <gui2/Separator.hpp>
 
@@ -119,6 +120,7 @@ int main(int argc, char** argv)
       return Button{ "Counter: " + std::to_string(counter), [&]{ ++counter; } };
     };
     auto resetButton = Button{ "Reset counter", [&]{ counter = 0; } };
+    std::string textBoxContent = "Type here...";
 
     using Clock = std::chrono::steady_clock;
     auto previous = Clock::now();
@@ -165,8 +167,8 @@ int main(int argc, char** argv)
             Panel{ VStack {
               "Bottom Panel",
               Separator{},
-              HStack { "Counter Controls", counterButton, resetButton,
-              },
+              HStack { "Counter Controls", counterButton, resetButton},
+              TextBox{ &textBoxContent },
             }}};
           },
         }} : Fixed{0}; },
