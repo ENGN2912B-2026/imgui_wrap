@@ -3,6 +3,7 @@
 #pragma once
 
 #include <gui2/Widget.hpp>
+#include <gui2/Identifier.hpp>
 
 #include <vector>
 #include <cassert>
@@ -110,6 +111,34 @@ namespace gui2
     }
   };
 
+  // A tight-sized item that can be added to a Layout. The size of the item is
+  // determined by the size of its content, and the content is a Widget that
+  // will be displayed within the tight-sized area.
+  struct TightSized
+  {
+    // The content of the item, which is a Widget that will be displayed within
+    // the stretchable area.
+    Widget content;
+
+    // The identifier of the item.
+    std::string id;
+
+    // \brief Constructs a Stretch item with the given weight and content.
+    // \param[in] _content  The content of the item.
+    // \param[in] location  The source location where the item is constructed.
+    TightSized(Widget _content = {},
+               std::source_location location = std::source_location::current())
+      : content{std::move(_content)}
+      , id{ LocationId{std::move(location)}.getValueStr() }
+    { }
+
+    // Display its content.
+    Rect display(const Runtime& rt, const Rect& rect)
+    {
+      return content.display(rt, rect);
+    }
+  };
+
   // A container that arranges its child items either vertically or
   // horizontally, and either in a stack or box layout mode. The items are
   // displayed in the order they are added to the layout, and with a spacing
@@ -173,8 +202,15 @@ namespace gui2
     static_assert(M == LayoutMode::Stack || M == LayoutMode::Box,
       "Invalid layout mode");
 
-    std::vector<Rect> computeItemLayouts_(
-      const Rect& rect, const Vec2i& itemSpacing);
+    struct ItemLayout
+    {
+      Rect rect;
+      bool mustSize;
+      std::string id;
+    };
+
+    std::vector<ItemLayout> computeItemLayouts_(
+      const Runtime& rt, const Rect& rect, const Vec2i& itemSpacing);
   };
 
   using HStack = Layout<Orientation::Horizontal, LayoutMode::Stack>;
@@ -212,13 +248,14 @@ namespace gui2
   Rect Layout<O, M>::display(const Runtime& rt, const Rect& rect)
   {
     const auto itemSpacing = rt.getItemSpacing();
-    const auto itemRects = computeItemLayouts_(rect, itemSpacing);
-    assert(itemRects.size() == items_.size()
-      && "Mismatch between computed rectangles and items");
+    const auto itemLayouts = computeItemLayouts_(rt, rect, itemSpacing);
+    assert(itemLayouts.size() == items_.size()
+      && "Mismatch between computed item layouts and items");
     Rect actualRect{ Rect::empty() }, itemActualRect{ Rect::empty() };
     for (size_t i = 0; i < items_.size(); ++i)
     {
-      Rect itemRect{ itemRects[i] };
+      auto& itemLayout = itemLayouts[i];
+      Rect itemRect{ itemLayout.rect };
       // We need to adjust the position based on the last item's size.
       IfVertical<O>([&]{
         if (actualRect.hasHeight())
@@ -268,8 +305,12 @@ namespace gui2
         if (availableHeight > 0) { itemRect.setOptionalHeight(availableHeight); }
         else { itemRect.unsetHeight(); }
       }
+      // Start sizing if the item layout requires it
+      if (itemLayout.mustSize) { rt.sizeBegin(itemLayout.id); }
       // Display the item and get its actual rectangle
       itemActualRect = items_[i].display(rt, itemRect);
+      // End sizing if the item layout requires it
+      if (itemLayout.mustSize) { rt.sizeEnd(); }
       // Update the layout's actual rectangle based on actual rectangles of
       // the items.
       actualRect.unite(itemActualRect);
@@ -280,17 +321,17 @@ namespace gui2
   }
 
   template<Orientation O, LayoutMode M>
-  std::vector<Rect> Layout<O, M>::computeItemLayouts_(
-    const Rect& rect, const Vec2i& itemSpacing)
+  std::vector<typename Layout<O, M>::ItemLayout> Layout<O, M>::computeItemLayouts_(
+    const Runtime& rt, const Rect& rect, const Vec2i& itemSpacing)
   {
-    std::vector<Rect> rects(items_.size(), rect);
+    std::vector<ItemLayout> layouts(items_.size(), {rect, false, {}});
     if constexpr (M == LayoutMode::Stack)
     { // For Stack mode, we just unset the size in the orientation direction
       // and return the rectangles as they are.
-      for (auto& r : rects)
+      for (auto& layout : layouts)
       {
-        IfVertical<O>([&]{r.unsetHeight();});
-        IfHorizontal<O>([&]{r.unsetWidth();});
+        IfVertical<O>([&]{layout.rect.unsetHeight();});
+        IfHorizontal<O>([&]{layout.rect.unsetWidth();});
       }
     }
     else
@@ -323,9 +364,28 @@ namespace gui2
           itemValues[i] = kFixed | (size << 1);
           fixedSize += size;
           nonZeroItems += (size > 0 ? 1 : 0);
+          continue;
         }
-        else
-        { // Otherwise is a stretch item, add its weight to the total weight.
+
+        if (const auto* tight = items_[i].template resolveAs<TightSized>())
+        { // Item is tight-sized
+          auto& layout = layouts[i];
+          layout.mustSize = true;
+          layout.id = tight->id;
+          if (auto rect = rt.getSizedRect(layout.id); rect.hasSize())
+          { // If the tight-sized item has a valid size, we use it as a fixed size.
+            const int size{ O == Orientation::Vertical ? rect.size.y : rect.size.x };
+            itemValues[i] = kFixed | (size << 1);
+            fixedSize += size;
+            nonZeroItems += (size > 0 ? 1 : 0);
+            continue;
+          }
+          // otherwise we continue to treat it as a stretch item with weight 1
+        }
+
+        // Otherwise we treat it as a stretch item. We must add its weight to
+        // the total weight. Weight is 1 by default if the item is not a Stretch.
+        {
           const auto* stretch = items_[i].template resolveAs<Stretch>();
           const int weight{ stretch ? static_cast<int>(stretch->weight) : 1 };
           itemValues[i] = kWeight | (weight << 1);
@@ -333,7 +393,8 @@ namespace gui2
           lastWeightedIndex = i;
           nonZeroItems += (weight > 0 ? 1 : 0);
         }
-      }
+
+      } // for (size_t i = 0; i < items_.size(); ++i)
 
       if (totalWeight <= 0)
       { // If totalWeight is 0, all children have fixed size,
@@ -371,12 +432,14 @@ namespace gui2
           }
         }
         IfVertical<O>([&]{
-          rects[i].origin.y += pos;
-          rects[i].size.y = size;
+          auto &rect = layouts[i].rect;
+          rect.origin.y += pos;
+          rect.size.y = size;
         });
         IfHorizontal<O>([&]{
-          rects[i].origin.x += pos;
-          rects[i].size.x = size;
+          auto &rect = layouts[i].rect;
+          rect.origin.x += pos;
+          rect.size.x = size;
         });
         if (size > 0)
         { // Only add spacing if the item has a non-zero size.
@@ -385,7 +448,7 @@ namespace gui2
       }
     }
 
-    // Return the computed rectangles for each item
-    return rects;
+    // Return the computed item layouts
+    return layouts;
   }
 }

@@ -46,6 +46,14 @@ namespace gui2
     //! returns the string name of the identifier.
     const std::string& getName() const { return name_; }
 
+    //! \brief Sets whether the panel should draw a border around its content.
+    //! \param[in] drawBorder true to draw a border, false to not draw a border.
+    void setDrawBorder(bool drawBorder) { drawBorder_ = drawBorder; }
+
+    //! \brief Returns whether the panel should draw a border around its content.
+    //! \return true if the panel should draw a border, false otherwise.
+    bool getDrawBorder() const { return drawBorder_; }
+
     //! \brief Adds an action to be executed during the next display cycle.
     //! \param[in] action The action to add.
     //!
@@ -70,6 +78,7 @@ namespace gui2
     std::string id_;
     std::string name_;
     Widget widget_;
+    bool drawBorder_ = true;
     Actions actions_ = Actions::None;
   };
 

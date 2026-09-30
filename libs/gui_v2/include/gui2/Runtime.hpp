@@ -11,6 +11,8 @@
 #include <memory>
 #include <concepts>
 #include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 namespace gui2
 {
@@ -97,6 +99,25 @@ namespace gui2
     // Container items, they maybe have as children other items
     Rect display(Panel& panel, const Rect& rect) const;
 
+    // Content sizing ---------------------------------------------------------
+
+    //! \brief Begins a sizing operation for a content item with the given ID.
+    //! \param[in] id The unique identifier of the content item to size.
+    //! \note This function should be called before displaying the content item
+    //!       to be sized.
+    void sizeBegin(const std::string& id) const;
+
+    //! \brief Ends the current sizing operation.
+    //! \note This function should be called after displaying the content item
+    //!       to be sized.
+    void sizeEnd() const;
+
+    //! \brief Gets the sized rectangle for a content item with the given ID.
+    //! \param[in] id The unique identifier of the content item.
+    //! \return The sized rectangle for the content item, or an empty rectangle
+    //!         if the content item has not been sized yet.
+    Rect getSizedRect(const std::string& id) const;
+
     // Other functions --------------------------------------------------------
 
     //! \brief Gets the padding of the desktop window and child windows.
@@ -106,10 +127,20 @@ namespace gui2
     //!       the window where the content is displayed.
     Vec2i getWindowPadding() const;
 
+    //! \brief Gets the padding of the frame around items in a layout.
+    //! \return The padding of the frame around items in a layout.
+    //! \note The frame padding is the space between the frame border and the
+    //!       content area of the frame. It is used by most widgets.
+    Vec2i getFramePadding() const;
+
     //! \brief Gets the spacing between items in a layout.
     //! \return The spacing between items in a layout.
     //! \note The spacing is the space between the items in the layout.
     Vec2i getItemSpacing() const;
+
+    //! \brief Gets the height of a single line of text.
+    //! \return The height of a single line of text in pixels.
+    size_t getFontSize() const;
 
     //! \brief Gets a reference to the backend used by the runtime.
     //! \return A reference to the backend used by the runtime.
@@ -118,6 +149,8 @@ namespace gui2
 
   private:
     std::unique_ptr<backend::Backend> backend_;
+    mutable std::unordered_map<std::string, Rect> sizedRects_;
+    mutable std::vector<std::pair<std::string, Rect>> sizingStack_;
     Runtime() = default;
   };
 

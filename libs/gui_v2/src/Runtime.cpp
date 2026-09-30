@@ -33,7 +33,7 @@ namespace gui2
     };
 
     constexpr int kDefaultImGuiChildWindowFlags{
-      ImGuiChildFlags_Borders
+      ImGuiChildFlags_None
     };
 
     inline Rect getItemRect_()
@@ -42,6 +42,15 @@ namespace gui2
       ImVec2 size = ImGui::GetItemRectSize();
       return { math::make<Vec2i>(pos).cast<int>(),
                math::make<Vec2i>(size).cast<int>() };
+    }
+
+    inline void updateSize_(std::vector<std::pair<std::string, Rect>>& sizingStack,
+                            const Rect& rect)
+    {
+      for (auto& [id, r] : sizingStack)
+      {
+        r.unite(rect);
+      }
     }
 
   } // anonymous namespace
@@ -171,6 +180,13 @@ namespace gui2
     // Render the Dear ImGui frame and the desktop window.
     ImGui::Render();
     backend_->Render();
+
+    // Update the sized rectangles for all active session and clear sizing stack.
+    for (const auto& [id, rect] : sizingStack_)
+    {
+      sizedRects_[id] = rect;
+    }
+    sizingStack_.clear();
   }
 
   Rect Runtime::display(const Empty& empty, const Rect& rect) const
@@ -268,17 +284,6 @@ namespace gui2
     // Restore the previous item flags
     ImGui::PopItemFlag();
 
-  // if (ImGui::InputText("##inputText", &inputText,
-  //     ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory,
-  //     inputTextCallback_, this))
-  // { // User pressed enter key, we must processed the input text stored in
-  //   //  `inputText` variable.
-  //   if (!inputText.empty())
-  //   {
-  //     processExpression_(inputText);
-  //   }
-  // }
-
     return getItemRect_();
   }
 
@@ -296,10 +301,16 @@ namespace gui2
 
   Rect Runtime::display(Panel& panel, const Rect& rect) const
   {
-    int flags = kDefaultImGuiChildWindowFlags;
     ImGui::SetNextWindowPos(rect.origin.to<float>());
     Actions actions = panel.takeActions();
-    if (ImGui::BeginChild(panel.getId().c_str(), rect.size.to<float>(), flags))
+    int flags = kDefaultImGuiChildWindowFlags;
+    if (panel.getDrawBorder())
+    {
+      flags |= ImGuiChildFlags_Borders;
+    }
+    if (ImGui::BeginChild(panel.getId().c_str(),
+                          rect.getAvailableSize().to<float>(),
+                          flags))
     {
       // Must call `ImGui::GetCursorScreenPos()` to get an initial position for
       // the inner rectangle, which already takes into account the window padding
@@ -310,12 +321,17 @@ namespace gui2
       const Rect innerRect{ origin.cast<int>(), size.cast<int>() };
       const Rect contentActualRect = panel.displayContent(*this, innerRect);
 
-      // Make ImGui aware of the complete content extent produced by our layout
-      // system, so that the child window can be scrolled to show all content.
       if (!contentActualRect.isEmpty())
       {
+        // Make ImGui aware of the complete content extent produced by our layout
+        // system, so that the child window can be scrolled to show all content.
         ImGui::SetCursorScreenPos(contentActualRect.end().to<float>());
         ImGui::Dummy(ImVec2{0, 0});
+
+        // Size the actual rectangle if requested
+        const auto padding{ innerRect.origin - rect.origin };
+        const Rect sizeRect{ rect.origin, contentActualRect.size + 2 * padding };
+        updateSize_(sizingStack_, sizeRect);
       }
 
       if (contains(actions, Actions::ScrollToEnd))
@@ -340,14 +356,53 @@ namespace gui2
     return actualRect;
   }
 
+  void Runtime::sizeBegin(const std::string& id) const
+  {
+    sizingStack_.emplace_back(id, Rect::empty());
+  }
+
+  void Runtime::sizeEnd() const
+  {
+    if (sizingStack_.empty())
+    {
+      throw std::runtime_error("No sizing session is active");
+    }
+    const auto& [id, rect] = sizingStack_.back();
+    if (!rect.isEmpty())
+    {
+      sizedRects_[id] = rect;
+    }
+    sizingStack_.pop_back();
+  }
+
+  Rect Runtime::getSizedRect(const std::string& id) const
+  {
+    auto it = sizedRects_.find(id);
+    if (it != sizedRects_.end())
+    {
+      return it->second;
+    }
+    return Rect::empty();
+  }
+
   Vec2i Runtime::getWindowPadding() const
   {
     return math::make<Vec2i>(ImGui::GetStyle().WindowPadding);
   }
 
+  Vec2i Runtime::getFramePadding() const
+  {
+    return math::make<Vec2i>(ImGui::GetStyle().FramePadding);
+  }
+
   Vec2i Runtime::getItemSpacing() const
   {
     return math::make<Vec2i>(ImGui::GetStyle().ItemSpacing);
+  }
+
+  size_t Runtime::getFontSize() const
+  {
+    return static_cast<size_t>(ImGui::GetFontSize());
   }
 
   //! \brief Gets a reference to the backend used by the runtime.

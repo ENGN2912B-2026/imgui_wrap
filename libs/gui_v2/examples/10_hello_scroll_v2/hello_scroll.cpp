@@ -2,9 +2,12 @@
 //
 
 #include <gui2/Application.hpp>
+#include <gui2/Runtime.hpp>
 #include <gui2/Panel.hpp>
 #include <gui2/Layout.hpp>
 #include <gui2/TextBox.hpp>
+#include <gui2/ScrollArea.hpp>
+#include <gui2/Separator.hpp>
 
 #include <print>
 
@@ -28,7 +31,7 @@ int main(int argc, char** argv)
 
   // Content widget
   std::string content;
-  Panel contentRegion{ std::cref(content) };
+  ScrollArea contentRegion{ std::cref(content) };
 
   // TextBox to input new lines of text
   std::string newLine;
@@ -44,12 +47,14 @@ int main(int argc, char** argv)
   window.setContent(
     VBox{
       // Main panel
-      Stretch{3, Panel{ VBox{
+      Stretch{3, Panel{ VStack{
         "Main Panel",
+        Separator{},
         std::ref(contentRegion),
       }}},
       // Bottom panel
-      Stretch{1, Panel{ VStack{ "Bottom Panel", std::ref(textBox) }}}
+      TightSized{Panel{
+        VStack{ "Bottom Panel", std::ref(textBox) }}}
     }
   );
 
