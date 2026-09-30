@@ -9,7 +9,7 @@
 #include <gui2/FNVHash.hpp>
 
 // Define a helper macro to use in place of `constexpr` for `std::string` if the
-// compiler does not support it. This allows
+// compiler does not support it
 #ifdef HAS_STD_CONSTEXPR_STRING
 # define CONSTEXPR_STR constexpr
 #else

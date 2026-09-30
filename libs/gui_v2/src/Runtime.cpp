@@ -249,6 +249,12 @@ namespace gui2
     std::string id = "##" + textBox.getId();
     std::string* text = textBox.getTextPtr() ? textBox.getTextPtr() : &placeholder;
 
+    Actions actions = textBox.takeActions();
+    if (contains(actions, Actions::Focus))
+    {
+      ImGui::SetKeyboardFocusHere();
+    }
+
     // Disable the "Live Edit on Input" flag to prevent the text box from being
     // updated on every keystroke.
     ImGui::PushItemFlag(ImGuiItemFlags_LiveEditOnInput, false);
@@ -292,6 +298,7 @@ namespace gui2
   {
     int flags = kDefaultImGuiChildWindowFlags;
     ImGui::SetNextWindowPos(rect.origin.to<float>());
+    Actions actions = panel.takeActions();
     if (ImGui::BeginChild(panel.getId().c_str(), rect.size.to<float>(), flags))
     {
       // Must call `ImGui::GetCursorScreenPos()` to get an initial position for
@@ -309,6 +316,11 @@ namespace gui2
       {
         ImGui::SetCursorScreenPos(contentActualRect.end().to<float>());
         ImGui::Dummy(ImVec2{0, 0});
+      }
+
+      if (contains(actions, Actions::ScrollToEnd))
+      {
+        ImGui::SetScrollHereY();
       }
     }
 

@@ -4,6 +4,7 @@
 
 #include <gui2/Widget.hpp>
 #include <gui2/Identifier.hpp>
+#include <gui2/Actions.hpp>
 
 #include <functional>
 
@@ -75,11 +76,24 @@ namespace gui2
     //! the Enter key or when the text box loses focus.
     void onEditFinished() const { if (onEditFinished_) { onEditFinished_(); } }
 
+    //! \brief Adds an action to be executed during the next display cycle.
+    //! \param[in] action The action to add.
+    //!
+    //! Actions are executed during the next display cycle of the text box and
+    //! are cleared after being executed. Actions not applicable to this item
+    //! are ignored.
+    void addAction(Actions action) { actions_ |= action; }
+
+    //! \brief Takes and clears all existing actions.
+    //! \return The actions that were taken.
+    Actions takeActions() { return std::exchange(actions_, Actions::None); }
+
   private:
     std::string id_;
     std::string name_;
     std::string* text_;
     std::function<void()> onEditFinished_;
+    Actions actions_ = Actions::None;
   };
 
 } // namespace gui

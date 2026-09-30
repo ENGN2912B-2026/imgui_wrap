@@ -4,6 +4,7 @@
 
 #include <gui2/Widget.hpp>
 #include <gui2/Identifier.hpp>
+#include <gui2/Actions.hpp>
 
 namespace gui2
 {
@@ -45,6 +46,18 @@ namespace gui2
     //! returns the string name of the identifier.
     const std::string& getName() const { return name_; }
 
+    //! \brief Adds an action to be executed during the next display cycle.
+    //! \param[in] action The action to add.
+    //!
+    //! Actions are executed during the next display cycle of the text box and
+    //! are cleared after being executed. Actions not applicable to this item
+    //! are ignored.
+    void addAction(Actions action) { actions_ |= action; }
+
+    //! \brief Takes and clears all existing actions.
+    //! \return The actions that were taken.
+    Actions takeActions() { return std::exchange(actions_, Actions::None); }
+
     //! \brief Displays the content of the panel using the given runtime and
     //!        rectangle.
     //! \param[in] runtime The runtime used to display the content.
@@ -57,6 +70,7 @@ namespace gui2
     std::string id_;
     std::string name_;
     Widget widget_;
+    Actions actions_ = Actions::None;
   };
 
 } // namespace gui

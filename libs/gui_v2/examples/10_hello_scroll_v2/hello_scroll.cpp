@@ -26,26 +26,30 @@ int main(int argc, char** argv)
   // Get the window
   Window& window = app.getWindow();
 
+  // Content widget
   std::string content;
+  Panel contentRegion{ std::cref(content) };
+
+  // TextBox to input new lines of text
   std::string newLine;
+  TextBox textBox{ &newLine,
+    [&](){
+      content += newLine + "\n";
+      newLine.clear();
+      contentRegion.addAction(Actions::ScrollToEnd);
+      textBox.addAction(Actions::Focus);
+    }};
 
   // Set the content of the window
   window.setContent(
     VBox{
       // Main panel
-      Stretch{3, Panel{ VStack{
+      Stretch{3, Panel{ VBox{
         "Main Panel",
-        std::cref(content),
+        std::ref(contentRegion),
       }}},
       // Bottom panel
-      Stretch{1, Panel{ VStack{
-        "Bottom Panel",
-        TextBox{ &newLine,
-          [&](){
-            content += newLine + "\n";
-            newLine.clear();
-          }},
-       }}},
+      Stretch{1, Panel{ VStack{ "Bottom Panel", std::ref(textBox) }}}
     }
   );
 
