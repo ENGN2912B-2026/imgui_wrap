@@ -166,13 +166,20 @@ namespace backend
       GLAD_VERSION_MINOR(version));
   #endif
 
+    // Use a custom font size if specified, otherwise use the default font size
+  #if defined(GUI_CUSTOM_FONT_SIZE) && GUI_CUSTOM_FONT_SIZE > 0
+    constexpr float kDefaultFontSize{ static_cast<float>(GUI_CUSTOM_FONT_SIZE) };
+  #else
+    constexpr float kDefaultFontSize{ 17.0f };
+  #endif // GUI_CUSTOM_FONT_SIZE
+
     // Adjust scale
     ImGuiIO& io = ImGui::GetIO();
     ImFontConfig font_config;
     font_config.OversampleH = 1;
     font_config.OversampleV = 1;
     font_config.PixelSnapH = true;
-    font_config.SizePixels = 17.0f * DpiScale;
+    font_config.SizePixels = kDefaultFontSize * DpiScale;
     font_config.GlyphOffset.y = 1.0f * DpiScale;
     io.Fonts->Clear();
 

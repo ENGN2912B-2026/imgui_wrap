@@ -12,6 +12,8 @@ option(USE_GUI_V1 "Enable Gui version 1" OFF)
 option(USE_GUI_V2 "Enable Gui version 2" ON)
 option(BUILD_GUI_EXAMPLES "Build GUI examples" ${IMGUI_WRAP_STANDALONE_BUILD})
 
+set(GUI_CUSTOM_FONT_SIZE 0 CACHE STRING "Custom GUI font size")
+
 if (USE_GUI_V1)
   message(STATUS "USE_GUI_V1: ${USE_GUI_V1}")
 endif(USE_GUI_V1)
@@ -47,7 +49,10 @@ endif()
 if (USE_ROBOTO_WEBFONT)
   FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/../fonts/roboto-regular-webfont.ttf)
 endif(USE_ROBOTO_WEBFONT)
-
+if (GUI_CUSTOM_FONT_SIZE)
+  message(STATUS "GUI_CUSTOM_FONT_SIZE: ${GUI_CUSTOM_FONT_SIZE}")
+  add_compile_definitions(GUI_CUSTOM_FONT_SIZE=${GUI_CUSTOM_FONT_SIZE})
+endif()
 
 if (BUILD_GUI_EXAMPLES)
   include(cmake/gui_example.cmake)

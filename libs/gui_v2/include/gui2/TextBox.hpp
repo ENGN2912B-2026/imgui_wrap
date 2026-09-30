@@ -5,6 +5,8 @@
 #include <gui2/Widget.hpp>
 #include <gui2/Identifier.hpp>
 
+#include <functional>
+
 namespace gui2
 {
   //! \brief A TextBox is a GUI widget that allows the user to input and edit
@@ -20,8 +22,15 @@ namespace gui2
     //!                 TextBox. The TextBox does not take ownership of the
     //!                 string, and the caller is responsible for ensuring that
     //!                 the string remains valid for the lifetime of the TextBox.
+    //! \param[in] onEditFinished The callback function to be called when the
+    //!                           the user finishes editing the text box (e.g.,
+    //!                           when the user presses the Enter key or when
+    //!                           the text box loses focus). It is only called
+    //!                           if the text content has changed.
     template<Identifier T>
-    TextBox(T&& id, std::string* text);
+    TextBox(T&& id,
+            std::string* text,
+            std::function<void()> onEditFinished = {});
 
     //! \brief Constructs a TextBox with a unique identifier generated from the
     //!        source location where the constructor is called, and a pointer to
@@ -31,7 +40,13 @@ namespace gui2
     //!                 string, and the caller is responsible for ensuring that
     //!                 the string remains valid for the lifetime of the TextBox.
     //! \param[in] location The source location where the TextBox is constructed.
+    //! \param[in] onEditFinished The callback function to be called when the
+    //!                           the user finishes editing the text box (e.g.,
+    //!                           when the user presses the Enter key or when
+    //!                           the text box loses focus). It is only called
+    //!                           if the text content has changed.
     TextBox(std::string* text,
+            std::function<void()> onEditFinished = {},
             std::source_location location = std::source_location::current());
 
     //! \brief Returns the identifier of the text box.
@@ -54,10 +69,17 @@ namespace gui2
     //! \return The text content of the text box.
     std::string* getTextPtr()  { return text_; }
 
+    //! \brief Execute the onClick callback if it is set.
+    //!
+    //! This method is called when the text box is edited and the user presses
+    //! the Enter key or when the text box loses focus.
+    void onEditFinished() const { if (onEditFinished_) { onEditFinished_(); } }
+
   private:
     std::string id_;
     std::string name_;
     std::string* text_;
+    std::function<void()> onEditFinished_;
   };
 
 } // namespace gui
@@ -66,9 +88,12 @@ namespace gui2
 namespace gui2
 {
   template<Identifier T>
-  TextBox::TextBox(T&& id, std::string* text)
+  TextBox::TextBox(T&& id,
+                   std::string* text,
+                   std::function<void()> onEditFinished)
     : text_{text}
     , id_{id.getValueStr()}
+    , onEditFinished_{onEditFinished}
   {
     if constexpr (IdentifierWithName<std::remove_cvref_t<T>>)
     {
@@ -76,8 +101,11 @@ namespace gui2
     }
   }
 
-  inline TextBox::TextBox(std::string* text, std::source_location location)
+  inline TextBox::TextBox(std::string* text,
+                          std::function<void()> onEditFinished,
+                          std::source_location location)
     : text_{text}
+    , onEditFinished_{onEditFinished}
   {
     LocationId id{std::move(location)};
     id_ = id.getValueStr();

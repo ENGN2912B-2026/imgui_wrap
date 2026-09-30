@@ -48,7 +48,7 @@ namespace gui2
     //!       even if it has already been resolved and regardless of whether
     //!       the resulting object's type is `T`.
     template<Content T>
-    T* resolveAs();
+    const T* resolveAs() const;
 
     //! \brief Resolves the Widget's content and, if the resulting object is of
     //!        the specified type `type`, returns a pointer to it; otherwise,
@@ -59,7 +59,7 @@ namespace gui2
     //! \note Calling `resolveAs(const std::type_info& type)` always resolves
     //!       the Widget's content, even if it has already been resolved and
     //!       regardless of whether the resulting object's type is `type`.
-    void* resolveAs(const std::type_info& type);
+    const void* resolveAs(const std::type_info& type) const;
 
     // Returns a pointer to the value of type T held by the Widget, or nullptr
     // if the Widget does not hold a value of type T.
@@ -166,7 +166,7 @@ namespace gui2
     //! \param type The type to check the resolved object against.
     //! \return A pointer to the resolved object if it is of the specified type;
     //!         otherwise, `nullptr`.
-    virtual void* resolveAs(const std::type_info& type) = 0;
+    virtual const void* resolveAs(const std::type_info& type) const = 0;
 
     //! \brief Pure virtual function to display the value.
     //! \param rt    The runtime environment used for rendering.
@@ -207,7 +207,7 @@ namespace gui2
   {
   public:
     ContentValue(T content) : content_{std::move(content)} {}
-    void* resolveAs(const std::type_info& type) override;
+    const void* resolveAs(const std::type_info& type) const override;
     Rect display(const Runtime& rt, const Rect& rect) override;
   private:
     using Resolved = widget::resolved_type_t<T>;
@@ -221,14 +221,14 @@ namespace gui2
   {
   public:
     FactoryValue(F factory) : factory_{std::move(factory)} {}
-    void* resolveAs(const std::type_info& type) override;
+    const void* resolveAs(const std::type_info& type) const override;
     Rect display(const Runtime& rt, const Rect& rect) override;
   private:
     using Resolved = widget::resolved_type_t<F>;
     F factory_;
-    std::optional<Resolved> resolved_;
-    void resolve_();
-    void unresolve_();
+    mutable std::optional<Resolved> resolved_;
+    void resolve_() const;
+    void unresolve_() const;
   };
 
   //---------------------------------------------------------------------------
@@ -286,7 +286,7 @@ namespace gui2
   }
 
   template<Content T>
-  void* Widget::ContentValue<T>::resolveAs(const std::type_info& type)
+  const void* Widget::ContentValue<T>::resolveAs(const std::type_info& type) const
   {
     if (typeid(Resolved) == type)
     {
@@ -299,7 +299,7 @@ namespace gui2
   // Widget::FactoryValue<F> class implementation -----------------------------
   //---------------------------------------------------------------------------
   template<ContentFactory F>
-  void* Widget::FactoryValue<F>::resolveAs(const std::type_info& type)
+  const void* Widget::FactoryValue<F>::resolveAs(const std::type_info& type) const
   {
     resolve_();
     if (typeid(Resolved) == type)
@@ -323,7 +323,7 @@ namespace gui2
   }
 
   template<ContentFactory F>
-  void Widget::FactoryValue<F>::resolve_()
+  void Widget::FactoryValue<F>::resolve_() const
   {
     if (!resolved_.has_value())
     {
@@ -332,7 +332,7 @@ namespace gui2
   }
 
   template<ContentFactory F>
-  void Widget::FactoryValue<F>::unresolve_()
+  void Widget::FactoryValue<F>::unresolve_() const
   {
     if (resolved_.has_value())
     {
@@ -350,16 +350,16 @@ namespace gui2
   }
 
   template<Content T>
-  T* Widget::resolveAs()
+  const T* Widget::resolveAs() const
   {
     if (value_)
     {
-      return static_cast<T*>(value_->resolveAs(typeid(T)));
+      return static_cast<const T*>(value_->resolveAs(typeid(T)));
     }
     return nullptr;
   }
 
-  inline void* Widget::resolveAs(const std::type_info& type)
+  inline const void* Widget::resolveAs(const std::type_info& type) const
   {
     if (value_)
     {

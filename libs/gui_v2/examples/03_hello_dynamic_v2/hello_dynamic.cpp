@@ -168,7 +168,8 @@ int main(int argc, char** argv)
               "Bottom Panel",
               Separator{},
               HStack { "Counter Controls", counterButton, resetButton},
-              TextBox{ &textBoxContent },
+              TextBox{ &textBoxContent,
+                       [&](){ std::println("TextBox edited: {}", textBoxContent); } },
             }}};
           },
         }} : Fixed{0}; },

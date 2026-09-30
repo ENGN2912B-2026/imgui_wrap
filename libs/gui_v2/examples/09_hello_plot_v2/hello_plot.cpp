@@ -65,8 +65,6 @@ int main(int argc, char** argv)
   // Get the window
   Window& window = app.getWindow();
 
-  std::string filename = "<No file selected>";
-
   // Set the content of the window
   window.setContent(
     HBox{

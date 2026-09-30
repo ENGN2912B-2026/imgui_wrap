@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.31.6)
+cmake_policy(VERSION 3.31.6)
 
 project(imgui_wrap)
 

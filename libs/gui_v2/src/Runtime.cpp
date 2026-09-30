@@ -243,10 +243,24 @@ namespace gui2
   Rect Runtime::display(TextBox& textBox, const Rect& rect) const
   {
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    ImGui::SetNextItemWidth(rect.getAvailableSize().x);
+
     std::string placeholder;
     std::string id = "##" + textBox.getId();
     std::string* text = textBox.getTextPtr() ? textBox.getTextPtr() : &placeholder;
-    ImGui::InputText(id.c_str(), text);
+
+    // Disable the "Live Edit on Input" flag to prevent the text box from being
+    // updated on every keystroke.
+    ImGui::PushItemFlag(ImGuiItemFlags_LiveEditOnInput, false);
+
+    if (ImGui::InputText(id.c_str(), text))
+    { // Execute the callback function when the user presses the Enter key or
+      // when the text box loses focus.
+      textBox.onEditFinished();
+    }
+
+    // Restore the previous item flags
+    ImGui::PopItemFlag();
 
   // if (ImGui::InputText("##inputText", &inputText,
   //     ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory,
