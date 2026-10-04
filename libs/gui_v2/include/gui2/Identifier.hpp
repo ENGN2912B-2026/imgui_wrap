@@ -43,7 +43,7 @@ namespace gui2
     CONSTEXPR_STR StringId(std::string name)
       : hash_{name}, name_{std::move(name)}
     {
-      if (name.empty())
+      if (name_.empty())
       {
         throw std::invalid_argument{"Id name cannot be empty"};
       }
