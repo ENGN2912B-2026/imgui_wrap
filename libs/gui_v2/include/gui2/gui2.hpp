@@ -12,5 +12,6 @@
 #include <gui2/Separator.hpp>
 #include <gui2/TextBox.hpp>
 #include <gui2/CheckBox.hpp>
+#include <gui2/RadioButton.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/Image.hpp>

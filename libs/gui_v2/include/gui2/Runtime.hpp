@@ -22,6 +22,7 @@ namespace gui2
   class Image;
   class Button;
   class CheckBox;
+  class RadioButton;
   class TextBox;
   class ImageZoom;
   class Panel;
@@ -95,6 +96,7 @@ namespace gui2
 
     // Primitive items which have state which might change during display
     Rect display(CheckBox& checkBox, const Rect& rect) const;
+    Rect display(RadioButton& radioButton, const Rect& rect) const;
     Rect display(TextBox& textBox, const Rect& rect) const;
     Rect display(ImageZoom& imageZoom, const Rect& rect) const;
 

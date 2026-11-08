@@ -9,6 +9,7 @@
 #include <gui2/HStack.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
+#include <gui2/RadioButton.hpp>
 #include <gui2/TextBox.hpp>
 #include <gui2/Empty.hpp>
 #include <gui2/Separator.hpp>
@@ -115,6 +116,9 @@ int main(int argc, char** argv)
 
     bool sidePanelCheckBox = false;
 
+    enum class RadioOption { Option1, Option2 };
+    RadioOption currentRadioOption = RadioOption::Option1;
+
     int counter = 0;
     auto counterButton = [&]{
       return Button{ "Counter: " + std::to_string(counter), [&]{ ++counter; } };
@@ -182,6 +186,9 @@ int main(int argc, char** argv)
             [&]{ return std::string(sidePanelCheckBox ? "Checked" : "Unchecked"); },
             "",
             CheckBox{ "Show left side", &showLeftSide },
+            Separator{},
+            RadioButton{ "Option 1", &currentRadioOption, RadioOption::Option1 },
+            RadioButton{ "Option 2", &currentRadioOption, RadioOption::Option2 },
           }}};
         },
       }

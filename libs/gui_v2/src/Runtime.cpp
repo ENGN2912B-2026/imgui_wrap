@@ -9,6 +9,7 @@
 #include <gui2/Image.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
+#include <gui2/RadioButton.hpp>
 #include <gui2/TextBox.hpp>
 #include <gui2/Panel.hpp>
 
@@ -252,6 +253,17 @@ namespace gui2
     if (ImGui::Checkbox(checkBox.getLabel().c_str(), &checked))
     {
       checkBox.setChecked(checked);
+    }
+    return getItemRect_();
+  }
+
+  Rect Runtime::display(RadioButton& radioButton, const Rect& rect) const
+  {
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    if (ImGui::RadioButton(radioButton.getLabel().c_str(),
+                           radioButton.isSelected()))
+    {
+      radioButton.setSelected();
     }
     return getItemRect_();
   }
