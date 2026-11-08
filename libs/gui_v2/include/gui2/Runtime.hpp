@@ -16,7 +16,7 @@
 
 namespace gui2
 {
-  // forward declaration
+  // Forward declarations
   class Empty;
   class Separator;
   class Image;
@@ -25,6 +25,8 @@ namespace gui2
   class TextBox;
   class ImageZoom;
   class Panel;
+
+  namespace runtime { template<typename T> constexpr bool is_displayable(); }
 
   //! \brief The Runtime class manages the GUI runtime environment, including
   //!        the backend and main window.
@@ -98,6 +100,11 @@ namespace gui2
 
     // Container items, they maybe have as children other items
     Rect display(Panel& panel, const Rect& rect) const;
+
+    //! \brief Displays a Displayable item using its own display method.
+    template<typename T>
+      requires (runtime::is_displayable<T>())
+    Rect display(T&& item, const Rect& rect) const;
 
     // Content sizing ---------------------------------------------------------
 
@@ -209,6 +216,13 @@ namespace gui2
 {
   namespace runtime
   {
+    // Returns `true` is the given `T` satisfies `Displayable` concept.
+    template<typename T>
+    constexpr bool is_displayable()
+    {
+      return Displayable<T>;
+    }
+
     // Resolves a value by removing any reference wrappers if present.
     template<typename T>
     inline T& resolve_reference_impl(T& value)
@@ -241,5 +255,12 @@ namespace gui2
       static constexpr bool value =
         Content<Result> || is_factory<Result>::value;
     };
+  }
+
+  template<typename T>
+    requires (runtime::is_displayable<T>())
+  Rect Runtime::display(T&& item, const Rect& rect) const
+  {
+    return runtime::resolve_reference(item).display(*this, rect);
   }
 }
