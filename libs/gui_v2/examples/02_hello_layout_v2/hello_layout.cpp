@@ -59,12 +59,26 @@ int main(int argc, char** argv)
       }
     };
 
+    // Test that we can construct a layout with a vector of items
+    //
+    // NOTE: We must add the widgets to the vector without using initializer
+    //       list syntax, because initializer lists copy elements and Widget
+    //       is not copyable.
+    //
+    //       std::vector<Widget> items{ "Bottom Panel", "Item 1", "Item 2" }; // This would not work
+    //
+    std::vector<Widget> items;
+    items.emplace_back("Bottom Panel");
+    items.emplace_back("Item 1");
+    items.emplace_back("Item 2");
+    VStack vboxWithVector{ std::move(items) };
+
     window.setContent(
       HBox{
         Fixed{200, Panel{ "Left Panel" }},
         VBox{
           Stretch{3, std::move(mainPanel)},
-          Stretch{1, Panel{ "Bottom Panel" }},
+          Stretch{1, Panel{ std::move(vboxWithVector) }},
         },
       }
     );

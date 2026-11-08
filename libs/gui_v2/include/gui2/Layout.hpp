@@ -179,6 +179,14 @@ namespace gui2
       (items_.emplace_back(std::forward<T>(items)), ...);
     }
 
+    //! \brief Creates a layout with the given items.
+    //! \param[in] items  A vector of items to be added to the layout.
+    //! \note The items are stored in the order they are passed to the
+    //!       constructor, and will be displayed in that order.
+    explicit Layout(std::vector<Widget> items)
+      : items_{std::move(items)}
+    { }
+
     // Returns a const reference to the vector of items in the stack.
     const std::vector<Widget>& getItems() const { return items_; }
     // Returns a non-const reference to the vector of items in the stack.
