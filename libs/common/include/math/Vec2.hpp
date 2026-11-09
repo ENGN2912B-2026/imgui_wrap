@@ -119,7 +119,7 @@ namespace math
   static V make(const U& u)
   {
     using T = typename V::value_type;
-    return V{static_cast<T>(u.x), static_cast<T>(u.y)};
+    return {static_cast<T>(u.x), static_cast<T>(u.y)};
   }
 
   using Vec2i = Vec2<int>;

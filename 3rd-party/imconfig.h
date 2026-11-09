@@ -3,11 +3,14 @@
 
 #include <array>
 
-// Enable math operators for ImVec2
+// Enable math operators for ImVec2 and ImVec4
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 #define IM_VEC2_CLASS_EXTRA \
     ImVec2(std::array<float,2> a) { x = a[0]; y = a[1]; }
+
+#define IM_VEC4_CLASS_EXTRA \
+    ImVec4(std::array<float,4> a) { x = a[0]; y = a[1]; z = a[2]; w = a[3]; }
 
 // Disable legacy features / enforce using latest
 #ifndef IMGUI_HAS_IMSTR

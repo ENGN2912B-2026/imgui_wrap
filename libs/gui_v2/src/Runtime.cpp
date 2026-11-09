@@ -307,7 +307,12 @@ namespace gui2
     ImGuiImage::Zoomable(
       imageZoom.getTextureId(),
       rect.getAvailableSize().to<float>(),
+      ImGuiImage::kDefaultUV0,
+      ImGuiImage::kDefaultUV1,
+      imageZoom.getBgColor().to<float>(),
+      ImGuiImage::kDefaultTintColor,
       reinterpret_cast<ImGuiImage::State*>(&imageZoom.getZoomState()));
+
     return getItemRect_();
   }
 

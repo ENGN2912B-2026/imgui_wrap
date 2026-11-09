@@ -65,10 +65,15 @@ namespace gui2
     //! \param[in] enableZoomPan Whether to enable zoom and pan functionality.
     //! \param[in] maintainAspectRatio Whether to maintain the aspect ratio of
     //!                                the image.
+    //! \param[in] bgColor The background color of the image. Only shown when
+    //!                    the image does not fill the entire display area.
     ImageZoom(TextureId textureId,
               const Vec2i& textureSize,
               bool enableZoomPan = true,
-              bool maintainAspectRatio = false) : Image{textureId}
+              bool maintainAspectRatio = false,
+              Vec4f bgColor = Vec4f{0.0f, 0.0f, 0.0f, 1.0f})
+      : Image{textureId}
+      , bgColor_{bgColor}
     {
       zoomState_.textureSize = textureSize.cast<float>();
       zoomState_.zoomPanEnabled = enableZoomPan;
@@ -129,10 +134,13 @@ namespace gui2
     //! \return The zoom and pan state of the image.
     ZoomState& getZoomState() { return zoomState_; }
 
+    //! \brief Gets the background color of the image.
+    //! \return The background color of the image.
+    const Vec4f& getBgColor() const { return bgColor_; }
+
   private:
     ZoomState zoomState_ = {};
+    Vec4f bgColor_ = {0.0f, 0.0f, 0.0f, 1.0f};
   };
-
-
 
 } // namespace gui
