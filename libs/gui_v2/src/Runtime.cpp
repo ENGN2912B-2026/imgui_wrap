@@ -11,6 +11,7 @@
 #include <gui2/CheckBox.hpp>
 #include <gui2/RadioButton.hpp>
 #include <gui2/TextBox.hpp>
+#include <gui2/Disabled.hpp>
 #include <gui2/Panel.hpp>
 
 #include <imgui.h>
@@ -321,6 +322,14 @@ namespace gui2
 
     // If the image is not valid (textureId <= 0), we display an empty rectangle.
     return display(Empty{}, rect);
+  }
+
+  Rect Runtime::display(Disabled& disabled, const Rect& rect) const
+  {
+    ImGui::BeginDisabled(disabled.isDisabled());
+    const Rect contentRect = display(disabled.getContent(), rect);
+    ImGui::EndDisabled();
+    return contentRect;
   }
 
   Rect Runtime::display(Panel& panel, const Rect& rect) const

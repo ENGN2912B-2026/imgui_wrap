@@ -77,7 +77,8 @@ namespace gui2
 
   private:
     class Value;
-    std::unique_ptr<Value> value_;
+    std::shared_ptr<Value> value_; // We use shared_ptr to allow for
+                                   // copyable Widgets (shallow copy).
     template<Content T> class ContentValue;
     template<ContentFactory T> class FactoryValue;
   };
@@ -186,7 +187,7 @@ namespace gui2
     //! If T is a Content type, it creates a ContentValue<T>.
     //! If T is a ContentFactory type, it creates a FactoryValue<T>.
     template<WidgetContent T>
-    static std::unique_ptr<Value> create(T value);
+    static std::shared_ptr<Value> create(T value);
 
   protected:
     //! \brief Helper function to display the content of type T.
@@ -235,15 +236,15 @@ namespace gui2
   // Widget::Value class implementation ---------------------------------------
   //---------------------------------------------------------------------------
   template<WidgetContent T>
-  std::unique_ptr<Widget::Value> Widget::Value::create(T value)
+  std::shared_ptr<Widget::Value> Widget::Value::create(T value)
   {
     if constexpr (Content<T>)
     {
-      return std::make_unique<ContentValue<T>>(std::move(value));
+      return std::make_shared<ContentValue<T>>(std::move(value));
     }
     else if constexpr (ContentFactory<T>)
     {
-      return std::make_unique<FactoryValue<T>>(std::move(value));
+      return std::make_shared<FactoryValue<T>>(std::move(value));
     }
     else
     { // We have multiple static_asserts here to provide more specific error

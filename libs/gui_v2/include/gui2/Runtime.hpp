@@ -25,6 +25,7 @@ namespace gui2
   class RadioButton;
   class TextBox;
   class ImageZoom;
+  class Disabled;
   class Panel;
 
   namespace runtime { template<typename T> constexpr bool is_displayable(); }
@@ -101,6 +102,7 @@ namespace gui2
     Rect display(ImageZoom& imageZoom, const Rect& rect) const;
 
     // Container items, they maybe have as children other items
+    Rect display(Disabled& disabled, const Rect& rect) const;
     Rect display(Panel& panel, const Rect& rect) const;
 
     //! \brief Displays a Displayable item using its own display method.

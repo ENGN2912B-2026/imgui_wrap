@@ -13,6 +13,7 @@
 #include <gui2/TextBox.hpp>
 #include <gui2/Empty.hpp>
 #include <gui2/Separator.hpp>
+#include <gui2/Disabled.hpp>
 
 #include <print>
 #include <format>
@@ -118,6 +119,7 @@ int main(int argc, char** argv)
 
     enum class RadioOption { Option1, Option2 };
     RadioOption currentRadioOption = RadioOption::Option1;
+    bool disableOption1 = false;
 
     int counter = 0;
     auto counterButton = [&]{
@@ -187,8 +189,10 @@ int main(int argc, char** argv)
             "",
             CheckBox{ "Show left side", &showLeftSide },
             Separator{},
-            RadioButton{ "Option 1", &currentRadioOption, RadioOption::Option1 },
+            Disabled{ disableOption1,
+              RadioButton{ "Option 1", &currentRadioOption, RadioOption::Option1 } },
             RadioButton{ "Option 2", &currentRadioOption, RadioOption::Option2 },
+            CheckBox{ "Disable Option 1", &disableOption1 },
           }}};
         },
       }
