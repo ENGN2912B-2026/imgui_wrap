@@ -8,6 +8,25 @@
 
 namespace gl
 {
+  namespace
+  {
+    GLenum getPixelFormat_(std::type_index format)
+    {
+      if (format == typeid(image::ImageViewRgb8::PixelType)) return GL_RGB;
+      if (format == typeid(image::ImageViewGray8::PixelType)) return GL_RED;
+      throw std::invalid_argument{"ERROR::TEXTURE:: Invalid texture format!"};
+    }
+
+    void setSwizzle_(std::type_index format)
+    {
+      const GLint rgbSwizzle[] = {GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA};
+      const GLint graySwizzle[] = {GL_RED, GL_RED, GL_RED, GL_ONE};
+      glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA,
+                       format == typeid(image::ImageViewGray8::PixelType)
+                         ? graySwizzle : rgbSwizzle);
+    }
+  }
+
   void Texture::initialize()
   {
     if (!isInitialized())
@@ -25,18 +44,6 @@ namespace gl
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  }
-
-  void Texture::initialize(const Vec2i& size, GLint interpolationMode)
-  {
-    // Ensure the texture is initialized
-    initialize();
-
-    // Set the size of the texture
-    setSize(size);
-
-    // Set interpolation mode
-    setInterpolationMode(interpolationMode);
   }
 
   void Texture::initialize(const image::ImageViewRgb8& imageView,
@@ -93,7 +100,7 @@ namespace gl
     return Vec2i{ width, height };
   }
 
-  void Texture::setSize(const Vec2i& size)
+  void Texture::setSize_(const Vec2i& size, std::type_index format)
   {
     if (!isInitialized())
     {
@@ -101,13 +108,48 @@ namespace gl
         "Cannot set size of uninitialized texture!"};
     }
 
+    const GLenum glFormat = getPixelFormat_(format);
+
     // Bind the texture to set its parameters
     const auto autoUnbind = AutoUnbind{ *this };
 
     // Allocate storage for the texture without uploading any data
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y,
-                 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, glFormat, size.x, size.y, 0, glFormat,
+                 GL_UNSIGNED_BYTE, nullptr);
+    setSwizzle_(format);
+  }
 
+  std::type_index Texture::getFormat() const
+  {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::TEXTURE:: "
+        "Cannot get format of uninitialized texture!"};
+    }
+    const auto autoUnbind = AutoUnbind{ *this };
+    GLint internalFormat = 0;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT,
+                             &internalFormat);
+    if (internalFormat == GL_RGB8 || internalFormat == GL_RGB)
+      return typeid(image::ImageViewRgb8::PixelType);
+    if (internalFormat == GL_R8 || internalFormat == GL_RED)
+      return typeid(image::ImageViewGray8::PixelType);
+
+    throw std::runtime_error{ "ERROR::TEXTURE:: "
+      "Texture format is unsupported or unallocated!"};
+  }
+
+  void Texture::setFormat_(std::type_index format)
+  {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::TEXTURE:: "
+        "Cannot set format of uninitialized texture!"};
+    }
+    if (format != getFormat())
+    {
+      setSize_(getSize(), format);
+    }
   }
 
   void Texture::setInterpolationMode(GLint interpolationMode)
@@ -141,25 +183,8 @@ namespace gl
         "Image is not tightly packed!"};
     }
 
-    // Bind the texture to upload the image data
-    const auto autoUnbind = AutoUnbind{ *this };
-
-    // Set pixel storage modes for unpacking the image data
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0); // Ensure no row padding is used
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // Use single byte alignment
-
-    if (getSize() != imageView.getSize())
-    { // Allocate a new texture size and upload the image data
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                   imageView.getWidth(), imageView.getHeight(),
-                   0, GL_RGB, GL_UNSIGNED_BYTE, imageView.getData());
-    }
-    else
-    { // Upload the image data to the existing texture size
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-                      imageView.getWidth(), imageView.getHeight(),
-                      GL_RGB, GL_UNSIGNED_BYTE, imageView.getData());
-    }
+    uploadImageData_(imageView.getData(), imageView.getSize(),
+                     typeid(image::ImageViewRgb8::PixelType));
   }
 
   void Texture::uploadImage(const image::ImageViewGray8& imageView)
@@ -177,29 +202,25 @@ namespace gl
         "Image is not tightly packed!"};
     }
 
-    // Bind the texture to upload the image data
+    uploadImageData_(imageView.getData(), imageView.getSize(),
+                     typeid(image::ImageViewGray8::PixelType));
+  }
+
+  void Texture::uploadImageData_(const void* data, const Vec2i& size,
+                                 std::type_index format)
+  {
+    if (getSize() != size || getFormat() != format)
+    {
+      setSize_(size, format);
+    }
+
     const auto autoUnbind = AutoUnbind{ *this };
-
-    // Set swizzle mask so red channel is used for all RGB, making grayscale
-    GLint swizzleMask[] = {GL_RED, GL_RED, GL_RED, GL_ONE};
-    glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
-
     // Set pixel storage modes for unpacking the image data
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0); // Ensure no row padding is used
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // Use single byte alignment
 
-    if (getSize() != imageView.getSize())
-    { // Allocate a new texture size and upload the image data
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
-                   imageView.getWidth(), imageView.getHeight(),
-                   0, GL_RED, GL_UNSIGNED_BYTE, imageView.getData());
-    }
-    else
-    { // Upload the image data to the existing texture size
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-                      imageView.getWidth(), imageView.getHeight(),
-                      GL_RED, GL_UNSIGNED_BYTE, imageView.getData());
-    }
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size.x, size.y,
+                    getPixelFormat_(format), GL_UNSIGNED_BYTE, data);
   }
 
   Texture::AutoUnbind Texture::bindScoped() const

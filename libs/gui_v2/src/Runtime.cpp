@@ -297,7 +297,10 @@ namespace gui2
     Rect displayInputBox(InputBox<T>& inputBox, const Rect& rect)
     {
       ImGui::SetCursorScreenPos(rect.origin.to<float>());
-      ImGui::SetNextItemWidth(rect.getAvailableSize().x);
+      if (rect.hasWidth())
+      {
+        ImGui::SetNextItemWidth(rect.getWidth());
+      }
 
       T placeholder{};
       std::string id = "##" + inputBox.getId();
