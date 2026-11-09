@@ -17,4 +17,5 @@
 #include <gui2/CheckBox.hpp>
 #include <gui2/RadioButton.hpp>
 #include <gui2/Button.hpp>
+#include <gui2/UserCode.hpp>
 #include <gui2/Image.hpp>

@@ -8,6 +8,7 @@
 #include <gui2/Separator.hpp>
 #include <gui2/Image.hpp>
 #include <gui2/Button.hpp>
+#include <gui2/UserCode.hpp>
 #include <gui2/CheckBox.hpp>
 #include <gui2/RadioButton.hpp>
 #include <gui2/InputBox.hpp>
@@ -246,6 +247,15 @@ namespace gui2
     }
     // If the image is not valid (textureId <= 0), we display an empty rectangle.
     return display(Empty{}, rect);
+  }
+
+  Rect Runtime::display(const UserCode& userCode, const Rect& rect) const
+  {
+    ImGui::SetCursorScreenPos(rect.origin.to<float>());
+    ImGui::BeginGroup();
+    userCode.run();
+    ImGui::EndGroup();
+    return getItemRect_();
   }
 
   Rect Runtime::display(CheckBox& checkBox, const Rect& rect) const

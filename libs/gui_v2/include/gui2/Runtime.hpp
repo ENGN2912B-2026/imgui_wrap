@@ -21,6 +21,7 @@ namespace gui2
   class Separator;
   class Image;
   class Button;
+  class UserCode;
   class CheckBox;
   class RadioButton;
   template<typename T> class InputBox;
@@ -94,6 +95,7 @@ namespace gui2
     Rect display(const std::string& text, const Rect& rect) const;
     Rect display(const Button& button, const Rect& rect) const;
     Rect display(const Image& image, const Rect& rect) const;
+    Rect display(const UserCode& UserCode, const Rect& rect) const;
 
     // Primitive items which have state which might change during display
     Rect display(CheckBox& checkBox, const Rect& rect) const;
