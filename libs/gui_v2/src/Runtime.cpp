@@ -228,7 +228,19 @@ namespace gui2
   Rect Runtime::display(const Button& button, const Rect& rect) const
   {
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
-    if (ImGui::Button(button.getLabel().c_str()))
+    const ImVec2 size{ rect.hasWidth() ? static_cast<float>(rect.getWidth()) : 0.0f, 0.0f };
+    const auto& color = button.getColor();
+    if (color)
+    {
+      ImGui::PushStyleColor(ImGuiCol_Button,
+        ImVec4{ color->x, color->y, color->z, color->w });
+    }
+    const bool clicked = ImGui::Button(button.getLabel().c_str(), size);
+    if (color)
+    {
+      ImGui::PopStyleColor();
+    }
+    if (clicked)
     {
       button.onClick();
     }
@@ -398,9 +410,23 @@ namespace gui2
     {
       flags |= ImGuiChildFlags_Borders;
     }
+    int windowFlags = ImGuiWindowFlags_None;
+    if (panel.getNoScrollbar())
+    {
+      windowFlags |= ImGuiWindowFlags_NoScrollbar;
+    }
+    if (panel.getNoScrollWithMouse())
+    {
+      windowFlags |= ImGuiWindowFlags_NoScrollWithMouse;
+    }
+    if (panel.getNoInputs())
+    {
+      windowFlags |= ImGuiWindowFlags_NoInputs;
+    }
     if (ImGui::BeginChild(panel.getId().c_str(),
                           rect.getAvailableSize().to<float>(),
-                          flags))
+                          flags,
+                          windowFlags))
     {
       // Must call `ImGui::GetCursorScreenPos()` to get an initial position for
       // the inner rectangle, which already takes into account the window padding

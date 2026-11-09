@@ -54,6 +54,34 @@ namespace gui2
     //! \return true if the panel should draw a border, false otherwise.
     bool getDrawBorder() const { return drawBorder_; }
 
+    //! \brief Sets whether the panel should hide its scrollbars.
+    //! \param[in] noScrollbar true to hide the scrollbars, false to show them.
+    void setNoScrollbar(bool noScrollbar) { noScrollbar_ = noScrollbar; }
+
+    //! \brief Returns whether the panel hides its scrollbars.
+    //! \return true if the scrollbars are hidden, false otherwise.
+    bool getNoScrollbar() const { return noScrollbar_; }
+
+    //! \brief Sets whether the panel should ignore scrolling with the mouse
+    //!        wheel.
+    //! \param[in] noScrollWithMouse true to disable mouse wheel scrolling.
+    void setNoScrollWithMouse(bool noScrollWithMouse)
+    {
+      noScrollWithMouse_ = noScrollWithMouse;
+    }
+
+    //! \brief Returns whether the panel ignores scrolling with the mouse wheel.
+    //! \return true if mouse wheel scrolling is disabled, false otherwise.
+    bool getNoScrollWithMouse() const { return noScrollWithMouse_; }
+
+    //! \brief Sets whether the panel and its content should ignore all inputs.
+    //! \param[in] noInputs true to disable inputs, false to enable them.
+    void setNoInputs(bool noInputs) { noInputs_ = noInputs; }
+
+    //! \brief Returns whether the panel and its content ignore all inputs.
+    //! \return true if inputs are disabled, false otherwise.
+    bool getNoInputs() const { return noInputs_; }
+
     //! \brief Adds an action to be executed during the next display cycle.
     //! \param[in] action The action to add.
     //!
@@ -79,6 +107,9 @@ namespace gui2
     std::string name_;
     Widget widget_;
     bool drawBorder_ = true;
+    bool noScrollbar_ = false;
+    bool noScrollWithMouse_ = false;
+    bool noInputs_ = false;
     Actions actions_ = Actions::None;
   };
 
