@@ -120,6 +120,7 @@ int main(int argc, char** argv)
     enum class RadioOption { Option1, Option2 };
     RadioOption currentRadioOption = RadioOption::Option1;
     bool disableOption1 = false;
+    int inputValue = 0;
 
     int counter = 0;
     auto counterButton = [&]{
@@ -193,6 +194,7 @@ int main(int argc, char** argv)
               RadioButton{ "Option 1", &currentRadioOption, RadioOption::Option1 } },
             RadioButton{ "Option 2", &currentRadioOption, RadioOption::Option2 },
             CheckBox{ "Disable Option 1", &disableOption1 },
+            IntBox{ &inputValue, [&](){ std::println("InputBox edited: {}", inputValue); } },
           }}};
         },
       }

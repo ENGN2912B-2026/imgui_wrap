@@ -10,7 +10,7 @@
 #include <gui2/Button.hpp>
 #include <gui2/CheckBox.hpp>
 #include <gui2/RadioButton.hpp>
-#include <gui2/TextBox.hpp>
+#include <gui2/InputBox.hpp>
 #include <gui2/Disabled.hpp>
 #include <gui2/Panel.hpp>
 
@@ -197,6 +197,7 @@ namespace gui2
     Vec2i size{ rect.size };
     if (!rect.hasWidth()) { size.x = 0; }
     if (!rect.hasHeight()) { size.y = 0; }
+    size = size.cwiseMax(empty.getMinSize());
     ImGui::Dummy(size.to<float>());
     return getItemRect_();
   }
@@ -269,35 +270,78 @@ namespace gui2
     return getItemRect_();
   }
 
-  Rect Runtime::display(TextBox& textBox, const Rect& rect) const
+  namespace
   {
-    ImGui::SetCursorScreenPos(rect.origin.to<float>());
-    ImGui::SetNextItemWidth(rect.getAvailableSize().x);
-
-    std::string placeholder;
-    std::string id = "##" + textBox.getId();
-    std::string* text = textBox.getTextPtr() ? textBox.getTextPtr() : &placeholder;
-
-    Actions actions = textBox.takeActions();
-    if (contains(actions, Actions::Focus))
+    template<InputBoxValue T>
+    bool inputValue(const char* id, T* value)
     {
-      ImGui::SetKeyboardFocusHere();
+      if constexpr (std::same_as<T, std::string>)
+      {
+        return ImGui::InputText(id, value);
+      }
+      else if constexpr (std::same_as<T, int>)
+      {
+        return ImGui::InputInt(id, value);
+      }
+      else if constexpr (std::same_as<T, float>)
+      {
+        return ImGui::InputFloat(id, value);
+      }
+      else
+      {
+        return ImGui::InputDouble(id, value);
+      }
     }
 
-    // Disable the "Live Edit on Input" flag to prevent the text box from being
-    // updated on every keystroke.
-    ImGui::PushItemFlag(ImGuiItemFlags_LiveEditOnInput, false);
+    template<InputBoxValue T>
+    Rect displayInputBox(InputBox<T>& inputBox, const Rect& rect)
+    {
+      ImGui::SetCursorScreenPos(rect.origin.to<float>());
+      ImGui::SetNextItemWidth(rect.getAvailableSize().x);
 
-    if (ImGui::InputText(id.c_str(), text))
-    { // Execute the callback function when the user presses the Enter key or
-      // when the text box loses focus.
-      textBox.onEditFinished();
+      T placeholder{};
+      std::string id = "##" + inputBox.getId();
+      T* value = inputBox.getValuePtr()
+        ? inputBox.getValuePtr() : &placeholder;
+
+      Actions actions = inputBox.takeActions();
+      if (contains(actions, Actions::Focus))
+      {
+        ImGui::SetKeyboardFocusHere();
+      }
+
+      ImGui::PushItemFlag(ImGuiItemFlags_LiveEditOnInput, false);
+
+      if (inputValue(id.c_str(), value))
+      {
+        inputBox.onEditFinished();
+      }
+
+      ImGui::PopItemFlag();
+
+      return getItemRect_();
     }
+  }
 
-    // Restore the previous item flags
-    ImGui::PopItemFlag();
+  Rect Runtime::display(
+    InputBox<std::string>& inputBox, const Rect& rect) const
+  {
+    return displayInputBox(inputBox, rect);
+  }
 
-    return getItemRect_();
+  Rect Runtime::display(InputBox<int>& inputBox, const Rect& rect) const
+  {
+    return displayInputBox(inputBox, rect);
+  }
+
+  Rect Runtime::display(InputBox<float>& inputBox, const Rect& rect) const
+  {
+    return displayInputBox(inputBox, rect);
+  }
+
+  Rect Runtime::display(InputBox<double>& inputBox, const Rect& rect) const
+  {
+    return displayInputBox(inputBox, rect);
   }
 
   Rect Runtime::display(ImageZoom& imageZoom, const Rect& rect) const

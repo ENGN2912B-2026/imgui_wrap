@@ -23,7 +23,7 @@ namespace gui2
   class Button;
   class CheckBox;
   class RadioButton;
-  class TextBox;
+  template<typename T> class InputBox;
   class ImageZoom;
   class Disabled;
   class Panel;
@@ -98,7 +98,10 @@ namespace gui2
     // Primitive items which have state which might change during display
     Rect display(CheckBox& checkBox, const Rect& rect) const;
     Rect display(RadioButton& radioButton, const Rect& rect) const;
-    Rect display(TextBox& textBox, const Rect& rect) const;
+    Rect display(InputBox<std::string>& inputBox, const Rect& rect) const;
+    Rect display(InputBox<int>& inputBox, const Rect& rect) const;
+    Rect display(InputBox<float>& inputBox, const Rect& rect) const;
+    Rect display(InputBox<double>& inputBox, const Rect& rect) const;
     Rect display(ImageZoom& imageZoom, const Rect& rect) const;
 
     // Container items, they maybe have as children other items
