@@ -64,7 +64,7 @@ namespace gl
     //! This method initializes the texture and uploads the image data to it.
     //! If the texture is already initialized, it will be re-initialized with
     //! the new image data.
-    void initialize(const image::ImageRgb8& image,
+    void initialize(const image::ImageViewRgb8& imageView,
                     GLint interpolationMode = GL_LINEAR);
 
     //! \brief Deletes the texture and releases the OpenGL resources.
@@ -100,7 +100,7 @@ namespace gl
     //! to the width of the image multiplied by the size of the pixel type.
     //! If the size of the image does not match the size of the texture, the
     //! texture will be resized to match the image size.
-    void uploadImage(const image::ImageRgb8& image);
+    void uploadImage(const image::ImageViewRgb8& imageView);
 
     //! \brief Binds the texture as `GL_TEXTURE_2D` and returns an AutoUnbind
     //!        object that will automatically unbind the texture when it goes

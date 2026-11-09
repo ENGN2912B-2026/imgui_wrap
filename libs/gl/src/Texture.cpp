@@ -39,14 +39,14 @@ namespace gl
     setInterpolationMode(interpolationMode);
   }
 
-  void Texture::initialize(const image::ImageRgb8& image,
+  void Texture::initialize(const image::ImageViewRgb8& imageView,
                            GLint interpolationMode)
   {
     // Ensure the texture is initialized
     initialize();
 
     // Upload the image data to the texture
-    uploadImage(image);
+    uploadImage(imageView);
 
     // Set interpolation mode
     setInterpolationMode(interpolationMode);
@@ -113,7 +113,7 @@ namespace gl
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, interpolationMode);
   }
 
-  void Texture::uploadImage(const image::ImageRgb8& image)
+  void Texture::uploadImage(const image::ImageViewRgb8& imageView)
   {
     if (!isInitialized())
     {
@@ -121,8 +121,8 @@ namespace gl
         "Cannot upload image to uninitialized texture!"};
     }
 
-    const int expectedRowStride = image.getWidth() * sizeof(image::Rgb8);
-    if (image.getRowStride() != expectedRowStride)
+    const int expectedRowStride = imageView.getWidth() * sizeof(image::Rgb8);
+    if (imageView.getRowStride() != expectedRowStride)
     {
       throw std::invalid_argument{"ERROR::TEXTURE:: "
         "Image is not tightly packed!"};
@@ -135,15 +135,17 @@ namespace gl
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0); // Ensure no row padding is used
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // Use single byte alignment
 
-    if (getSize() != image.getSize())
+    if (getSize() != imageView.getSize())
     { // Allocate a new texture size and upload the image data
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.getWidth(), image.getHeight(),
-                   0, GL_RGB, GL_UNSIGNED_BYTE, image.getData());
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                   imageView.getWidth(), imageView.getHeight(),
+                   0, GL_RGB, GL_UNSIGNED_BYTE, imageView.getData());
     }
     else
     { // Upload the image data to the existing texture size
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.getWidth(), image.getHeight(),
-                      GL_RGB, GL_UNSIGNED_BYTE, image.getData());
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+                      imageView.getWidth(), imageView.getHeight(),
+                      GL_RGB, GL_UNSIGNED_BYTE, imageView.getData());
     }
   }
 

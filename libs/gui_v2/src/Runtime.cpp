@@ -304,16 +304,23 @@ namespace gui2
     ImGui::SetCursorScreenPos(rect.origin.to<float>());
     static_assert(sizeof(ImGuiImage::State) == sizeof(ImageZoom::ZoomState),
                   "Size of ImGuiImage::State and ImageZoom::ZoomState must be equal");
-    ImGuiImage::Zoomable(
-      imageZoom.getTextureId(),
-      rect.getAvailableSize().to<float>(),
-      ImGuiImage::kDefaultUV0,
-      ImGuiImage::kDefaultUV1,
-      imageZoom.getBgColor().to<float>(),
-      ImGuiImage::kDefaultTintColor,
-      reinterpret_cast<ImGuiImage::State*>(&imageZoom.getZoomState()));
 
-    return getItemRect_();
+    if (const auto textureId = imageZoom.getTextureId(); textureId > 0)
+    {
+      ImGuiImage::Zoomable(
+        imageZoom.getTextureId(),
+        rect.getAvailableSize().to<float>(),
+        ImGuiImage::kDefaultUV0,
+        ImGuiImage::kDefaultUV1,
+        imageZoom.getBgColor().to<float>(),
+        ImGuiImage::kDefaultTintColor,
+        reinterpret_cast<ImGuiImage::State*>(&imageZoom.getZoomState()));
+
+      return getItemRect_();
+    }
+
+    // If the image is not valid (textureId <= 0), we display an empty rectangle.
+    return display(Empty{}, rect);
   }
 
   Rect Runtime::display(Panel& panel, const Rect& rect) const

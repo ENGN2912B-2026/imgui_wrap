@@ -10,22 +10,31 @@
 
 namespace image
 {
-  class ImageView
+  //! \brief A class representing a generic image view.
+  //!
+  //! The GenericImageView class provides a view of an image, allowing access to
+  //! the image data, size, and row stride. It does not own the image data, and
+  //! the user is responsible for managing the lifetime of the image data.
+  //!
+  //! GenericImageView does not know the pixel format of the image, and it is up
+  //! to the user to interpret the image data correctly.
+  //!
+  class GenericImageView
   {
   public:
-    //! \brief Default constructor for the ImageView class.
-    ImageView() = default;
+    //! \brief Default constructor for the GenericImageView class.
+    GenericImageView() = default;
 
-    //! \brief Constructs an ImageView object.
+    //! \brief Constructs an GenericImageView object.
     //! \param[in] data The pointer to the image data.
     //! \param[in] size The size of the image.
     //! \param[in] rowStride The row stride of the image in bytes.
-    ImageView(std::byte* data, math::Vec2i size, size_t rowStride)
+    GenericImageView(std::byte* data, math::Vec2i size, size_t rowStride)
     {
       initialize(data, size, rowStride);
     }
 
-    //! \brief Initializes the ImageView object.
+    //! \brief Initializes the GenericImageView object.
     //! \param[in] data The pointer to the image data.
     //! \param[in] size The size of the image.
     //! \param[in] rowStride The row stride of the image in bytes.
@@ -94,19 +103,61 @@ namespace image
     size_t rowStride_ = 0; // in bytes
   };
 
-
+  //! \brief A class representing an image view with a specific pixel type.
+  //!
+  //! The ImageView class provides a view of an image with a specific pixel
+  //! type, allowing access to the image data, size, and row stride. It does not
+  //! own the image data, and the user is responsible for managing the lifetime
+  //! of the image data.
+  //!
   template <typename T>
-  class Image : public ImageView
+  class ImageView : public GenericImageView
   {
   public:
     using PixelType = T;
+    using GenericImageView::GenericImageView;
 
+    //! \brief Initializes the ImageView with the given image data and size.
+    //! \param[in] data The pointer to the image data.
+    //! \param[in] size The size of the image.
+    void initialize(PixelType* data, math::Vec2i size)
+    {
+      GenericImageView::initialize(reinterpret_cast<std::byte*>(data),
+                                   size, size.x * sizeof(PixelType));
+    }
+
+    //! \brief Gets a pointer to the image data.
+    //! \return A pointer to the image data.
+    PixelType* getData() const
+    {
+      return GenericImageView::getDataAs<PixelType>();
+    }
+
+    //! \brief Gets a pointer to the specified row of the image.
+    //! \param[in] row The index of the row to get.
+    //! \return A pointer to the specified row of the image.
+    PixelType* getRow(size_t row) const
+    {
+      return GenericImageView::getRowAs<PixelType>(row);
+    }
+  };
+
+  //! \brief A class representing an image with a specific pixel type.
+  //!
+  //! The Image class provides an image with a specific pixel type, allowing
+  //! access to the image data, size, and row stride. It owns the image data
+  //! and manages its lifetime.
+  //!
+  template <typename PixelType>
+  class Image : public ImageView<PixelType>
+  {
+  public:
     //! \brief Default constructor for the Image class.
     Image() = default;
 
     //! \brief Constructs an Image object with the given size.
     //! \param[in] size The size of the image.
-    Image(math::Vec2i size) : ImageView{}, data_{}
+    Image(math::Vec2i size) : ImageView<PixelType>{}, data_{}
     {
       initialize(size);
     }
@@ -121,23 +172,7 @@ namespace image
     void initialize(math::Vec2i size)
     {
       data_.resize(size.x * size.y);
-      ImageView::initialize(reinterpret_cast<std::byte*>(data_.data()),
-                            size, size.x * sizeof(PixelType));
-    }
-
-    //! \brief Gets a pointer to the image data.
-    //! \return A pointer to the image data.
-    PixelType* getData() const
-    {
-      return ImageView::getDataAs<PixelType>();
-    }
-
-    //! \brief Gets a pointer to the specified row of the image.
-    //! \param[in] row The index of the row to get.
-    //! \return A pointer to the specified row of the image.
-    PixelType* getRow(size_t row) const
-    {
-      return ImageView::getRowAs<PixelType>(row);
+      ImageView<PixelType>::initialize(data_.data(), size);
     }
 
   private:
@@ -190,6 +225,7 @@ namespace image
   static_assert(sizeof(Rgb16) == 3 * sizeof(uint16_t), "Rgb struct must be packed");
   static_assert(sizeof(Rgb32) == 3 * sizeof(uint32_t), "Rgb struct must be packed");
 
+  using ImageViewRgb8 = ImageView<Rgb8>;
   using ImageRgb8 = Image<Rgb8>;
 
 } // namespace image
