@@ -64,7 +64,7 @@ namespace gui2
     running_ = true;
     std::string lastTitle = window_.getTitle();
     Vec2i lastSize = window_.getSize();
-    while (running_ && rt.frameBegin())
+    while (running_ && rt.frameBegin(window_.hasMenuBar()))
     {
       //TODO: sync the window size with the runtime window size in a
       // thread -safe, in case the user resized the window.

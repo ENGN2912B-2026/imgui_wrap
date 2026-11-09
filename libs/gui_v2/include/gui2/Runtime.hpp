@@ -28,6 +28,9 @@ namespace gui2
   class ImageZoom;
   class Disabled;
   class Panel;
+  class Menu;
+  class MenuItem;
+  class MenuBar;
 
   namespace runtime { template<typename T> constexpr bool is_displayable(); }
 
@@ -81,8 +84,9 @@ namespace gui2
     void setWindowSize(const Vec2i& size);
 
     //! \brief Begins a new rendering frame.
+    //! \param[in] hasMenuBar Whether the main window has a menu bar.
     //! \return true if the frame was successfully begun, false otherwise.
-    bool frameBegin();
+    bool frameBegin(bool hasMenuBar = false);
 
     //! \brief Ends the current rendering frame.
     void frameEnd();
@@ -109,6 +113,12 @@ namespace gui2
     // Container items, they maybe have as children other items
     Rect display(Disabled& disabled, const Rect& rect) const;
     Rect display(Panel& panel, const Rect& rect) const;
+    Rect display(Menu& menu, const Rect& rect) const;
+    Rect display(const MenuItem& item, const Rect& rect) const;
+    void display(MenuBar& menuBar) const;
+
+    //! Returns the available content rectangle of the current ImGui window.
+    Rect getContentRect() const;
 
     //! \brief Displays a Displayable item using its own display method.
     template<typename T>

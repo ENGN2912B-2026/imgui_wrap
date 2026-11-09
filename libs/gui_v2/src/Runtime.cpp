@@ -14,6 +14,7 @@
 #include <gui2/InputBox.hpp>
 #include <gui2/Disabled.hpp>
 #include <gui2/Panel.hpp>
+#include <gui2/Menu.hpp>
 
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
@@ -155,7 +156,7 @@ namespace gui2
     backend_->SetWindowSize(size.to<float>());
   }
 
-  bool Runtime::frameBegin()
+  bool Runtime::frameBegin(bool hasMenuBar)
   {
     if (!backend_->NewFrame())
     {
@@ -171,7 +172,9 @@ namespace gui2
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    return ImGui::Begin("mainFrame", nullptr, kDefaultImGuiWindowFlags);
+    const int flags = kDefaultImGuiWindowFlags |
+      (hasMenuBar ? ImGuiWindowFlags_MenuBar : 0);
+    return ImGui::Begin("mainFrame", nullptr, flags);
   }
 
   void Runtime::frameEnd()
@@ -399,6 +402,47 @@ namespace gui2
     const Rect contentRect = display(disabled.getContent(), rect);
     ImGui::EndDisabled();
     return contentRect;
+  }
+
+  Rect Runtime::getContentRect() const
+  {
+    const auto origin = math::make<Vec2i>(ImGui::GetCursorScreenPos()).cast<int>();
+    const auto size = math::make<Vec2i>(ImGui::GetContentRegionAvail()).cast<int>();
+    return {origin, size};
+  }
+
+  void Runtime::display(MenuBar& menuBar) const
+  {
+    if (ImGui::BeginMenuBar())
+    {
+      for (auto& item : menuBar.getItems())
+      {
+        item.display(*this, getContentRect());
+      }
+      ImGui::EndMenuBar();
+    }
+  }
+
+  Rect Runtime::display(Menu& menu, const Rect& rect) const
+  {
+    if (ImGui::BeginMenu(menu.getLabel().c_str()))
+    {
+      for (auto& item : menu.getItems())
+      {
+        item.display(*this, getContentRect());
+      }
+      ImGui::EndMenu();
+    }
+    return getItemRect_();
+  }
+
+  Rect Runtime::display(const MenuItem& item, const Rect& rect) const
+  {
+    if (ImGui::MenuItem(item.getLabel().c_str(), nullptr, item.getChecked()))
+    {
+      item.onClick();
+    }
+    return getItemRect_();
   }
 
   Rect Runtime::display(Panel& panel, const Rect& rect) const

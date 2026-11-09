@@ -13,6 +13,7 @@
 #include <gui2/Separator.hpp>
 
 #include <gui2/Panel.hpp>
+#include <gui2/Menu.hpp>
 #include <gui2/InputBox.hpp>
 #include <gui2/CheckBox.hpp>
 #include <gui2/RadioButton.hpp>

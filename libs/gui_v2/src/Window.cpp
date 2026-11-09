@@ -35,6 +35,13 @@ namespace gui2
 
   void Window::displayContent(const Runtime& rt)
   {
+    if (menuBar_)
+    {
+      auto menuBar = *menuBar_;
+      rt.display(menuBar);
+      widget_.display(rt, rt.getContentRect());
+      return;
+    }
     Vec2i pad = rt.getWindowPadding();
     Rect rect{ pad, size_ - pad * 2 };
     widget_.display(rt, rect);
@@ -43,5 +50,15 @@ namespace gui2
   void Window::setContent(Widget widget)
   {
     widget_ = std::move(widget);
+  }
+
+  void Window::setMenuBar(MenuBar menuBar)
+  {
+    menuBar_ = std::move(menuBar);
+  }
+
+  void Window::clearMenuBar()
+  {
+    menuBar_.reset();
   }
 }

@@ -3,6 +3,7 @@
 #pragma once
 
 #include <gui2/Widget.hpp>
+#include <gui2/Menu.hpp>
 
 #include <string>
 #include <memory>
@@ -17,6 +18,7 @@ namespace gui2
     std::string title_;
     Vec2i size_;
     Widget widget_;
+    std::optional<MenuBar> menuBar_;
   public:
     // Constructs a new Window with the given title and size.
     // \param[in] title The title of the window.
@@ -46,6 +48,13 @@ namespace gui2
     // Sets the content of the window to be displayed. The content is provided
     // as a Widget, which can be any displayable GUI element or container.
     void setContent(Widget widget);
+
+    // Sets the window's menu bar. Captured references must outlive its use.
+    void setMenuBar(MenuBar menuBar);
+    // Removes the window's menu bar.
+    void clearMenuBar();
+    // Returns `true` if this window has a menu bar.
+    bool hasMenuBar() const { return menuBar_.has_value(); }
   };
 
 } // namespace gui
