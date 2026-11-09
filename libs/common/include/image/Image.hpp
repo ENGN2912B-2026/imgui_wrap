@@ -115,7 +115,17 @@ namespace image
   {
   public:
     using PixelType = T;
-    using GenericImageView::GenericImageView;
+
+    //! \brief Default constructor for the ImageView class.
+    ImageView() = default;
+
+    //! \brief Constructs an ImageView with the given image data and size.
+    //! \param[in] data The pointer to the image data.
+    //! \param[in] size The size of the image.
+    ImageView(PixelType* data, math::Vec2i size) : ImageView{}
+    {
+      initialize(data, size);
+    }
 
     //! \brief Initializes the ImageView with the given image data and size.
     //! \param[in] data The pointer to the image data.
@@ -227,5 +237,8 @@ namespace image
 
   using ImageViewRgb8 = ImageView<Rgb8>;
   using ImageRgb8 = Image<Rgb8>;
+
+  using ImageViewGray8 = ImageView<uint8_t>;
+  using ImageGray8 = Image<uint8_t>;
 
 } // namespace image

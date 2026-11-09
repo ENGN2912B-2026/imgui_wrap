@@ -52,6 +52,19 @@ namespace gl
     setInterpolationMode(interpolationMode);
   }
 
+  void Texture::initialize(const image::ImageViewGray8& imageView,
+                           GLint interpolationMode)
+  {
+    // Ensure the texture is initialized
+    initialize();
+
+    // Upload the image data to the texture
+    uploadImage(imageView);
+
+    // Set interpolation mode
+    setInterpolationMode(interpolationMode);
+  }
+
   void Texture::uninitialize()
   {
     if (isInitialized())
@@ -146,6 +159,46 @@ namespace gl
       glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
                       imageView.getWidth(), imageView.getHeight(),
                       GL_RGB, GL_UNSIGNED_BYTE, imageView.getData());
+    }
+  }
+
+  void Texture::uploadImage(const image::ImageViewGray8& imageView)
+  {
+    if (!isInitialized())
+    {
+      throw std::runtime_error{ "ERROR::TEXTURE:: "
+        "Cannot upload image to uninitialized texture!"};
+    }
+
+    const int expectedRowStride = imageView.getWidth() * sizeof(uint8_t);
+    if (imageView.getRowStride() != expectedRowStride)
+    {
+      throw std::invalid_argument{"ERROR::TEXTURE:: "
+        "Image is not tightly packed!"};
+    }
+
+    // Bind the texture to upload the image data
+    const auto autoUnbind = AutoUnbind{ *this };
+
+    // Set swizzle mask so red channel is used for all RGB, making grayscale
+    GLint swizzleMask[] = {GL_RED, GL_RED, GL_RED, GL_ONE};
+    glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+
+    // Set pixel storage modes for unpacking the image data
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0); // Ensure no row padding is used
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // Use single byte alignment
+
+    if (getSize() != imageView.getSize())
+    { // Allocate a new texture size and upload the image data
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
+                   imageView.getWidth(), imageView.getHeight(),
+                   0, GL_RED, GL_UNSIGNED_BYTE, imageView.getData());
+    }
+    else
+    { // Upload the image data to the existing texture size
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+                      imageView.getWidth(), imageView.getHeight(),
+                      GL_RED, GL_UNSIGNED_BYTE, imageView.getData());
     }
   }
 

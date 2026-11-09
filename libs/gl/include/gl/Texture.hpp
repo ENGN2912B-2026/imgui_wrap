@@ -67,6 +67,20 @@ namespace gl
     void initialize(const image::ImageViewRgb8& imageView,
                     GLint interpolationMode = GL_LINEAR);
 
+    //! \brief Initializes the texture from the given grayscale image.
+    //! \param[in] imageView          The grayscale image to upload.
+    //! \param[in] interpolationMode  The interpolation mode of the texture.
+    //!                               This is a valid OpenGL texture parameter,
+    //!                               such as GL_LINEAR or GL_NEAREST.
+    //! \throw std::invalid_argument if the image is not tightly packed.
+    //! \throw std::runtime_error if the texture fails to be initialized.
+    //!
+    //! This method initializes the texture and uploads the image data to it.
+    //! If the texture is already initialized, it will be re-initialized with
+    //! the new image data.
+    void initialize(const image::ImageViewGray8& imageView,
+                    GLint interpolationMode = GL_LINEAR);
+
     //! \brief Deletes the texture and releases the OpenGL resources.
     //!
     //! If the texture is not initialized, this method does nothing.
@@ -91,16 +105,30 @@ namespace gl
 
     //! \brief Uploads an image to the texture.
     //! \param[in] image  The image to upload.
-    //! \throw std::runtime_error if the texture is not initialized, or if the
-    //!        image is not tightly packed.
+    //! \throw std::runtime_error if the texture is not initialized.
+    //! \throw std::invalid_argument if the image is not tightly packed.
     //!
     //! This method uploads the given image data to the texture. The texture
     //! must be initialized before calling this method. The image must be
     //! tightly packed, meaning that the row stride of the image must be equal
-    //! to the width of the image multiplied by the size of the pixel type.
-    //! If the size of the image does not match the size of the texture, the
-    //! texture will be resized to match the image size.
+    //! to the width of the image multiplied by the size of the pixel type
+    //! (three bytes per pixel). If the size of the image does not match the
+    //! size of the texture, the texture will be resized to match the image
+    //! size.
     void uploadImage(const image::ImageViewRgb8& imageView);
+
+    //! \brief Uploads a grayscale image to the texture.
+    //! \param[in] imageView  The grayscale image to upload.
+    //! \throw std::runtime_error if the texture is not initialized.
+    //! \throw std::invalid_argument if the image is not tightly packed.
+    //!
+    //! This method uploads the given image data to the texture. The texture
+    //! must be initialized before calling this method. The image must be
+    //! tightly packed, meaning that the row stride of the image must be equal
+    //! to the width of the image (one byte per pixel). If the size of the
+    //! image does not match the size of the texture, the texture will be
+    //! resized to match the image size.
+    void uploadImage(const image::ImageViewGray8& imageView);
 
     //! \brief Binds the texture as `GL_TEXTURE_2D` and returns an AutoUnbind
     //!        object that will automatically unbind the texture when it goes
