@@ -26,10 +26,7 @@ int main(int argc, char** argv)
       Fixed{120, Button{"OK", [&] { about.setOpen(false); }}.setDefaultFocus(true)},
     },
   }};
-  about.setSize({600, 170});
-  about.setCentered(true);
-  about.setResizable(false);
-  about.setNoScrollbar(true);
+  about.setSize({600, 180});
 
   window.setMenuBar(MenuBar{
     Menu{"File",

@@ -268,7 +268,7 @@ void registerHelloGuiTests(testing::TestEngine& engine)
     dialog.setSize({600, 170});
     dialog.setCentered(true);
     dialog.setResizable(false);
-    dialog.setNoScrollbar(true);
+    dialog.setScrollbar(false);
     gui2::Window window;
     const ImVec2 viewportSize = ImGui::GetMainViewport()->Size;
     window.setSize({static_cast<int>(viewportSize.x), static_cast<int>(viewportSize.y)});

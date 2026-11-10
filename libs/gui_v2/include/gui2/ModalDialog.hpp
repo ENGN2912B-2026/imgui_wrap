@@ -65,11 +65,11 @@ namespace gui2
     //! \brief Returns whether the modal can be resized.
     bool getResizable() const { return resizable_; }
 
-    //! \brief Sets whether the modal hides its scrollbars.
-    //! \param[in] noScrollbar true to hide the scrollbars.
-    void setNoScrollbar(bool noScrollbar) { noScrollbar_ = noScrollbar; }
-    //! \brief Returns whether the modal hides its scrollbars.
-    bool getNoScrollbar() const { return noScrollbar_; }
+    //! \brief Sets whether the modal shows its scrollbars.
+    //! \param[in] scrollbar true to show the scrollbars.
+    void setScrollbar(bool scrollbar) { scrollbar_ = scrollbar; }
+    //! \brief Returns whether the modal shows its scrollbars.
+    bool getScrollbar() const { return scrollbar_; }
 
     //! \brief Displays the modal content within the given rectangle.
     //! \param[in] runtime The runtime used to display the content.
@@ -87,9 +87,9 @@ namespace gui2
     Widget widget_;
     Vec2i size_{0, 0};
     bool open_ = false;
-    bool centered_ = false;
-    bool resizable_ = true;
-    bool noScrollbar_ = false;
+    bool centered_ = true;
+    bool resizable_ = false;
+    bool scrollbar_ = false;
   };
 
   template<Identifier T>

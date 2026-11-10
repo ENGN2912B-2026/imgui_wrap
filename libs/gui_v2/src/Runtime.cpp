@@ -603,7 +603,7 @@ namespace gui2
 
     int flags = ImGuiWindowFlags_None;
     if (!dialog.getResizable()) { flags |= ImGuiWindowFlags_NoResize; }
-    if (dialog.getNoScrollbar()) { flags |= ImGuiWindowFlags_NoScrollbar; }
+    if (!dialog.getScrollbar()) { flags |= ImGuiWindowFlags_NoScrollbar; }
 
     Rect actualRect{ Rect::empty() };
     if (ImGui::BeginPopupModal(name.c_str(), nullptr, flags))
