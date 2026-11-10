@@ -249,7 +249,7 @@ void registerHelloGuiTests(testing::TestEngine& engine)
   t = IM_REGISTER_TEST(e, "hello_gui_v2", "modal_dialog");
   struct DialogVars
   {
-    gui2::ModalDialog dialog{gui2::Id{"Dialog Test"}, gui2::VStack{
+    gui2::ModalDialog dialog{"Dialog Test", gui2::VStack{
       "About",
       gui2::Separator{},
       gui2::HBox{
@@ -385,8 +385,8 @@ void registerHelloGuiTests(testing::TestEngine& engine)
   t->TestFunc = [](ImGuiTestContext* ctx)
   {
     auto& window = getApp().getWindow();
-    gui2::ModalDialog first{gui2::Id{"First modal"}, "First content"};
-    gui2::ModalDialog second{gui2::Id{"Second modal"}, "Second content"};
+    gui2::ModalDialog first{"First modal", "First content"};
+    gui2::ModalDialog second{"Second modal", "Second content"};
     bool showFirst = true;
     bool showSecond = true;
     first.setOpen(true);
@@ -440,7 +440,7 @@ void registerHelloGuiTests(testing::TestEngine& engine)
     ctx->Yield(3);
     IM_CHECK(secondPopup && !secondPopup->WasActive);
 
-    gui2::ModalDialog transient{gui2::Id{"Transient modal"},
+    gui2::ModalDialog transient{"Transient modal",
       gui2::Button{"Replace content", [&window] {
         window.setContent("Hello World!");
       }}};

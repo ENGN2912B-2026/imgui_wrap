@@ -16,16 +16,18 @@ namespace gui2
   class ModalDialog
   {
   public:
-    //! \brief Constructs a modal with an identifier and optional content.
-    //! \param[in] id The unique identifier; its name, if any, is the title.
-    //! \param[in] widget The content of the modal.
+    //! \brief Constructs a modal with an identifier, title and optional content.
+    //! \param[in] id     A unique identifier for the modal dialog.
+    //! \param[in] title  The dialog window title.
+    //! \param[in] widget The content of the modal dialog.
     template<Identifier T>
-    ModalDialog(T&& id, Widget widget = {});
+    ModalDialog(T&& id, std::string title, Widget widget = {});
 
     //! \brief Constructs a modal identified by its construction location.
-    //! \param[in] widget The content of the modal.
+    //! \param[in] title    The dialog window title.
+    //! \param[in] widget   The content of the modal dialog.
     //! \param[in] location The source location where the modal is constructed.
-    ModalDialog(Widget widget = {},
+    ModalDialog(std::string title = {}, Widget widget = {},
                 std::source_location location = std::source_location::current());
 
     //! \brief Returns the unique identifier.
@@ -91,18 +93,21 @@ namespace gui2
   };
 
   template<Identifier T>
-  ModalDialog::ModalDialog(T&& id, Widget widget)
-    : id_{id.getValueStr()}, widget_{std::move(widget)}
+  ModalDialog::ModalDialog(T&& id, std::string title, Widget widget)
+    : id_{id.getValueStr()}
+    , title_{std::move(title)}
+    , widget_{std::move(widget)}
   {
     if constexpr (IdentifierWithName<std::remove_cvref_t<T>>)
     {
       name_ = id.getName();
-      title_ = name_;
     }
   }
 
-  inline ModalDialog::ModalDialog(Widget widget, std::source_location location)
+  inline ModalDialog::ModalDialog(std::string title, Widget widget,
+                                  std::source_location location)
     : id_{LocationId{std::move(location)}.getValueStr()}
+    , title_{std::move(title)}
     , widget_{std::move(widget)}
   {
   }

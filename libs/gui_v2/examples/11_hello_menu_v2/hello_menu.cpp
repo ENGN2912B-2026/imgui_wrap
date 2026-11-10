@@ -18,7 +18,7 @@ int main(int argc, char** argv)
   Window& window = app.getWindow();
   bool showMessage = true;
 
-  ModalDialog about{Id{"About"}, VStack{
+  ModalDialog about{"About", VStack{
     "Hello menu v2\nAn example of menus and a modal dialog.",
     Separator{},
     HBox{
