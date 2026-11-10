@@ -2,7 +2,6 @@
 //
 
 #include <gui2/Window.hpp>
-#include <gui2/Dialog.hpp>
 
 #include <algorithm>
 
@@ -57,14 +56,9 @@ namespace gui2
     rect.size.y -= actualRect.size.y;
     rect.origin += rt.getWindowPadding();
     rect.size -= rt.getWindowPadding() * 2;
-    widget_.display(rt, rect);
-
-    // Display any registered dialogs, which are modal and appear above the
-    // window content. The dialogs are displayed in the order they were added.
-    for (Dialog* dialog : dialogs_)
-    {
-      rt.display(*dialog, rect);
-    }
+    // Keep the content alive if a callback replaces it during display.
+    auto widget = widget_;
+    widget.display(rt, rect);
   }
 
   void Window::setContent(Widget widget)
@@ -80,10 +74,5 @@ namespace gui2
   void Window::clearMenuBar()
   {
     menuBar_.reset();
-  }
-
-  void Window::addDialog(Dialog& dialog)
-  {
-    dialogs_.push_back(&dialog);
   }
 }

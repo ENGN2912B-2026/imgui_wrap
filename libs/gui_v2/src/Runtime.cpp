@@ -14,7 +14,7 @@
 #include <gui2/InputBox.hpp>
 #include <gui2/Disabled.hpp>
 #include <gui2/Panel.hpp>
-#include <gui2/Dialog.hpp>
+#include <gui2/ModalDialog.hpp>
 #include <gui2/Menu.hpp>
 
 #include <imgui.h>
@@ -31,6 +31,8 @@ namespace gui2
 {
   namespace
   {
+    constexpr char kMainFrameName[]{ "mainFrame" };
+
     constexpr int kDefaultImGuiWindowFlags{
       ImGuiWindowFlags_NoDecoration |
       ImGuiWindowFlags_NoResize |
@@ -51,9 +53,12 @@ namespace gui2
 
     inline Rect getCurrentContentRect_()
     {
-      const auto origin = math::make<Vec2i>(ImGui::GetCursorScreenPos()).cast<int>();
-      const auto size = math::make<Vec2i>(ImGui::GetContentRegionAvail()).cast<int>();
-      return {origin, size};
+      // `ImGui::GetCursorScreenPos()` takes into account the window padding,
+      // if any, and the current scroll position to correctly return the inner
+      // rectangle on a Panel, Dialog, and other nested contexts.
+      const auto origin{ math::make<math::Vec2d>(ImGui::GetCursorScreenPos()) };
+      const auto size{ math::make<math::Vec2d>(ImGui::GetContentRegionAvail()) };
+      return { origin.cast<int>(), size.cast<int>() };
     }
 
     inline void updateSize_(std::vector<std::pair<std::string, Rect>>& sizingStack,
@@ -131,6 +136,8 @@ namespace gui2
     ImPlot::DestroyContext();
 #endif
     ImGui::DestroyContext();
+    activeModalId_.clear();
+    activeModalStatus_ = ModalDialogStatus::Unknown;
   }
 
   void Runtime::setWindowTitle(const std::string& title)
@@ -171,6 +178,8 @@ namespace gui2
       return false;
     }
 
+    activeModalStatus_ = ModalDialogStatus::Unknown;
+
     // Start a new Dear ImGui frame
     ImGui::NewFrame();
 
@@ -182,11 +191,37 @@ namespace gui2
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     const int flags = kDefaultImGuiWindowFlags |
       (hasMenuBar ? ImGuiWindowFlags_MenuBar : 0);
-    return ImGui::Begin("mainFrame", nullptr, flags);
+    return ImGui::Begin(kMainFrameName, nullptr, flags);
   }
 
   void Runtime::frameEnd()
   {
+    // Check if a modal dialog is active
+    if (!activeModalId_.empty())
+    {
+      const std::string name{ "###" + activeModalId_ };
+
+      // Check if the modal dialog was present in the current frame, otherwise
+      // we must close it.
+      if (activeModalStatus_ == ModalDialogStatus::Unknown
+        && ImGui::IsPopupOpen(name.c_str())
+        && ImGui::BeginPopupModal(name.c_str(), nullptr))
+      { // Close the modal dialog if it was not present in the current frame.
+        // Note that only if `ImGui::BeginPopupModal()` returns true, we can
+        // close the modal dialog. Otherwise, we must keep it open another
+        // frame to stay in sync with ImGui's state.
+        ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+      }
+
+      // Check if the modal dialog is still open in ImGui's state, otherwise we
+      // clear the active modal dialog Id.
+      if (!ImGui::IsPopupOpen(name.c_str()))
+      {
+        activeModalId_.clear();
+      }
+    }
+
     // End the current Dear ImGui window and pop the style variable.
     ImGui::End();
     ImGui::PopStyleVar();
@@ -498,13 +533,7 @@ namespace gui2
                           flags,
                           windowFlags))
     {
-      // Must call `ImGui::GetCursorScreenPos()` to get an initial position for
-      // the inner rectangle, which already takes into account the window padding
-      // and the current scroll position.
-      const auto origin{ math::make<math::Vec2d>(ImGui::GetCursorScreenPos()) };
-      const auto size{ math::make<math::Vec2d>(ImGui::GetContentRegionAvail()) };
-
-      const Rect innerRect{ origin.cast<int>(), size.cast<int>() };
+      const Rect innerRect{ getCurrentContentRect_() };
       const Rect contentActualRect = panel.displayContent(*this, innerRect);
 
       if (!contentActualRect.isEmpty())
@@ -542,43 +571,85 @@ namespace gui2
     return actualRect;
   }
 
-  Rect Runtime::display(Dialog& dialog, const Rect& rect) const
+  Rect Runtime::display(ModalDialog& dialog, const Rect& rect) const
   {
-    if (dialog.takeOpenRequest())
+    const std::string name{ dialog.getTitle() + "###" + dialog.getId() };
+
+    // Append to the main frame so a modal has the same popup scope even when
+    // its Overlay is inside a child panel. Push the main frame to the stack
+    // so that we can add more content to it.
+    ImGui::Begin(kMainFrameName);
+
+    // Open the dialog if requested and allowed (only one modal is allowed)
+    if (dialog.isOpen() && activeModalId_.empty())
     {
-      ImGui::OpenPopup(dialog.getTitle().c_str());
+      ImGui::OpenPopup(name.c_str());
+      activeModalId_ = dialog.getId();
+
+      // If the dialog is to be open, then we must set its position
+      if (dialog.getCentered())
+      { // Center the dialog in the given rectangle
+        const ImVec2 center{ rect.getCenter().to<float>() };
+        ImGui::SetNextWindowPos(center, 0, ImVec2{0.5f, 0.5f});
+      }
+      else
+      { // Place at the rectangle origin
+        ImGui::SetNextWindowPos(rect.origin.to<float>());
+      }
+
+      // Set the dialog size
+      ImGui::SetNextWindowSize(dialog.getSize().to<float>());
     }
-    const bool closeRequested = dialog.takeCloseRequest();
-    if (dialog.getCentered())
-    {
-      const ImVec2 center{rect.origin.x + rect.size.x * 0.5f,
-                          rect.origin.y + rect.size.y * 0.5f};
-      ImGui::SetNextWindowPos(center,
-                              ImGuiCond_Appearing, ImVec2{0.5f, 0.5f});
-    }
-    ImGui::SetNextWindowSize(dialog.getSize().to<float>(), ImGuiCond_Appearing);
+
     int flags = ImGuiWindowFlags_None;
     if (!dialog.getResizable()) { flags |= ImGuiWindowFlags_NoResize; }
     if (dialog.getNoScrollbar()) { flags |= ImGuiWindowFlags_NoScrollbar; }
-    if (ImGui::BeginPopupModal(dialog.getTitle().c_str(), nullptr, flags))
+
+    Rect actualRect{ Rect::empty() };
+    if (ImGui::BeginPopupModal(name.c_str(), nullptr, flags))
     {
-      const Rect actualRect{
-        math::make<Vec2i>(ImGui::GetWindowPos()).cast<int>(),
-        math::make<Vec2i>(ImGui::GetWindowSize()).cast<int>()
-      };
-      dialog.displayContent(*this, getCurrentContentRect_());
-      if (dialog.takeCloseRequest() || closeRequested)
-      {
+      const Rect innerRect{ getCurrentContentRect_() };
+      const Rect contentActualRect = dialog.displayContent(*this, innerRect);
+
+      if (!dialog.isOpen())
+      { // The dialog was closed by the user, so we must close the popup.
         ImGui::CloseCurrentPopup();
       }
+
+      // Read the actual rectangle of the dialog window, which may be different
+      // from the requested rectangle.
+      // Must do this before calling `ImGui::EndPopup()`, because `GetWindowPos()`
+      // and `GetWindowSize()` return the position and size of the current window,
+      // which is not the popup window after `EndPopup()` is called.
+      actualRect= Rect{
+        math::make<math::Vec2d>(ImGui::GetWindowPos()).cast<int>(),
+        math::make<math::Vec2d>(ImGui::GetWindowSize()).cast<int>() };
+
       ImGui::EndPopup();
-      return actualRect;
     }
-    else if (closeRequested && ImGui::IsPopupOpen(dialog.getTitle().c_str()))
-    {
-      dialog.close();
+
+    // Check if this is the active modal dialog
+    if (activeModalId_ == dialog.getId())
+    { // Update the modal status based on whether the popup is open in ImGui
+      if (ImGui::IsPopupOpen(name.c_str()))
+      { // The modal dialog is open in ImGui.
+        activeModalStatus_ = ModalDialogStatus::Open;
+      }
+      else
+      { // The modal dialog was closed by the user, or by the application,
+        // update its status if sync its state.
+        activeModalStatus_ = ModalDialogStatus::Closed;
+        if (dialog.isOpen())
+        { // Set the dialog to closed to sync its state with the ImGui popup.
+          dialog.setOpen(false);
+        }
+      }
     }
-    return Rect::empty();
+
+    // Remove this frame from the stack to continue regular rendering.
+    ImGui::End();
+
+    return actualRect;
   }
 
   void Runtime::sizeBegin(const std::string& id) const

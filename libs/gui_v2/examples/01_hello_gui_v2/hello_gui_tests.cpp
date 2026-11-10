@@ -5,7 +5,9 @@
 #include <gui2/Application.hpp>
 #include <gui2/Runtime.hpp>
 #include <gui2/Menu.hpp>
-#include <gui2/Dialog.hpp>
+#include <gui2/ModalDialog.hpp>
+#include <gui2/Overlay.hpp>
+#include <gui2/Panel.hpp>
 #include <gui2/Layout.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/Separator.hpp>
@@ -247,7 +249,16 @@ void registerHelloGuiTests(testing::TestEngine& engine)
   t = IM_REGISTER_TEST(e, "hello_gui_v2", "modal_dialog");
   struct DialogVars
   {
-    gui2::Dialog dialog{"Dialog Test"};
+    gui2::ModalDialog dialog{gui2::Id{"Dialog Test"}, gui2::VStack{
+      "About",
+      gui2::Separator{},
+      gui2::HBox{
+        gui2::Stretch{1, gui2::Empty{}},
+        gui2::Fixed{120, gui2::Button{"OK", [this] {
+          dialog.setOpen(false);
+        }}.setDefaultFocus(true)},
+      },
+    }};
   };
   t->SetVarsDataType<DialogVars>();
   t->GuiFunc = [](ImGuiTestContext* ctx)
@@ -258,25 +269,13 @@ void registerHelloGuiTests(testing::TestEngine& engine)
     dialog.setCentered(true);
     dialog.setResizable(false);
     dialog.setNoScrollbar(true);
-    dialog.setContent(gui2::VStack{
-      "About",
-      gui2::Separator{},
-      gui2::HBox{
-        gui2::Stretch{1, gui2::Empty{}},
-        gui2::Fixed{120, gui2::Button{"OK", [&dialog] {
-          dialog.close();
-        }}.setDefaultFocus(true)},
-      },
-    });
-
     gui2::Window window;
     const ImVec2 viewportSize = ImGui::GetMainViewport()->Size;
     window.setSize({static_cast<int>(viewportSize.x), static_cast<int>(viewportSize.y)});
     window.setMenuBar(gui2::MenuBar{
-      gui2::Menu{"Help", gui2::MenuItem{"About", [&dialog] { dialog.open(); }}}
+      gui2::Menu{"Help", gui2::MenuItem{"About", [&dialog] { dialog.setOpen(true); }}}
     });
-    window.addDialog(dialog);
-    window.setContent("Content");
+    window.setContent(gui2::Overlay{"Content", std::ref(dialog)});
     ImGui::SetNextWindowPos({0, 0});
     ImGui::SetNextWindowSize(viewportSize);
     ImGui::Begin("Dialog Parent", nullptr,
@@ -300,7 +299,8 @@ void registerHelloGuiTests(testing::TestEngine& engine)
     ctx->SetRef("Dialog Parent");
     ctx->MenuClick("Help/About");
     ctx->Yield(2);
-    ImGuiWindow* popup = ImGui::FindWindowByName("Dialog Test");
+    const std::string popupName = "Dialog Test###" + ctx->GetVars<DialogVars>().dialog.getId();
+    ImGuiWindow* popup = ImGui::FindWindowByName(popupName.c_str());
     IM_CHECK(popup != nullptr && popup->WasActive);
     if (popup)
     {
@@ -315,7 +315,7 @@ void registerHelloGuiTests(testing::TestEngine& engine)
                   center.y + ImGui::GetFrameHeight() * 0.5f);
       IM_CHECK_EQ(GImGui->NavId, popup->GetID("OK"));
     }
-    ctx->SetRef("Dialog Test");
+    ctx->SetRef(popupName.c_str());
     const auto ok = ctx->ItemInfo("OK");
     IM_CHECK_EQ(ok.RectFull.GetWidth(), 120.0f);
     IM_CHECK_EQ(ok.RectFull.Max.x, popup->WorkRect.Max.x);
@@ -327,9 +327,130 @@ void registerHelloGuiTests(testing::TestEngine& engine)
     ctx->MenuClick("Help/About");
     ctx->Yield(2);
     IM_CHECK(popup->WasActive);
-    ctx->GetVars<DialogVars>().dialog.close();
+    ctx->GetVars<DialogVars>().dialog.setOpen(false);
     ctx->Yield(3);
     IM_CHECK(!popup->WasActive);
+  };
+
+  t = IM_REGISTER_TEST(e, "hello_gui_v2", "overlay_bounds");
+  t->TestFunc = [](ImGuiTestContext* ctx)
+  {
+    struct Probe
+    {
+      int value;
+      std::vector<int>* order;
+      gui2::Rect* received;
+      gui2::Rect result;
+      gui2::Rect display(const gui2::Runtime&, const gui2::Rect& rect)
+      {
+        order->push_back(value);
+        *received = rect;
+        return result;
+      }
+    };
+
+    std::vector<int> order;
+    gui2::Rect received[3];
+    const gui2::Rect parent{{10, 20}, {400, 300}};
+    const gui2::Rect mainBounds{{12, 24}, {100, 50}};
+    gui2::Overlay overlay{
+      Probe{0, &order, &received[0], mainBounds},
+      Probe{1, &order, &received[1], {{500, 500}, {50, 50}}},
+      Probe{2, &order, &received[2], {{600, 600}, {50, 50}}}
+    };
+    const auto actual = overlay.display(gui2::Runtime::getInstance(), parent);
+    IM_CHECK_EQ(order.size(), 3);
+    if (order.size() == 3)
+    {
+      IM_CHECK_EQ(order[0], 0);
+      IM_CHECK_EQ(order[1], 1);
+      IM_CHECK_EQ(order[2], 2);
+    }
+    for (const auto& rect : received)
+    {
+      IM_CHECK_EQ(rect.origin.x, parent.origin.x);
+      IM_CHECK_EQ(rect.origin.y, parent.origin.y);
+      IM_CHECK_EQ(rect.size.x, parent.size.x);
+      IM_CHECK_EQ(rect.size.y, parent.size.y);
+    }
+    IM_CHECK_EQ(actual.origin.x, mainBounds.origin.x);
+    IM_CHECK_EQ(actual.origin.y, mainBounds.origin.y);
+    IM_CHECK_EQ(actual.size.x, mainBounds.size.x);
+    IM_CHECK_EQ(actual.size.y, mainBounds.size.y);
+  };
+
+  t = IM_REGISTER_TEST(e, "hello_gui_v2", "modal_priority_and_disappearance");
+  t->TestFunc = [](ImGuiTestContext* ctx)
+  {
+    auto& window = getApp().getWindow();
+    gui2::ModalDialog first{gui2::Id{"First modal"}, "First content"};
+    gui2::ModalDialog second{gui2::Id{"Second modal"}, "Second content"};
+    bool showFirst = true;
+    bool showSecond = true;
+    first.setOpen(true);
+    second.setOpen(true);
+    window.setContent(gui2::Panel{gui2::Id{"Modal panel"}, gui2::Overlay{
+      "Content",
+      [&]() -> gui2::Widget {
+        return showFirst ? gui2::Widget{std::ref(first)} : gui2::Widget{};
+      },
+      [&]() -> gui2::Widget {
+        return showSecond ? gui2::Widget{std::ref(second)} : gui2::Widget{};
+      }
+    }});
+
+    const std::string firstName = first.getTitle() + "###" + first.getId();
+    const std::string secondName = second.getTitle() + "###" + second.getId();
+    ctx->Yield(3);
+    ImGuiWindow* firstPopup = ImGui::FindWindowByName(firstName.c_str());
+    ImGuiWindow* secondPopup = ImGui::FindWindowByName(secondName.c_str());
+    IM_CHECK(firstPopup && firstPopup->WasActive);
+    IM_CHECK(!secondPopup || !secondPopup->WasActive);
+
+    first.setOpen(false);
+    ctx->Yield(3);
+    secondPopup = ImGui::FindWindowByName(secondName.c_str());
+    IM_CHECK(firstPopup && !firstPopup->WasActive);
+    IM_CHECK(secondPopup && secondPopup->WasActive);
+
+    first.setOpen(true);
+    second.setTitle("Renamed modal");
+    ctx->Yield(3);
+    IM_CHECK(firstPopup && !firstPopup->WasActive);
+    IM_CHECK(secondPopup && secondPopup->WasActive);
+    IM_CHECK(ImGui::FindWindowByName(
+      ("Renamed modal###" + second.getId()).c_str()) == secondPopup);
+
+    showSecond = false;
+    ctx->Yield(4);
+    IM_CHECK(secondPopup && !secondPopup->WasActive);
+    IM_CHECK(firstPopup && firstPopup->WasActive);
+
+    showFirst = false;
+    ctx->Yield(3);
+    IM_CHECK(firstPopup && !firstPopup->WasActive);
+    IM_CHECK_EQ(ctx->UiContext->OpenPopupStack.Size, 0);
+
+    showSecond = true;
+    ctx->Yield(3);
+    IM_CHECK(secondPopup && secondPopup->WasActive);
+    second.setOpen(false);
+    ctx->Yield(3);
+    IM_CHECK(secondPopup && !secondPopup->WasActive);
+
+    gui2::ModalDialog transient{gui2::Id{"Transient modal"},
+      gui2::Button{"Replace content", [&window] {
+        window.setContent("Hello World!");
+      }}};
+    transient.setOpen(true);
+    const std::string transientName = transient.getTitle() + "###" + transient.getId();
+    window.setContent(gui2::Overlay{"Content", std::move(transient)});
+    ctx->Yield(3);
+    ctx->SetRef(transientName.c_str());
+    ctx->ItemClick("Replace content");
+    ctx->Yield(3);
+    IM_CHECK_EQ(ctx->UiContext->OpenPopupStack.Size, 0);
+    window.setContent("Hello World!");
   };
 
   t = IM_REGISTER_TEST(e, "hello_gui_v2", "window_menu_bar");

@@ -28,7 +28,7 @@ namespace gui2
   class ImageZoom;
   class Disabled;
   class Panel;
-  class Dialog;
+  class ModalDialog;
   class Menu;
   class MenuItem;
   class MenuBar;
@@ -116,7 +116,7 @@ namespace gui2
     Rect display(Panel& panel, const Rect& rect) const;
     // Dialogs are overlays: rect is the parent area used for centering and the
     // result is the actual dialog rectangle, or empty when not displayed.
-    Rect display(Dialog& dialog, const Rect& rect) const;
+    Rect display(ModalDialog& dialog, const Rect& rect) const;
     Rect display(Menu& menu, const Rect& rect) const;
     Rect display(const MenuItem& item, const Rect& rect) const;
     // The menu bar belongs to the window represented by rect. Its actual
@@ -180,6 +180,11 @@ namespace gui2
     std::unique_ptr<backend::Backend> backend_;
     mutable std::unordered_map<std::string, Rect> sizedRects_;
     mutable std::vector<std::pair<std::string, Rect>> sizingStack_;
+
+    enum class ModalDialogStatus{ Unknown, Open, Closed };
+    mutable ModalDialogStatus activeModalStatus_;
+    mutable std::string activeModalId_;
+
     Runtime() = default;
   };
 

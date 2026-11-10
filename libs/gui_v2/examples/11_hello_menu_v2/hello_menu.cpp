@@ -3,7 +3,8 @@
 
 #include <gui2/Application.hpp>
 #include <gui2/Menu.hpp>
-#include <gui2/Dialog.hpp>
+#include <gui2/ModalDialog.hpp>
+#include <gui2/Overlay.hpp>
 #include <gui2/Layout.hpp>
 #include <gui2/Button.hpp>
 #include <gui2/Separator.hpp>
@@ -17,20 +18,18 @@ int main(int argc, char** argv)
   Window& window = app.getWindow();
   bool showMessage = true;
 
-  Dialog about{"About"};
-  about.setSize({600, 170});
-  about.setCentered(true);
-  about.setResizable(false);
-  about.setNoScrollbar(true);
-  about.setContent(VStack{
+  ModalDialog about{Id{"About"}, VStack{
     "Hello menu v2\nAn example of menus and a modal dialog.",
     Separator{},
     HBox{
       Stretch{1, Empty{}},
-      Fixed{120, Button{"OK", [&] { about.close(); }}.setDefaultFocus(true)},
+      Fixed{120, Button{"OK", [&] { about.setOpen(false); }}.setDefaultFocus(true)},
     },
-  });
-  window.addDialog(about);
+  }};
+  about.setSize({600, 170});
+  about.setCentered(true);
+  about.setResizable(false);
+  about.setNoScrollbar(true);
 
   window.setMenuBar(MenuBar{
     Menu{"File",
@@ -42,12 +41,13 @@ int main(int argc, char** argv)
       MenuItem{"Show message", &showMessage}
     },
     Menu{"Help",
-      MenuItem{"About", [&] { about.open(); }}
+      MenuItem{"About", [&] { about.setOpen(true); }}
     }
   });
 
-  window.setContent([&] {
-    return showMessage ? "Hello from the menu example!" : "";
+  window.setContent(Overlay{
+    [&] { return showMessage ? "Hello from the menu example!" : ""; },
+    std::ref(about)
   });
 
   app.run();

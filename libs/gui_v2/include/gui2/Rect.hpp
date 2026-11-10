@@ -71,6 +71,13 @@ namespace gui2
       return !hasSize();
     }
 
+    //! \brief Get the center point of this rectangle.
+    constexpr Vec2i getCenter() const
+    {
+      return {origin.x + getAvailableWidth() / 2,
+              origin.y + getAvailableHeight() / 2};
+    }
+
     //! \brief Sets the specified value as an optional width.
     //! \param[in] width  The width value to set as optional.
     //! \return A reference to the current rectangle with the updated width.
@@ -135,7 +142,7 @@ namespace gui2
     //! \brief Returns the available width of the rectangle.
     //! \return The available width of the rectangle.
     //!
-    //! If the rectangle has width, it is returned. If it does not, but i has
+    //! If the rectangle has width, it is returned. If it does not, but it has
     //! an optional width, the optional width is returned. Otherwise, 0 is
     //! returned.
     int getAvailableWidth() const
@@ -146,7 +153,7 @@ namespace gui2
     //! \brief Returns the available height of the rectangle.
     //! \return The available height of the rectangle.
     //!
-    //! If the rectangle has height, it is returned. If it does not, but i has
+    //! If the rectangle has height, it is returned. If it does not, but it has
     //! an optional height, the optional height is returned. Otherwise, 0 is
     //! returned.
     int getAvailableHeight() const
