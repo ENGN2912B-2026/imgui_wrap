@@ -8,10 +8,13 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <vector>
 //#include <mutex>
 
 namespace gui2
 {
+  class Dialog;
+
   // A desktop window.
   class Window
   {
@@ -19,6 +22,7 @@ namespace gui2
     Vec2i size_;
     Widget widget_;
     std::optional<MenuBar> menuBar_;
+    std::vector<Dialog*> dialogs_;
   public:
     // Constructs a new Window with the given title and size.
     // \param[in] title The title of the window.
@@ -55,6 +59,10 @@ namespace gui2
     void clearMenuBar();
     // Returns `true` if this window has a menu bar.
     bool hasMenuBar() const { return menuBar_.has_value(); }
+
+    // Registers a modal dialog displayed after the window content. The dialog
+    // must remain alive while the window displays it.
+    void addDialog(Dialog& dialog);
   };
 
 } // namespace gui

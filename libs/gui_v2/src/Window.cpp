@@ -2,6 +2,9 @@
 //
 
 #include <gui2/Window.hpp>
+#include <gui2/Dialog.hpp>
+
+#include <algorithm>
 
 namespace gui2
 {
@@ -35,16 +38,33 @@ namespace gui2
 
   void Window::displayContent(const Runtime& rt)
   {
+    Rect rect{{0, 0}, size_};
+    Rect actualRect{rect.origin, {0, 0}};
+
+    // Display the menu bar if it exists, and update the actualRect to include
+    // its size.
     if (menuBar_)
     {
+      // Copy the menu bar so it remains alive if a callback clears or replaces
+      // the original. Its Widgets are shallow copies that share their content.
       auto menuBar = *menuBar_;
-      rt.display(menuBar);
-      widget_.display(rt, rt.getContentRect());
-      return;
+      actualRect.unite(rt.display(menuBar, rect));
     }
-    Vec2i pad = rt.getWindowPadding();
-    Rect rect{ pad, size_ - pad * 2 };
+
+    // Display the window content, adjusting the rectangle to account for the
+    // menu bar and window padding.
+    rect.origin.y += actualRect.size.y;
+    rect.size.y -= actualRect.size.y;
+    rect.origin += rt.getWindowPadding();
+    rect.size -= rt.getWindowPadding() * 2;
     widget_.display(rt, rect);
+
+    // Display any registered dialogs, which are modal and appear above the
+    // window content. The dialogs are displayed in the order they were added.
+    for (Dialog* dialog : dialogs_)
+    {
+      rt.display(*dialog, rect);
+    }
   }
 
   void Window::setContent(Widget widget)
@@ -60,5 +80,10 @@ namespace gui2
   void Window::clearMenuBar()
   {
     menuBar_.reset();
+  }
+
+  void Window::addDialog(Dialog& dialog)
+  {
+    dialogs_.push_back(&dialog);
   }
 }

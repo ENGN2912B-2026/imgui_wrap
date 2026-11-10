@@ -14,6 +14,7 @@
 #include <gui2/InputBox.hpp>
 #include <gui2/Disabled.hpp>
 #include <gui2/Panel.hpp>
+#include <gui2/Dialog.hpp>
 #include <gui2/Menu.hpp>
 
 #include <imgui.h>
@@ -46,6 +47,13 @@ namespace gui2
       ImVec2 size = ImGui::GetItemRectSize();
       return { math::make<Vec2i>(pos).cast<int>(),
                math::make<Vec2i>(size).cast<int>() };
+    }
+
+    inline Rect getCurrentContentRect_()
+    {
+      const auto origin = math::make<Vec2i>(ImGui::GetCursorScreenPos()).cast<int>();
+      const auto size = math::make<Vec2i>(ImGui::GetContentRegionAvail()).cast<int>();
+      return {origin, size};
     }
 
     inline void updateSize_(std::vector<std::pair<std::string, Rect>>& sizingStack,
@@ -239,6 +247,10 @@ namespace gui2
         ImVec4{ color->x, color->y, color->z, color->w });
     }
     const bool clicked = ImGui::Button(button.getLabel().c_str(), size);
+    if (button.getDefaultFocus())
+    {
+      ImGui::SetItemDefaultFocus();
+    }
     if (color)
     {
       ImGui::PopStyleColor();
@@ -404,36 +416,50 @@ namespace gui2
     return contentRect;
   }
 
-  Rect Runtime::getContentRect() const
+  Rect Runtime::display(MenuBar& menuBar, const Rect& rect) const
   {
-    const auto origin = math::make<Vec2i>(ImGui::GetCursorScreenPos()).cast<int>();
-    const auto size = math::make<Vec2i>(ImGui::GetContentRegionAvail()).cast<int>();
-    return {origin, size};
-  }
-
-  void Runtime::display(MenuBar& menuBar) const
-  {
+    // ImGui attaches the menu bar to the current window and determines its
+    // position and width, so rect cannot be used to place it. Menu items also
+    // follow ImGui's window layout rather than rect: ImGui determines their
+    // spacing and size, and positions opened menus in separate popup windows.
+    // Return the bar's bounds so the caller can reserve space for it.
     if (ImGui::BeginMenuBar())
     {
+      const auto pos = math::make<Vec2i>(ImGui::GetWindowPos()).cast<int>();
+      const int width = static_cast<int>(ImGui::GetWindowSize().x);
+      const int height = static_cast<int>(ImGui::GetFrameHeight());
+      const Rect actualRect{pos, {width, height}};
       for (auto& item : menuBar.getItems())
       {
-        item.display(*this, getContentRect());
+        item.display(*this, getCurrentContentRect_());
       }
       ImGui::EndMenuBar();
+      return actualRect;
     }
+    return Rect::empty();
   }
 
   Rect Runtime::display(Menu& menu, const Rect& rect) const
   {
-    if (ImGui::BeginMenu(menu.getLabel().c_str()))
+    // ImGui places the menu label using its current window layout and sizes
+    // it automatically. Its popup has a separate ImGui-managed content area,
+    // so this implementation does not use rect for either.
+    const bool open = ImGui::BeginMenu(menu.getLabel().c_str());
+    // Retrieve the actual rectangle of the menu label before displaying the
+    // menu items, because getItemRect_() returns the rectangle of the last item
+    // displayed, which could be different if the menu is open and its items are
+    // displayed. We want to return the rectangle of the menu label, not the
+    // items.
+    const Rect actualRect = getItemRect_();
+    if (open)
     {
       for (auto& item : menu.getItems())
       {
-        item.display(*this, getContentRect());
+        item.display(*this, getCurrentContentRect_());
       }
       ImGui::EndMenu();
     }
-    return getItemRect_();
+    return actualRect;
   }
 
   Rect Runtime::display(const MenuItem& item, const Rect& rect) const
@@ -514,6 +540,45 @@ namespace gui2
                        // if `BeginChild()` returns false.
 
     return actualRect;
+  }
+
+  Rect Runtime::display(Dialog& dialog, const Rect& rect) const
+  {
+    if (dialog.takeOpenRequest())
+    {
+      ImGui::OpenPopup(dialog.getTitle().c_str());
+    }
+    const bool closeRequested = dialog.takeCloseRequest();
+    if (dialog.getCentered())
+    {
+      const ImVec2 center{rect.origin.x + rect.size.x * 0.5f,
+                          rect.origin.y + rect.size.y * 0.5f};
+      ImGui::SetNextWindowPos(center,
+                              ImGuiCond_Appearing, ImVec2{0.5f, 0.5f});
+    }
+    ImGui::SetNextWindowSize(dialog.getSize().to<float>(), ImGuiCond_Appearing);
+    int flags = ImGuiWindowFlags_None;
+    if (!dialog.getResizable()) { flags |= ImGuiWindowFlags_NoResize; }
+    if (dialog.getNoScrollbar()) { flags |= ImGuiWindowFlags_NoScrollbar; }
+    if (ImGui::BeginPopupModal(dialog.getTitle().c_str(), nullptr, flags))
+    {
+      const Rect actualRect{
+        math::make<Vec2i>(ImGui::GetWindowPos()).cast<int>(),
+        math::make<Vec2i>(ImGui::GetWindowSize()).cast<int>()
+      };
+      dialog.displayContent(*this, getCurrentContentRect_());
+      if (dialog.takeCloseRequest() || closeRequested)
+      {
+        ImGui::CloseCurrentPopup();
+      }
+      ImGui::EndPopup();
+      return actualRect;
+    }
+    else if (closeRequested && ImGui::IsPopupOpen(dialog.getTitle().c_str()))
+    {
+      dialog.close();
+    }
+    return Rect::empty();
   }
 
   void Runtime::sizeBegin(const std::string& id) const

@@ -34,7 +34,16 @@ namespace gui2
     const std::optional<Vec4f>& getColor() const { return color_; }
     //! \brief Sets the optional background color of the button.
     //! \param[in] color The color (RGBA), or std::nullopt to use the theme.
-    void setColor(std::optional<Vec4f> color) { color_ = color; }
+    //! \return A reference to this button.
+    Button& setColor(std::optional<Vec4f> color);
+
+    //! \brief Gets whether the button receives default focus when its window appears.
+    //! \return true if the button receives default focus, false otherwise.
+    bool getDefaultFocus() const { return defaultFocus_; }
+    //! \brief Sets whether the button receives default focus when its window appears.
+    //! \param[in] defaultFocus true to request default focus.
+    //! \return A reference to this button.
+    Button& setDefaultFocus(bool defaultFocus);
 
     //! \brief Execute the onClick callback if it is set.
     //!
@@ -45,6 +54,23 @@ namespace gui2
     std::string label_;
     std::function<void()> onClick_;
     std::optional<Vec4f> color_;
+    bool defaultFocus_ = false;
   };
 
 } // namespace gui
+
+// Implementation ------------------------------------------------------------
+namespace gui2
+{
+  inline Button& Button::setColor(std::optional<Vec4f> color)
+  {
+    color_ = color;
+    return *this;
+  }
+
+  inline Button& Button::setDefaultFocus(bool defaultFocus)
+  {
+    defaultFocus_ = defaultFocus;
+    return *this;
+  }
+}

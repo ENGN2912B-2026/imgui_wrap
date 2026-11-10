@@ -28,6 +28,7 @@ namespace gui2
   class ImageZoom;
   class Disabled;
   class Panel;
+  class Dialog;
   class Menu;
   class MenuItem;
   class MenuBar;
@@ -113,12 +114,14 @@ namespace gui2
     // Container items, they maybe have as children other items
     Rect display(Disabled& disabled, const Rect& rect) const;
     Rect display(Panel& panel, const Rect& rect) const;
+    // Dialogs are overlays: rect is the parent area used for centering and the
+    // result is the actual dialog rectangle, or empty when not displayed.
+    Rect display(Dialog& dialog, const Rect& rect) const;
     Rect display(Menu& menu, const Rect& rect) const;
     Rect display(const MenuItem& item, const Rect& rect) const;
-    void display(MenuBar& menuBar) const;
-
-    //! Returns the available content rectangle of the current ImGui window.
-    Rect getContentRect() const;
+    // The menu bar belongs to the window represented by rect. Its actual
+    // bounds are returned, or empty if it cannot be displayed.
+    Rect display(MenuBar& menuBar, const Rect& rect) const;
 
     //! \brief Displays a Displayable item using its own display method.
     template<typename T>

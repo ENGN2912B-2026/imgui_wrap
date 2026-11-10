@@ -11,6 +11,22 @@
 
 namespace gui2
 {
+  // Concept of things that can be items in a Menu:
+  // - The type is a Widget, or
+  // - The type is a WidgetContent type (either Content or ContentFactory).
+  //   which can be stored in a Widget.
+  template<typename T>
+  concept MenuContentItem =
+    std::same_as<std::remove_cvref_t<T>, Widget> || WidgetContent<T>;
+
+  // Concept of things that can be items in a MenuBar:
+  // - The type is a MenuContentItem (a Widget or WidgetContent), and
+  // - The type is not MenuBar, so copying uses the copy constructor instead
+  //   of the variadic constructor.
+  template<typename T>
+  concept MenuBarItem =
+    MenuContentItem<T> && !std::same_as<std::remove_cvref_t<T>, MenuBar>;
+
   //! \brief An item in a menu that performs an action when selected.
   //!
   //! A menu item either invokes a callback or toggles a boolean value. A
@@ -63,8 +79,7 @@ namespace gui2
     //! \tparam T The types of the items, each constructible into a Widget.
     //! \param[in] label The text to display for the menu.
     //! \param[in] items The items to display in the menu.
-    template<typename... T>
-      requires (std::constructible_from<Widget, T> && ...)
+    template<MenuContentItem... T>
     Menu(const std::string& label, T&&... items) : label_{label}
     {
       (items_.emplace_back(std::forward<T>(items)), ...);
@@ -106,8 +121,7 @@ namespace gui2
     //! \brief Constructs a menu bar with any number of items.
     //! \tparam T The types of the items, each constructible into a Widget.
     //! \param[in] items The menus to display in the menu bar.
-    template<typename... T>
-      requires (std::constructible_from<Widget, T> && ...)
+    template<MenuBarItem... T>
     MenuBar(T&&... items)
     {
       (items_.emplace_back(std::forward<T>(items)), ...);
