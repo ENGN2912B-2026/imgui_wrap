@@ -311,8 +311,10 @@ void registerHelloGuiTests(testing::TestEngine& engine)
       IM_CHECK_EQ(popup->Size.y, 170.0f);
       const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
       IM_CHECK_EQ(popup->Pos.x + popup->Size.x * 0.5f, center.x);
-      IM_CHECK_EQ(popup->Pos.y + popup->Size.y * 0.5f,
-                  center.y + ImGui::GetFrameHeight() * 0.5f);
+      // The center is computed with integer math, so allow 1px of rounding
+      IM_CHECK_LE(ImFabs(popup->Pos.y + popup->Size.y * 0.5f -
+                         (center.y + ImGui::GetFrameHeight() * 0.5f)),
+                  1.0f);
       IM_CHECK_EQ(GImGui->NavId, popup->GetID("OK"));
     }
     ctx->SetRef(popupName.c_str());
