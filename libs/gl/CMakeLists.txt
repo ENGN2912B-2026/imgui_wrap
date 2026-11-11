@@ -3,6 +3,8 @@
 
 add_library(imgui_wrap_gl STATIC)
 
+target_compile_definitions(imgui_wrap_gl PUBLIC USE_GL3)
+
 target_link_libraries(imgui_wrap_gl PUBLIC imgui_wrap_common)
 
 target_include_directories(imgui_wrap_gl

@@ -4,9 +4,9 @@
 
 #include <gui2/Types.hpp>
 
-#ifdef USE_GLFW_GL3
+#ifdef USE_GL3
 # include <gl/Texture.hpp>
-#endif // USE_GLFW_GL3
+#endif // USE_GL3
 
 #include <stdint.h>
 
@@ -33,11 +33,11 @@ namespace gui2
     //! \param[in] textureId The texture Id of the image.
     Image(TextureId textureId) : textureId_{textureId} {}
 
-#ifdef USE_GLFW_GL3
+#ifdef USE_GL3
     //! \brief Constructs an Image object from a gl::Texture object.
     //! \param[in] texture The gl::Texture object to create the image from.
     Image(const gl::Texture& texture) : Image{texture.getId()} {}
-#endif // USE_GLFW_GL3
+#endif // USE_GL3
 
     //! \brief Gets the texture Id of the image.
     //! \return The texture Id of the image.
@@ -80,7 +80,7 @@ namespace gui2
       zoomState_.maintainAspectRatio = maintainAspectRatio;
     }
 
-#ifdef USE_GLFW_GL3
+#ifdef USE_GL3
     //! \brief Constructs an ImageZoom object from a gl::Texture object.
     //! \param[in] texture The gl::Texture object to create the image from.
     //! \param[in] enableZoomPan Whether to enable zoom and pan functionality.
@@ -93,7 +93,7 @@ namespace gui2
         texture.getId(), texture.getSize(), enableZoomPan, maintainAspectRatio}
     {
     }
-#endif // USE_GLFW_GL3
+#endif // USE_GL3
 
     //! \brief Zoom and pan state of an image.
     //!

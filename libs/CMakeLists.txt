@@ -7,7 +7,7 @@ if (USE_GUI_TEST_ENGINE)
   add_subdirectory(testing)
 endif()
 
-if (USE_GLFW_GL3)
+if (USE_GLFW_GL3 OR USE_GLAD)
   add_subdirectory(gl)
 endif()
 

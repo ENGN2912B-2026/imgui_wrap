@@ -16,9 +16,9 @@ target_sources(imgui_wrap_gui_v2 PRIVATE
   src/Window.cpp
 )
 
-if (USE_GLFW_GL3)
+if (TARGET imgui_wrap_gl)
   target_link_libraries(imgui_wrap_gui_v2 PUBLIC imgui_wrap_gl)
-endif(USE_GLFW_GL3)
+endif()
 
 if (USE_IMPLOT)
   target_link_libraries(imgui_wrap_gui_v2 PUBLIC implot)
