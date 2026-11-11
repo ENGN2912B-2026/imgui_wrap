@@ -6,6 +6,7 @@
 #include <gui2/Layout.hpp>
 #include <gui2/Separator.hpp>
 #include <gui2/Button.hpp>
+#include <gui2/Disabled.hpp>
 
 #ifdef USE_NFD_CPP
 # include <gui2/Runtime.hpp>
@@ -17,7 +18,9 @@
 #include <cstdio>
 #include <print>
 
-#include <nfd.h>
+#ifdef USE_NATIVEFILEDIALOG_EXTENDED
+# include <nfd.h>
+#endif
 
 // This example shows how to open a dialog for let a user select a file, and
 // display the selected filename in a GUI window.
@@ -25,6 +28,7 @@
 
 using namespace gui2;
 
+#ifdef USE_NATIVEFILEDIALOG_EXTENDED
 bool open_file_dialog(std::string& outFilename)
 {
   if (NFD_Init() != NFD_OKAY)
@@ -32,7 +36,6 @@ bool open_file_dialog(std::string& outFilename)
     printf("Error initializing NFD: %s\n", NFD_GetError());
     return false;
   }
-
   nfdu8char_t *outPath;
   nfdu8filteritem_t filters[2] = { { "Source code", "c,cpp,cc" }, { "Headers", "h,hpp" } };
   nfdopendialogu8args_t args = {0};
@@ -59,6 +62,7 @@ bool open_file_dialog(std::string& outFilename)
   NFD_Quit();
   return false;
 }
+#endif
 
 int main(int argc, char** argv)
 {
@@ -82,15 +86,19 @@ int main(int argc, char** argv)
           "Main Panel",
           Separator{},
           HStack{"File: ", std::ref(filename)},
-          Button{ "Open File", [&]{
+#ifdef USE_NATIVEFILEDIALOG_EXTENDED
+          Button{ "Open File (NFD)", [&]{
             std::string selectedFilename;
             if (open_file_dialog(selectedFilename))
             { // User selected a file, update the filename variable
               filename = selectedFilename;
             }
           }},
+#else
+          Disabled(true, Button{ "Open File (NFD)" }),
+#endif
 #ifdef USE_NFD_CPP
-          Button{ "Open File (C++ wrapper)", [&]{
+          Button{ "Open File (NFD C++)", [&]{
             try
             {
               nfd::OpenFileDialog dialog;
@@ -110,6 +118,8 @@ int main(int argc, char** argv)
               std::fprintf(stderr, "Could not open file dialog: %s\n", error.what());
             }
           }},
+#else
+          Disabled(true, Button{ "Open File (NFD C++)" }),
 #endif
         }}},
         // Bottom panel
