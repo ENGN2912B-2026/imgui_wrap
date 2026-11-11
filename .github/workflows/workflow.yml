@@ -47,7 +47,7 @@ jobs:
 
     env:
       PRESET_NAME: gcc-linux-ninja-release
-      CMAKE_CONFIG_OPTIONS: -DUSE_GLFW_GL3=0 -DUSE_NFD_CPP=0 -DUSE_NATIVEFILEDIALOG_EXTENDED=0 -DUSE_GUI_TEST_ENGINE=1
+      CMAKE_CONFIG_OPTIONS: -DUSE_GLFW_GL3=0 -DUSE_NATIVEFILEDIALOG_EXTENDED=0 -DUSE_GUI_TEST_ENGINE=1
       # ubuntu-26-04: Fix the version of GCC to 15 to have a consistent build
       # environment. The default GCC version is 15, but it could change in the
       # future.

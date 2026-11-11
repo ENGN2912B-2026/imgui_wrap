@@ -110,6 +110,7 @@ endif(USE_GUI_TEST_ENGINE)
 if (USE_NATIVEFILEDIALOG_EXTENDED)
   # Default is to use GTK3 in Linux, which requires `libgtk-3-dev`
   add_subdirectory(nativefiledialog-extended)
+  target_compile_definitions(nfd PUBLIC USE_NATIVEFILEDIALOG_EXTENDED)
 endif(USE_NATIVEFILEDIALOG_EXTENDED)
 
 # GLAD OpenGL Loader-Generator ###############################################

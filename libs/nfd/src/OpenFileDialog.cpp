@@ -2,15 +2,16 @@
 //
 #include <nfd/OpenFileDialog.hpp>
 
-#include <nfd.hpp>
-
-#include <limits>
 #include <stdexcept>
 #include <utility>
 
-#ifdef USE_GLFW_GL3
-# include <backend/Backend_GLFW_GL3.hpp>
+#ifdef USE_NATIVEFILEDIALOG_EXTENDED
+# include <nfd.hpp>
+# include <limits>
+#endif
 
+#if defined(USE_NATIVEFILEDIALOG_EXTENDED) && defined(USE_GLFW_GL3)
+# include <backend/Backend_GLFW_GL3.hpp>
 # if defined(_WIN32)
 #  define GLFW_EXPOSE_NATIVE_WIN32
 # elif defined(__APPLE__)
@@ -37,6 +38,8 @@ namespace nfd
     return *this;
   }
 
+#ifdef USE_NATIVEFILEDIALOG_EXTENDED
+  // NFD is enabled, so we can use the open() method normally.
   std::string OpenFileDialog::open(backend::Backend& parent) const
   {
     nfdopendialogu8args_t args{};
@@ -88,4 +91,11 @@ namespace nfd
     }
     throw std::runtime_error{std::string{"NFD open dialog failed: "} + NFD_GetError()};
   }
+#else
+  // NFD is disabled, so we throw an exception when open() is called.
+  std::string OpenFileDialog::open(backend::Backend& /*parent*/) const
+  {
+    throw std::runtime_error{"NFD is disabled, cannot open file dialog"};
+  }
+#endif
 } // namespace nfd

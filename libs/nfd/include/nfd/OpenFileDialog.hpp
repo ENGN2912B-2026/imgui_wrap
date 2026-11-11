@@ -39,7 +39,7 @@ namespace nfd
     //! \brief Opens the dialog with the backend window as its parent when
     //!        using GLFW, or without a parent when GLFW is disabled.
     //! \return The selected UTF-8 path, or an empty string if canceled.
-    //! \throw std::runtime_error if the dialog cannot be opened.
+    //! \throw std::runtime_error if NFD is disabled or the dialog cannot be opened.
     //! \note Call on the GUI thread while the backend is active and, when
     //!       using GLFW, its window exists. NFD must not already be initialized
     //!       by the application.

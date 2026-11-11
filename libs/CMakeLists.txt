@@ -12,11 +12,7 @@ if (USE_GLFW_GL3)
 endif()
 
 if (USE_NFD_CPP)
-  if (USE_NATIVEFILEDIALOG_EXTENDED)
-    add_subdirectory(nfd)
-  else()
-    message(WARNING "USE_NFD_CPP is ON but USE_NATIVEFILEDIALOG_EXTENDED is OFF. Skipping nfd_cpp build.")
-  endif()
+  add_subdirectory(nfd)
 endif()
 
 if (USE_GUI_V1)
