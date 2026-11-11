@@ -7,6 +7,14 @@
 #include <gui2/Separator.hpp>
 #include <gui2/Button.hpp>
 
+#ifdef USE_NFD_CPP
+# include <gui2/Runtime.hpp>
+# include <nfd/OpenFileDialog.hpp>
+# include <stdexcept>
+# include <utility>
+#endif
+
+#include <cstdio>
 #include <print>
 
 #include <nfd.h>
@@ -19,6 +27,12 @@ using namespace gui2;
 
 bool open_file_dialog(std::string& outFilename)
 {
+  if (NFD_Init() != NFD_OKAY)
+  {
+    printf("Error initializing NFD: %s\n", NFD_GetError());
+    return false;
+  }
+
   nfdu8char_t *outPath;
   nfdu8filteritem_t filters[2] = { { "Source code", "c,cpp,cc" }, { "Headers", "h,hpp" } };
   nfdopendialogu8args_t args = {0};
@@ -31,6 +45,7 @@ bool open_file_dialog(std::string& outFilename)
     puts(outPath);
     outFilename = outPath;
     NFD_FreePathU8(outPath);
+    NFD_Quit();
     return true;
   }
   else if (result == NFD_CANCEL)
@@ -41,14 +56,12 @@ bool open_file_dialog(std::string& outFilename)
   {
     printf("Error: %s\n", NFD_GetError());
   }
+  NFD_Quit();
   return false;
 }
 
 int main(int argc, char** argv)
 {
-  // Initialize Native File Dialog
-  NFD_Init();
-
   // Title of the window
   std::string title{"GUI: Hello file v2"};
 
@@ -76,6 +89,28 @@ int main(int argc, char** argv)
               filename = selectedFilename;
             }
           }},
+#ifdef USE_NFD_CPP
+          Button{ "Open File (C++ wrapper)", [&]{
+            try
+            {
+              nfd::OpenFileDialog dialog;
+              dialog.setFilters({
+                { "Source code", "c,cpp,cc" },
+                { "Headers", "h,hpp" }
+              });
+              auto& backend = Runtime::getInstance().getBackend();
+              std::string selectedFilename = dialog.open(backend);
+              if (!selectedFilename.empty())
+              {
+                filename = std::move(selectedFilename);
+              }
+            }
+            catch (const std::runtime_error& error)
+            {
+              std::fprintf(stderr, "Could not open file dialog: %s\n", error.what());
+            }
+          }},
+#endif
         }}},
         // Bottom panel
         Stretch{1, Panel{ "Bottom Panel" }},
@@ -90,9 +125,6 @@ int main(int argc, char** argv)
 
   // Success
   std::println("Finished successfully!\n");
-
-  // Uninitialize Native File Dialog
-  NFD_Quit();
 
   return 0;
 }
